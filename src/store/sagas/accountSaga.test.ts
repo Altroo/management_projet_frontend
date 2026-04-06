@@ -1,9 +1,9 @@
 import { runSaga } from 'redux-saga';
-import { takeLatest } from 'redux-saga/effects';
 import * as Types from '../actions';
 import { accountSetProfilSaga, accountEditProfilSaga, wsUserAvatarSaga, watchAccount } from './accountSaga';
 import { setProfil, setWSUserAvatar } from '../slices/accountSlice';
 import { UserClass } from '@/models/classes';
+import { takeLatest } from 'redux-saga/effects';
 
 const makeUser = (id: number) =>
 	new UserClass(
