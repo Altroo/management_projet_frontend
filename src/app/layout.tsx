@@ -14,6 +14,7 @@ import SessionExpiredListener from '@/components/shared/sessionExpiredListener/s
 import { LanguageContextProvider } from '@/contexts/languageContext';
 import Maintenance from '@/components/shared/maintenance/Maintenance';
 import { getServerTranslations } from '@/utils/serverTranslations';
+import { cookies } from 'next/headers';
 
 export const generateMetadata = async (): Promise<Metadata> => {
 	const t = await getServerTranslations();
@@ -73,8 +74,10 @@ interface EntryPointProps extends AppProps {
 
 const RootLayout: React.FC<EntryPointProps> = async (props) => {
 	const t = await getServerTranslations();
+	const cookieStore = await cookies();
+	const lang = cookieStore.get('app-language')?.value === 'en' ? 'en' : 'fr';
 	return (
-		<html lang="fr" data-scroll-behavior="smooth">
+		<html lang={lang} data-scroll-behavior="smooth">
 			<body>
 				<a href="#main-content" className="skip-to-content">
 					{t.common.skipToContent}
@@ -85,7 +88,7 @@ const RootLayout: React.FC<EntryPointProps> = async (props) => {
 							<InitEffects />
 							<AppRouterCacheProvider>
 								<ThemeProvider>
-									<LanguageContextProvider>
+									<LanguageContextProvider initialLanguage={lang}>
 										<ErrorBoundary>
 											<ToastContextProvider>
 												<SessionExpiredListener />

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useCallback, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useState } from 'react';
 import type { Language, TranslationDictionary } from '@/types/languageTypes';
 import { translations } from '@/translations';
 import { setHelpersLanguage } from '@/utils/helpers';
@@ -20,25 +20,22 @@ export const LanguageContext = createContext<LanguageContextType>({
 	t: translations[DEFAULT_LANGUAGE],
 });
 
-const getInitialLanguage = (): Language => {
-	if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
-	const stored = localStorage.getItem(STORAGE_KEY);
-	if (stored === 'fr' || stored === 'en') return stored;
-	return DEFAULT_LANGUAGE;
-};
+export const LanguageContextProvider: React.FC<{ children: React.ReactNode; initialLanguage?: Language }> = ({ children, initialLanguage }) => {
+	const [language, setLanguageState] = useState<Language>(initialLanguage ?? DEFAULT_LANGUAGE);
 
-export const LanguageContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-	const [language, setLanguageState] = useState<Language>(() => {
-		const lang = getInitialLanguage();
-		setHelpersLanguage(lang);
-		return lang;
-	});
+	useEffect(() => {
+		setHelpersLanguage(initialLanguage ?? DEFAULT_LANGUAGE);
+		const stored = localStorage.getItem(STORAGE_KEY);
+		if (stored === 'fr' || stored === 'en') {
+			document.cookie = `${STORAGE_KEY}=${stored};path=/;max-age=31536000;SameSite=Lax`;
+		}
+	}, [initialLanguage]);
 
 	const setLanguage = useCallback((lang: Language) => {
 		setLanguageState(lang);
 		setHelpersLanguage(lang);
 		localStorage.setItem(STORAGE_KEY, lang);
-		document.cookie = `${STORAGE_KEY}=${lang};path=/;max-age=31536000`;
+		document.cookie = `${STORAGE_KEY}=${lang};path=/;max-age=31536000;SameSite=Lax`;
 	}, []);
 
 	const t = translations[language];
