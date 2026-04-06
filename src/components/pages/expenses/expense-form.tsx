@@ -386,8 +386,14 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 								loading={isPending}
 								active={!isPending}
 								type="submit"
-								startIcon={isEditMode ? <EditIcon /> : <AddIcon />}
-								cssClass={Styles.submitButton}
+								startIcon={isEditMode ? <EditIcon /> : <AddIcon />}							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+								if (!formik.isValid) {
+									e.preventDefault();
+									formik.handleSubmit();
+									onError(t.users.fixValidationErrors);
+									window.scrollTo({ top: 0, behavior: 'smooth' });
+								}
+							}}								cssClass={Styles.submitButton}
 							/>
 						</Box>
 					</Stack>

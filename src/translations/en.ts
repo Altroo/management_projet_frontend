@@ -401,7 +401,7 @@ export const en: TranslationDictionary = {
     changePasswordDescription: 'Change account password',
     homeTitle: 'Home',
     homeDescription: 'Application home page.',
-    appTitle: 'Application',
+    appTitle: 'Dashboard',
     enterCodeTitle: 'Enter code',
     enterCodeDescription: 'Enter the verification code received by email',
     setNewPasswordTitle: 'New password',

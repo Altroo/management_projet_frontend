@@ -401,7 +401,7 @@ export const fr: TranslationDictionary = {
     changePasswordDescription: 'Modifier le mot de passe du compte',
     homeTitle: 'Accueil',
     homeDescription: "Page d'accueil de l'application.",
-    appTitle: 'Application',
+    appTitle: 'Tableau de bord',
     enterCodeTitle: 'Entrer le code',
     enterCodeDescription: 'Entrer le code de vérification reçu par email',
     setNewPasswordTitle: 'Nouveau mot de passe',
