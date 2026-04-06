@@ -87,7 +87,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 			globalError: '',
 		},
 		enableReinitialize: true,
-		validateOnMount: false,
+		validateOnMount: true,
 		validationSchema: toFormikValidationSchema(revenueSchema),
 		onSubmit: async (data, { setFieldError }) => {
 			setIsPending(true);
