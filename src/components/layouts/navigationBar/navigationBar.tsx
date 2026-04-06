@@ -299,12 +299,12 @@ const NavigationBar = (props: Props) => {
 								{!loading && session && (
 									<>
 										<Desktop>
+											<LanguageSwitcher />
 											{is_staff && (
 												<Button variant="text" color="inherit" href={BACKEND_SITE_ADMIN} target="_blank" rel="noopener" endIcon={<DomainIcon />}>
 													{t.navigation.administration}
 												</Button>
 											)}
-											<LanguageSwitcher />
 											<Button variant="text" color="inherit" endIcon={<LogoutIcon />} onClick={logOutHandler}>
 												{t.navigation.logout}
 											</Button>
