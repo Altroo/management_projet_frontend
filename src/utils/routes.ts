@@ -1,6 +1,6 @@
 // Site root
 export const SITE_ROOT = `${process.env.NEXT_PUBLIC_DOMAIN_URL_PREFIX}/`;
-export const BACKEND_SITE_ADMIN = `${process.env.NEXT_PUBLIC_API_URL}/gestion-interne-gf62`;
+export const BACKEND_SITE_ADMIN = `${process.env.NEXT_PUBLIC_API_URL}/gestion-interne-kp56`;
 // Auth
 export const AUTH_LOGIN = `${SITE_ROOT}/login`;
 // Auth forgot password
