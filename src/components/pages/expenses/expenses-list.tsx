@@ -50,10 +50,10 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 	const { data: projectsData } = useGetProjectsListQuery({}, { skip: !token });
 	const { data: categoriesData } = useGetCategoriesQuery(undefined, { skip: !token });
 
-	const projects = useMemo(() => {
-		const raw = Array.isArray(projectsData) ? projectsData : (projectsData && 'results' in projectsData ? projectsData.results : []);
-		return raw;
-	}, [projectsData]);
+	const projects = useMemo(
+		() => Array.isArray(projectsData) ? projectsData : (projectsData && 'results' in projectsData ? projectsData.results : []),
+		[projectsData],
+	);
 
 	const categories = useMemo(() => categoriesData ?? [], [categoriesData]);
 

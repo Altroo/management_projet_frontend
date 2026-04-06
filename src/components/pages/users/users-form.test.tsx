@@ -33,6 +33,7 @@ jest.mock('next/navigation', () => ({
 jest.mock('@/utils/hooks', () => ({
 	__esModule: true,
 	useToast: () => ({ onSuccess: jest.fn(), onError: jest.fn() }),
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	useLanguage: () => ({ t: require('@/translations/fr').fr }),
 }));
 

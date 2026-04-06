@@ -76,6 +76,7 @@ jest.mock('zod-formik-adapter', () => ({
 
 jest.mock('@/utils/hooks', () => ({
 	useAppDispatch: () => mockDispatch,
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	useLanguage: () => ({ t: require('@/translations/fr').fr }),
 }));
 

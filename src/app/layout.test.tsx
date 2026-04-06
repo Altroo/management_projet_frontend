@@ -78,6 +78,7 @@ jest.mock('@/components/shared/sessionExpiredListener/sessionExpiredListener', (
 
 jest.mock('@/utils/serverTranslations', () => ({
 	__esModule: true,
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	getServerTranslations: () => Promise.resolve(require('@/translations/fr').fr),
 }));
 

@@ -45,7 +45,7 @@ const ProjectsListClient: React.FC<SessionProps> = ({ session }) => {
 		logicOperator: GridLogicOperator.And,
 	});
 	const [chipFilterParams, setChipFilterParams] = useState<Record<string, string>>({});
-	const [customFilterParams, setCustomFilterParams] = useState<Record<string, string>>({});
+	const [, setCustomFilterParams] = useState<Record<string, string>>({});
 
 	const { data: projectsData, isLoading } = useGetProjectsListQuery(
 		{

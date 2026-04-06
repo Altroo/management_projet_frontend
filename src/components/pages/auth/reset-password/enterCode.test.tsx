@@ -34,6 +34,7 @@ jest.mock('@/utils/clientHelpers', () => ({
 
 jest.mock('@/utils/hooks', () => ({
 	useToast: () => ({ onSuccess: mockOnSuccess, onError: mockOnError }),
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	useLanguage: () => ({ t: require('@/translations/fr').fr }),
 }));
 

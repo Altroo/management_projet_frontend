@@ -4,7 +4,6 @@ import { ThemeProvider } from '@mui/material/styles';
 import type { Theme } from '@mui/material/styles';
 import type { DropDownType } from '@/types/accountTypes';
 import { Autocomplete, InputAdornment, Box, Typography } from '@mui/material';
-import { useLanguage } from '@/utils/hooks';
 
 type Props = {
 	id: string;
@@ -45,7 +44,6 @@ const CustomAutoCompleteSelect: React.FC<Props> = ({
 	helperText,
 	renderOption: renderOptionProp,
 }) => {
-	const { t } = useLanguage();
 	const defaultRenderOption = (props: React.HTMLAttributes<HTMLLIElement> & { key: Key }, option: DropDownType) => {
 		const { key, ...rest } = props;
 		return (

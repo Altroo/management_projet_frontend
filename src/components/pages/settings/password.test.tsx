@@ -26,6 +26,7 @@ jest.mock('@/utils/hooks', () => ({
 		onError: mockOnError,
 	}),
 	useAppSelector: jest.fn(() => null),
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	useLanguage: () => ({ t: require('@/translations/fr').fr }),
 }));
 

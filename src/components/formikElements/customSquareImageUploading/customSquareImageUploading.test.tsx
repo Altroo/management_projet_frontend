@@ -4,6 +4,7 @@ import CustomSquareImageUploading from './customSquareImageUploading';
 import '@testing-library/jest-dom';
 
 jest.mock('@/utils/hooks', () => ({
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	useLanguage: () => ({ language: 'fr', setLanguage: jest.fn(), t: require('@/translations').translations.fr }),
 }));
 

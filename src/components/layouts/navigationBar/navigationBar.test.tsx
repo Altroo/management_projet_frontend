@@ -42,6 +42,7 @@ const mockUseAppSelector = jest.fn();
 jest.mock('@/utils/hooks', () => ({
 	useAppSelector: (fn: unknown) => mockUseAppSelector(fn),
 	useIsClient: () => mockUseIsClient(),
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	useLanguage: () => ({ t: require('@/translations/fr').fr, language: 'fr', setLanguage: jest.fn() }),
 }));
 

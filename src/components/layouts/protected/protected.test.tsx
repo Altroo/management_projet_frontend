@@ -8,6 +8,7 @@ import { usePermission, useAppSelector } from '@/utils/hooks';
 jest.mock('@/utils/hooks', () => ({
 	usePermission: jest.fn(),
 	useAppSelector: jest.fn(),
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	useLanguage: () => ({ language: 'fr', setLanguage: jest.fn(), t: require('@/translations').translations.fr }),
 }));
 

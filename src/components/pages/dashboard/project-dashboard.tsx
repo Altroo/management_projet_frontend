@@ -40,7 +40,7 @@ import { Protected } from '@/components/layouts/protected/protected';
 import { useLanguage } from '@/utils/hooks';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
 import type { SessionProps } from '@/types/_initTypes';
-import { CHART_COLORS, PROJECT_COLORS, CHART_OPTS, STATUS_CHIP_COLORS } from '@/utils/rawData';
+import { CHART_COLORS, CHART_OPTS, STATUS_CHIP_COLORS } from '@/utils/rawData';
 import { formatNumber } from '@/utils/helpers';
 
 ChartJS.register(
@@ -174,7 +174,8 @@ const ProjectDashboardClient: React.FC<SessionProps> = ({ session }) => {
 	const totalProfit = data?.total_profit ?? '0';
 	const totalMargin = data?.total_margin ?? 0;
 	const budgetUtilisation = data?.budget_utilisation ?? 0;
-	const projects = data?.projects ?? [];
+
+	const projects = useMemo(() => data?.projects ?? [], [data?.projects]);
 
 	// Status distribution for doughnut
 	const statusCounts = useMemo(() => {

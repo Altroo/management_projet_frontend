@@ -457,7 +457,6 @@ const PaginatedDataGrid = <T,>({
 								disableRowSelectionOnClick
 								keepNonExistentRowsSelected
 								onRowClick={onRowClick}
-								onRowClick={onRowClick}
 								checkboxSelection={checkboxSelection && rows.length > 0}
 								rowSelectionModel={computedRowSelectionModel}
 								onRowSelectionModelChange={checkboxSelection && rows.length > 0 ? handleRowSelectionModelChange : undefined}
