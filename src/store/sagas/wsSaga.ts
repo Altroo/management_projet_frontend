@@ -1,4 +1,5 @@
 import { call, put, select, take } from 'redux-saga/effects';
+import { getSession } from 'next-auth/react';
 import { initWebsocket } from '@/store/services/ws';
 import { getAccessToken } from '@/store/selectors';
 import type { RootState } from '@/store/store';
@@ -30,7 +31,11 @@ export function* watchWS(): SagaIterator<void> {
 	const token: string | null = yield call(monitorToken, getAccessToken, null);
 
 	if (token) {
-		const channel: EventChannel<WSChannelAction> = yield call(initWebsocket, token);
+		const getToken = async (): Promise<string | null> => {
+			const session = await getSession();
+			return session?.accessToken ?? null;
+		};
+		const channel: EventChannel<WSChannelAction> = yield call(initWebsocket, getToken);
 
 		while (true) {
 			const action: WSChannelAction = yield take(channel);

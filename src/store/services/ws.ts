@@ -25,14 +25,19 @@ let ws: WebSocket;
 const WS_MAX_RECONNECT_DELAY_MS = 30000;
 const WS_INITIAL_RECONNECT_DELAY_MS = 1000;
 
-export function initWebsocket(token: string): EventChannel<WSAction> {
+export function initWebsocket(getToken: () => Promise<string | null>): EventChannel<WSAction> {
 	return eventChannel<WSAction>((emitter) => {
 		let reconnectDelay = WS_INITIAL_RECONNECT_DELAY_MS;
 		let hasConnectedBefore = false;
 
-		function createWs() {
+		async function createWs() {
 			const wsUrl = `${process.env.NEXT_PUBLIC_ROOT_WS_URL}`;
 			if (typeof window !== 'undefined') {
+				const token = await getToken();
+				if (!token) {
+					emitter(END);
+					return;
+				}
 				ws = new WebSocket(`${wsUrl}?token=${token}`);
 				ws.onopen = () => {
 					reconnectDelay = WS_INITIAL_RECONNECT_DELAY_MS;
@@ -64,20 +69,16 @@ export function initWebsocket(token: string): EventChannel<WSAction> {
 						// Skip malformed message and continue listening
 					}
 				};
-				ws.onclose = (e: CloseEvent) => {
-					if (e.code === 4001) {
-						emitter(END);
-						return;
-					}
+				ws.onclose = () => {
 					setTimeout(() => {
-						createWs();
+						void createWs();
 					}, reconnectDelay);
 					reconnectDelay = Math.min(reconnectDelay * 2, WS_MAX_RECONNECT_DELAY_MS);
 				};
 			}
 		}
 
-		createWs();
+		void createWs();
 		return () => {
 			try {
 				ws.close();

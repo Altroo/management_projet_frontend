@@ -36,10 +36,9 @@ describe('LanguageContextProvider', () => {
     expect(localStorage.getItem('app-language')).toBe('en');
   });
 
-  it('reads language from localStorage on mount', () => {
-    localStorage.setItem('app-language', 'en');
+  it('uses initialLanguage prop when provided', () => {
     const wrapper = ({children}: {children: React.ReactNode}) => (
-      <LanguageContextProvider>{children}</LanguageContextProvider>
+      <LanguageContextProvider initialLanguage="en">{children}</LanguageContextProvider>
     );
     const {result} = renderHook(() => useTestLanguage(), {wrapper});
     expect(result.current.language).toBe('en');
