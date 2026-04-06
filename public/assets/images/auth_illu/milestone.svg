@@ -1,0 +1,38 @@
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Timeline road -->
+  <rect x="60" y="192" width="278" height="20" rx="10" fill="#ECF0F1" stroke="#BDC3C7" stroke-width="2"/>
+  <!-- Progress fill (60%) -->
+  <rect x="60" y="192" width="168" height="20" rx="10" fill="#9B59B6" opacity="0.8"/>
+  <!-- Start flag -->
+  <line x1="60" y1="172" x2="60" y2="212" stroke="#2C3E50" stroke-width="2.5"/>
+  <polygon points="60,172 82,180 60,188" fill="#27AE60"/>
+  <!-- Milestone 1 - DONE -->
+  <line x1="118" y1="158" x2="118" y2="192" stroke="#9B59B6" stroke-width="2"/>
+  <rect x="86" y="108" width="64" height="50" rx="8" fill="#9B59B6" stroke="#8E44AD" stroke-width="2"/>
+  <rect x="94" y="118" width="48" height="8" rx="4" fill="#FFFFFF" opacity="0.9"/>
+  <rect x="94" y="132" width="36" height="6" rx="3" fill="#FFFFFF" opacity="0.55"/>
+  <circle cx="118" cy="202" r="12" fill="#9B59B6"/>
+  <path d="M112 202 L116 206 L124 198" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <!-- Milestone 2 - DONE -->
+  <line x1="228" y1="158" x2="228" y2="192" stroke="#9B59B6" stroke-width="2"/>
+  <rect x="196" y="108" width="64" height="50" rx="8" fill="#3498DB" stroke="#2980B9" stroke-width="2"/>
+  <rect x="204" y="118" width="48" height="8" rx="4" fill="#FFFFFF" opacity="0.9"/>
+  <rect x="204" y="132" width="40" height="6" rx="3" fill="#FFFFFF" opacity="0.55"/>
+  <circle cx="228" cy="202" r="12" fill="#9B59B6"/>
+  <path d="M222 202 L226 206 L234 198" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <!-- Milestone 3 - CURRENT -->
+  <line x1="282" y1="258" x2="282" y2="212" stroke="#F39C12" stroke-width="2"/>
+  <rect x="250" y="262" width="64" height="50" rx="8" fill="#E67E22" stroke="#D35400" stroke-width="2"/>
+  <rect x="258" y="272" width="48" height="8" rx="4" fill="#FFFFFF" opacity="0.9"/>
+  <rect x="258" y="286" width="34" height="6" rx="3" fill="#FFFFFF" opacity="0.55"/>
+  <circle cx="282" cy="202" r="12" fill="#F39C12" stroke="#E67E22" stroke-width="2"/>
+  <circle cx="282" cy="202" r="5" fill="#FFFFFF"/>
+  <!-- Milestone 4 - FUTURE -->
+  <line x1="338" y1="258" x2="338" y2="212" stroke="#BDC3C7" stroke-width="2"/>
+  <rect x="306" y="262" width="64" height="50" rx="8" fill="#ECF0F1" stroke="#BDC3C7" stroke-width="2"/>
+  <rect x="314" y="272" width="48" height="8" rx="4" fill="#95A5A6" opacity="0.6"/>
+  <rect x="314" y="286" width="36" height="6" rx="3" fill="#95A5A6" opacity="0.4"/>
+  <circle cx="338" cy="202" r="12" fill="#ECF0F1" stroke="#BDC3C7" stroke-width="2"/>
+  <!-- Ground line -->
+  <rect x="60" y="368" width="280" height="4" rx="2" fill="#BDC3C7"/>
+</svg>

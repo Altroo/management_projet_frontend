@@ -1,0 +1,43 @@
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Central manager avatar -->
+  <circle cx="200" cy="108" r="36" fill="#E8F4FD" stroke="#2980B9" stroke-width="2.5"/>
+  <circle cx="200" cy="96" r="14" fill="#3498DB"/>
+  <path d="M178 134 Q178 116 200 116 Q222 116 222 134" fill="#3498DB"/>
+  <!-- Crown/star -->
+  <polygon points="200,56 204,68 216,68 207,76 210,88 200,81 190,88 193,76 184,68 196,68" fill="#F1C40F"/>
+  <!-- Manager label box -->
+  <rect x="172" y="148" width="56" height="14" rx="7" fill="#3498DB"/>
+  <rect x="178" y="152" width="44" height="6" rx="3" fill="#FFFFFF" opacity="0.8"/>
+  <!-- Connector trunk -->
+  <line x1="200" y1="164" x2="200" y2="186" stroke="#BDC3C7" stroke-width="2"/>
+  <!-- Horizontal connector bar -->
+  <line x1="100" y1="186" x2="300" y2="186" stroke="#BDC3C7" stroke-width="2"/>
+  <!-- Vertical drops -->
+  <line x1="100" y1="186" x2="100" y2="212" stroke="#BDC3C7" stroke-width="2"/>
+  <line x1="200" y1="186" x2="200" y2="212" stroke="#BDC3C7" stroke-width="2"/>
+  <line x1="300" y1="186" x2="300" y2="212" stroke="#BDC3C7" stroke-width="2"/>
+  <!-- Team member 1 (left - orange) -->
+  <circle cx="100" cy="236" r="26" fill="#FEF9E7" stroke="#F39C12" stroke-width="2"/>
+  <circle cx="100" cy="224" r="10" fill="#F39C12"/>
+  <path d="M82 254 Q82 240 100 240 Q118 240 118 254" fill="#F39C12"/>
+  <rect x="76" y="266" width="48" height="10" rx="5" fill="#F39C12" opacity="0.5"/>
+  <rect x="76" y="280" width="48" height="8" rx="4" fill="#ECF0F1"/>
+  <rect x="76" y="280" width="34" height="8" rx="4" fill="#F39C12" opacity="0.6"/>
+  <!-- Team member 2 (center - green) -->
+  <circle cx="200" cy="236" r="26" fill="#E8F8F5" stroke="#27AE60" stroke-width="2"/>
+  <circle cx="200" cy="224" r="10" fill="#27AE60"/>
+  <path d="M182 254 Q182 240 200 240 Q218 240 218 254" fill="#27AE60"/>
+  <rect x="176" y="266" width="48" height="10" rx="5" fill="#27AE60" opacity="0.5"/>
+  <rect x="176" y="280" width="48" height="8" rx="4" fill="#ECF0F1"/>
+  <rect x="176" y="280" width="42" height="8" rx="4" fill="#27AE60" opacity="0.6"/>
+  <!-- Team member 3 (right - purple) -->
+  <circle cx="300" cy="236" r="26" fill="#FDF2F8" stroke="#9B59B6" stroke-width="2"/>
+  <circle cx="300" cy="224" r="10" fill="#9B59B6"/>
+  <path d="M282 254 Q282 240 300 240 Q318 240 318 254" fill="#9B59B6"/>
+  <rect x="276" y="266" width="48" height="10" rx="5" fill="#9B59B6" opacity="0.5"/>
+  <rect x="276" y="280" width="48" height="8" rx="4" fill="#ECF0F1"/>
+  <rect x="276" y="280" width="20" height="8" rx="4" fill="#9B59B6" opacity="0.6"/>
+  <!-- Ground line -->
+  <rect x="60" y="338" width="280" height="4" rx="2" fill="#BDC3C7"/>
+  <ellipse cx="200" cy="344" rx="130" ry="7" fill="#2C3E50" opacity="0.05"/>
+</svg>

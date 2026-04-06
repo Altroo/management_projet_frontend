@@ -5,10 +5,10 @@ import Styles from './authLayout.module.sass';
 import { Box, Stack } from '@mui/material';
 import Image from 'next/image';
 import Logo from '../../../../public/assets/images/reservation-logo.png';
-import CalendarSVG from '../../../../public/assets/images/auth_illu/calendar.svg';
-import KeySVG from '../../../../public/assets/images/auth_illu/key.svg';
-import BuildingSVG from '../../../../public/assets/images/auth_illu/building.svg';
-import LuggageSVG from '../../../../public/assets/images/auth_illu/luggage.svg';
+import GanttSVG from '../../../../public/assets/images/auth_illu/gantt.svg';
+import TasksSVG from '../../../../public/assets/images/auth_illu/tasks.svg';
+import TeamSVG from '../../../../public/assets/images/auth_illu/team.svg';
+import MilestoneSVG from '../../../../public/assets/images/auth_illu/milestone.svg';
 import { useLanguage } from '@/utils/hooks';
 
 type Props = {
@@ -26,19 +26,19 @@ const AuthLayout = forwardRef<HTMLAnchorElement, Props>((props: Props, ref: Forw
 	const [authIlluRandom] = useState<{ image: svgImageType; color: string }>(() => {
 		const availableAuthBgImages: Array<{ image: svgImageType; color: string }> = [
 			{
-				image: CalendarSVG.src,
+				image: GanttSVG.src,
 				color: '#E8F5E9',
 			},
 			{
-				image: KeySVG.src,
+				image: TasksSVG.src,
 				color: '#FFF3E0',
 			},
 			{
-				image: BuildingSVG.src,
+				image: TeamSVG.src,
 				color: '#E3F2FD',
 			},
 			{
-				image: LuggageSVG.src,
+				image: MilestoneSVG.src,
 				color: '#F3E5F5',
 			},
 		];

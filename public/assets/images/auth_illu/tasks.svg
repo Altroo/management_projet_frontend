@@ -1,0 +1,37 @@
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Clipboard body -->
+  <rect x="90" y="75" width="220" height="255" rx="10" fill="#FFFFFF" stroke="#2C3E50" stroke-width="2.5"/>
+  <!-- Clip -->
+  <rect x="160" y="62" width="80" height="28" rx="10" fill="#ECF0F1" stroke="#2C3E50" stroke-width="2"/>
+  <rect x="175" y="66" width="50" height="16" rx="8" fill="#BDC3C7"/>
+  <!-- Header bar -->
+  <rect x="90" y="84" width="220" height="32" rx="0" fill="#E67E22"/>
+  <rect x="109" y="93" width="110" height="10" rx="5" fill="#FFFFFF" opacity="0.8"/>
+  <!-- Task row 1 - checked -->
+  <rect x="106" y="130" width="188" height="30" rx="6" fill="#F0FBF4"/>
+  <rect x="114" y="140" width="16" height="16" rx="4" fill="#27AE60"/>
+  <path d="M118 148 L122 152 L130 144" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <rect x="140" y="144" width="110" height="8" rx="4" fill="#2C3E50" opacity="0.35"/>
+  <!-- Task row 2 - checked -->
+  <rect x="106" y="168" width="188" height="30" rx="6" fill="#F0FBF4"/>
+  <rect x="114" y="178" width="16" height="16" rx="4" fill="#27AE60"/>
+  <path d="M118 186 L122 190 L130 182" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <rect x="140" y="182" width="90" height="8" rx="4" fill="#2C3E50" opacity="0.35"/>
+  <!-- Task row 3 - in progress -->
+  <rect x="106" y="206" width="188" height="30" rx="6" fill="#FFFBF0"/>
+  <rect x="114" y="216" width="16" height="16" rx="4" fill="#F39C12" stroke="#E67E22" stroke-width="1.5"/>
+  <circle cx="122" cy="224" r="4" fill="#E67E22"/>
+  <rect x="140" y="220" width="124" height="8" rx="4" fill="#2C3E50" opacity="0.6"/>
+  <!-- Task row 4 - pending -->
+  <rect x="106" y="244" width="188" height="30" rx="6" fill="#F9F9F9"/>
+  <rect x="114" y="254" width="16" height="16" rx="4" fill="none" stroke="#BDC3C7" stroke-width="2"/>
+  <rect x="140" y="258" width="100" height="8" rx="4" fill="#BDC3C7" opacity="0.6"/>
+  <!-- Task row 5 - pending -->
+  <rect x="106" y="282" width="188" height="30" rx="6" fill="#F9F9F9"/>
+  <rect x="114" y="292" width="16" height="16" rx="4" fill="none" stroke="#BDC3C7" stroke-width="2"/>
+  <rect x="140" y="296" width="80" height="8" rx="4" fill="#BDC3C7" opacity="0.6"/>
+  <!-- Shadow -->
+  <ellipse cx="200" cy="342" rx="100" ry="8" fill="#2C3E50" opacity="0.06"/>
+  <!-- Bottom bar -->
+  <rect x="90" y="348" width="220" height="4" rx="2" fill="#BDC3C7"/>
+</svg>

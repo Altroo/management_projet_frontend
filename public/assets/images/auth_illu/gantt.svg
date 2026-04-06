@@ -1,0 +1,48 @@
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Chart background -->
+  <rect x="55" y="55" width="290" height="270" rx="10" fill="#FFFFFF" stroke="#2C3E50" stroke-width="2.5"/>
+  <!-- Header -->
+  <rect x="55" y="55" width="290" height="36" rx="10" fill="#3498DB"/>
+  <rect x="55" y="79" width="290" height="12" fill="#3498DB"/>
+  <rect x="70" y="66" width="90" height="10" rx="5" fill="#FFFFFF" opacity="0.7"/>
+  <!-- Month headers -->
+  <rect x="142" y="101" width="52" height="9" rx="4" fill="#95A5A6" opacity="0.5"/>
+  <rect x="204" y="101" width="52" height="9" rx="4" fill="#95A5A6" opacity="0.5"/>
+  <rect x="266" y="101" width="52" height="9" rx="4" fill="#95A5A6" opacity="0.5"/>
+  <!-- Vertical grid lines -->
+  <line x1="138" y1="91" x2="138" y2="325" stroke="#ECF0F1" stroke-width="1.5"/>
+  <line x1="200" y1="91" x2="200" y2="325" stroke="#ECF0F1" stroke-width="1.5"/>
+  <line x1="262" y1="91" x2="262" y2="325" stroke="#ECF0F1" stroke-width="1.5"/>
+  <line x1="324" y1="91" x2="324" y2="325" stroke="#ECF0F1" stroke-width="1.5"/>
+  <!-- Horizontal grid lines -->
+  <line x1="55" y1="115" x2="345" y2="115" stroke="#ECF0F1" stroke-width="1"/>
+  <line x1="55" y1="155" x2="345" y2="155" stroke="#ECF0F1" stroke-width="1"/>
+  <line x1="55" y1="195" x2="345" y2="195" stroke="#ECF0F1" stroke-width="1"/>
+  <line x1="55" y1="235" x2="345" y2="235" stroke="#ECF0F1" stroke-width="1"/>
+  <line x1="55" y1="275" x2="345" y2="275" stroke="#ECF0F1" stroke-width="1"/>
+  <!-- Row labels -->
+  <rect x="63" y="126" width="60" height="9" rx="4" fill="#7F8C8D" opacity="0.5"/>
+  <rect x="63" y="166" width="54" height="9" rx="4" fill="#7F8C8D" opacity="0.5"/>
+  <rect x="63" y="206" width="68" height="9" rx="4" fill="#7F8C8D" opacity="0.5"/>
+  <rect x="63" y="246" width="46" height="9" rx="4" fill="#7F8C8D" opacity="0.5"/>
+  <rect x="63" y="286" width="56" height="9" rx="4" fill="#7F8C8D" opacity="0.5"/>
+  <!-- Gantt bar row 1 (completed) -->
+  <rect x="140" y="119" width="90" height="16" rx="8" fill="#3498DB" opacity="0.25"/>
+  <rect x="140" y="119" width="90" height="16" rx="8" fill="#3498DB"/>
+  <rect x="140" y="119" width="55" height="16" rx="8" fill="#2980B9"/>
+  <!-- Gantt bar row 2 -->
+  <rect x="202" y="159" width="122" height="16" rx="8" fill="#27AE60"/>
+  <!-- Gantt bar row 3 (split) -->
+  <rect x="140" y="199" width="62" height="16" rx="8" fill="#E74C3C"/>
+  <rect x="210" y="199" width="50" height="16" rx="8" fill="#E74C3C" opacity="0.35"/>
+  <!-- Gantt bar row 4 -->
+  <rect x="264" y="239" width="60" height="16" rx="8" fill="#9B59B6"/>
+  <!-- Gantt bar row 5 (full span) -->
+  <rect x="140" y="279" width="184" height="16" rx="8" fill="#1ABC9C" opacity="0.4"/>
+  <rect x="140" y="279" width="100" height="16" rx="8" fill="#1ABC9C"/>
+  <!-- Today line -->
+  <line x1="230" y1="91" x2="230" y2="325" stroke="#E74C3C" stroke-width="2" stroke-dasharray="5,4"/>
+  <polygon points="222,91 238,91 230,99" fill="#E74C3C"/>
+  <!-- Bottom bar -->
+  <rect x="55" y="325" width="290" height="4" rx="2" fill="#BDC3C7"/>
+</svg>
