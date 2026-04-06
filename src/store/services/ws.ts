@@ -1,5 +1,5 @@
 import type { EventChannel } from 'redux-saga';
-import { END, eventChannel } from 'redux-saga';
+import { eventChannel } from 'redux-saga';
 import { WSMaintenanceAction, WSUserAvatarAction, WSReconnectedAction } from '@/store/actions/wsActions';
 import type { WSAction, WSEnvelope } from '@/types/wsTypes';
 
@@ -35,7 +35,11 @@ export function initWebsocket(getToken: () => Promise<string | null>): EventChan
 			if (typeof window !== 'undefined') {
 				const token = await getToken();
 				if (!token) {
-					emitter(END);
+					// Token not available yet — retry with backoff
+					setTimeout(() => {
+						void createWs();
+					}, reconnectDelay);
+					reconnectDelay = Math.min(reconnectDelay * 2, WS_MAX_RECONNECT_DELAY_MS);
 					return;
 				}
 				ws = new WebSocket(`${wsUrl}?token=${token}`);
