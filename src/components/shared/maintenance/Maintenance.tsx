@@ -7,7 +7,7 @@ import BuildCircleOutlinedIcon from '@mui/icons-material/BuildCircleOutlined';
 import { useAppSelector, useLanguage } from '@/utils/hooks';
 import { getWSMaintenanceState } from '@/store/selectors';
 import Logo from '../../../../public/assets/images/reservation-logo.png';
-import IlluSVG from '../../../../public/assets/images/auth_illu/handshake.svg';
+import IlluSVG from '../../../../public/assets/images/auth_illu/document.svg';
 
 const Maintenance: React.FC = () => {
 	const maintenance = useAppSelector(getWSMaintenanceState);
