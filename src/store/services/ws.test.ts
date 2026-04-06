@@ -11,7 +11,7 @@ class MockWebSocket implements WebSocket {
   readonly CLOSING = 2;
   readonly CONNECTING = 0;
   readonly OPEN = 1;
-  readyState = this.CONNECTING;
+  readyState: 0 | 1 | 2 | 3 = this.CONNECTING;
   protocol = '';
   extensions = '';
   bufferedAmount = 0;
