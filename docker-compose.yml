@@ -12,7 +12,7 @@ services:
     extra_hosts:
       - "management-projet-api.elbouazzatiholding.ma:host-gateway"
     ports:
-      - '3002:3002'
+      - '3003:3003'
     networks:
       - webnet
     healthcheck:

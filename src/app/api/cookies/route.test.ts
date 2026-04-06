@@ -63,10 +63,10 @@ describe('Cookies Route Handlers', () => {
 			mockNextResponseJson.mockReturnValueOnce(mockResponse);
 			mockAddCorsHeaders.mockReturnValueOnce(mockResponse);
 
-			const result = await OPTIONS(createMockRequest('OPTIONS', undefined, 'http://localhost:3002'));
+			const result = await OPTIONS(createMockRequest('OPTIONS', undefined, 'http://localhost:3003'));
 
 			expect(mockNextResponseJson).toHaveBeenCalledWith({}, { status: 200 });
-			expect(mockAddCorsHeaders).toHaveBeenCalledWith(mockResponse, 'http://localhost:3002');
+			expect(mockAddCorsHeaders).toHaveBeenCalledWith(mockResponse, 'http://localhost:3003');
 			expect(result).toBe(mockResponse);
 		});
 	});
@@ -77,7 +77,7 @@ describe('Cookies Route Handlers', () => {
 			mockNextResponseJson.mockReturnValueOnce(mockResponse);
 			mockAddCorsHeaders.mockReturnValueOnce(mockResponse);
 
-			await POST(createMockRequest('POST', { new_email: 'test@example.com', maxAge: 3600 }, 'http://localhost:3002'));
+			await POST(createMockRequest('POST', { new_email: 'test@example.com', maxAge: 3600 }, 'http://localhost:3003'));
 
 			expect(mockCookieStore.set).toHaveBeenCalledWith(
 				'@new_email',
@@ -91,7 +91,7 @@ describe('Cookies Route Handlers', () => {
 			mockNextResponseJson.mockReturnValueOnce(mockResponse);
 			mockAddCorsHeaders.mockReturnValueOnce(mockResponse);
 
-			await POST(createMockRequest('POST', { code: '123456', maxAge: 300 }, 'http://localhost:3002'));
+			await POST(createMockRequest('POST', { code: '123456', maxAge: 300 }, 'http://localhost:3003'));
 
 			expect(mockCookieStore.set).toHaveBeenCalledWith(
 				'@code',
@@ -105,7 +105,7 @@ describe('Cookies Route Handlers', () => {
 			mockNextResponseJson.mockReturnValueOnce(mockResponse);
 			mockAddCorsHeaders.mockReturnValueOnce(mockResponse);
 
-			await POST(createMockRequest('POST', { pass_updated: 'true', maxAge: 60 }, 'http://localhost:3002'));
+			await POST(createMockRequest('POST', { pass_updated: 'true', maxAge: 60 }, 'http://localhost:3003'));
 
 			expect(mockCookieStore.set).toHaveBeenCalledWith('@pass_updated', 'true', expect.objectContaining({ maxAge: 60 }));
 		});
@@ -115,7 +115,7 @@ describe('Cookies Route Handlers', () => {
 			mockNextResponseJson.mockReturnValueOnce(mockResponse);
 			mockAddCorsHeaders.mockReturnValueOnce(mockResponse);
 
-			await POST(createMockRequest('POST', { new_email: 'a@b.com', code: '111', maxAge: 3600 }, 'http://localhost:3002'));
+			await POST(createMockRequest('POST', { new_email: 'a@b.com', code: '111', maxAge: 3600 }, 'http://localhost:3003'));
 
 			expect(mockCookieStore.set).toHaveBeenCalledTimes(2);
 			expect(mockCookieStore.set).toHaveBeenCalledWith('@new_email', 'a@b.com', expect.any(Object));
@@ -127,7 +127,7 @@ describe('Cookies Route Handlers', () => {
 			mockNextResponseJson.mockReturnValueOnce(mockResponse);
 			mockAddCorsHeaders.mockReturnValueOnce(mockResponse);
 
-			const result = await POST(createMockRequest('POST', { bad_key: 'value' }, 'http://localhost:3002'));
+			const result = await POST(createMockRequest('POST', { bad_key: 'value' }, 'http://localhost:3003'));
 
 			expect(mockCookieStore.set).not.toHaveBeenCalled();
 			expect(mockNextResponseJson).toHaveBeenCalledWith({ success: false, error: 'Invalid payload' }, { status: 400 });
@@ -139,7 +139,7 @@ describe('Cookies Route Handlers', () => {
 			mockNextResponseJson.mockReturnValueOnce(mockResponse);
 			mockAddCorsHeaders.mockReturnValueOnce(mockResponse);
 
-			const result = await POST(createMockRequest('POST', undefined, 'http://localhost:3002'));
+			const result = await POST(createMockRequest('POST', undefined, 'http://localhost:3003'));
 
 			expect(result.status).toBe(400);
 		});
@@ -152,7 +152,7 @@ describe('Cookies Route Handlers', () => {
 			mockNextResponseJson.mockReturnValueOnce(mockResponse);
 			mockAddCorsHeaders.mockReturnValueOnce(mockResponse);
 
-			const result = await GET(createMockRequest('GET', undefined, 'http://localhost:3002', mockCookies));
+			const result = await GET(createMockRequest('GET', undefined, 'http://localhost:3003', mockCookies));
 
 			expect(mockNextResponseJson).toHaveBeenCalledWith({ cookies: mockCookies }, { status: 200 });
 			expect(result.status).toBe(200);
@@ -174,7 +174,7 @@ describe('Cookies Route Handlers', () => {
 			mockNextResponseJson.mockReturnValueOnce(mockResponse);
 			mockAddCorsHeaders.mockReturnValueOnce(mockResponse);
 
-			await DELETE(createMockRequest('DELETE', { new_email: true }, 'http://localhost:3002'));
+			await DELETE(createMockRequest('DELETE', { new_email: true }, 'http://localhost:3003'));
 			expect(mockCookieStore.delete).toHaveBeenCalledWith('@new_email');
 		});
 
@@ -183,7 +183,7 @@ describe('Cookies Route Handlers', () => {
 			mockNextResponseJson.mockReturnValueOnce(mockResponse);
 			mockAddCorsHeaders.mockReturnValueOnce(mockResponse);
 
-			await DELETE(createMockRequest('DELETE', { code: true }, 'http://localhost:3002'));
+			await DELETE(createMockRequest('DELETE', { code: true }, 'http://localhost:3003'));
 			expect(mockCookieStore.delete).toHaveBeenCalledWith('@code');
 		});
 
@@ -192,7 +192,7 @@ describe('Cookies Route Handlers', () => {
 			mockNextResponseJson.mockReturnValueOnce(mockResponse);
 			mockAddCorsHeaders.mockReturnValueOnce(mockResponse);
 
-			await DELETE(createMockRequest('DELETE', { pass_updated: true }, 'http://localhost:3002'));
+			await DELETE(createMockRequest('DELETE', { pass_updated: true }, 'http://localhost:3003'));
 			expect(mockCookieStore.delete).toHaveBeenCalledWith('@pass_updated');
 		});
 
@@ -201,7 +201,7 @@ describe('Cookies Route Handlers', () => {
 			mockNextResponseJson.mockReturnValueOnce(mockResponse);
 			mockAddCorsHeaders.mockReturnValueOnce(mockResponse);
 
-			await DELETE(createMockRequest('DELETE', { new_email: true, code: true }, 'http://localhost:3002'));
+			await DELETE(createMockRequest('DELETE', { new_email: true, code: true }, 'http://localhost:3003'));
 
 			expect(mockCookieStore.delete).toHaveBeenCalledTimes(2);
 			expect(mockCookieStore.delete).toHaveBeenCalledWith('@new_email');
@@ -213,7 +213,7 @@ describe('Cookies Route Handlers', () => {
 			mockNextResponseJson.mockReturnValueOnce(mockResponse);
 			mockAddCorsHeaders.mockReturnValueOnce(mockResponse);
 
-			const result = await DELETE(createMockRequest('DELETE', { bad_key: true }, 'http://localhost:3002'));
+			const result = await DELETE(createMockRequest('DELETE', { bad_key: true }, 'http://localhost:3003'));
 			expect(mockCookieStore.delete).not.toHaveBeenCalled();
 			expect(result.status).toBe(400);
 		});
@@ -223,7 +223,7 @@ describe('Cookies Route Handlers', () => {
 			mockNextResponseJson.mockReturnValueOnce(mockResponse);
 			mockAddCorsHeaders.mockReturnValueOnce(mockResponse);
 
-			const result = await DELETE(createMockRequest('DELETE', undefined, 'http://localhost:3002'));
+			const result = await DELETE(createMockRequest('DELETE', undefined, 'http://localhost:3003'));
 			expect(result.status).toBe(400);
 		});
 	});

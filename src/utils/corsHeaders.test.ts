@@ -16,7 +16,7 @@ describe('getCorsHeaders', () => {
 	});
 
 	it('always includes CORS method, header, and credential headers', () => {
-		const headers = getCorsHeaders('http://localhost:3002');
+		const headers = getCorsHeaders('http://localhost:3003');
 		expect(headers).toMatchObject({
 			'Access-Control-Allow-Methods': 'GET, HEAD, PUT, PATCH, POST, DELETE',
 			'Access-Control-Allow-Headers': 'Content-Type, Authorization',
@@ -25,9 +25,9 @@ describe('getCorsHeaders', () => {
 	});
 
 	it('sets Allow-Origin for a matching allowed origin (localhost in test env)', () => {
-		// jest runs in test NODE_ENV so localhost:3002 is in allowedOrigins by default
-		const headers = getCorsHeaders('http://localhost:3002') as Record<string, string>;
-		expect(headers['Access-Control-Allow-Origin']).toBe('http://localhost:3002');
+		// jest runs in test NODE_ENV so localhost:3003 is in allowedOrigins by default
+		const headers = getCorsHeaders('http://localhost:3003') as Record<string, string>;
+		expect(headers['Access-Control-Allow-Origin']).toBe('http://localhost:3003');
 	});
 
 	it('does not set Allow-Origin for an unknown origin', () => {
@@ -48,7 +48,7 @@ describe('addCorsHeaders', () => {
 			headers: { 'Content-Type': 'application/json' },
 		});
 
-		const result = addCorsHeaders(original, 'http://localhost:3002');
+		const result = addCorsHeaders(original, 'http://localhost:3003');
 
 		expect(result.status).toBe(200);
 		expect(result.headers.get('Access-Control-Allow-Methods')).toBe('GET, HEAD, PUT, PATCH, POST, DELETE');

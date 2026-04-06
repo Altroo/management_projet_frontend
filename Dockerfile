@@ -24,7 +24,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/next.config.ts ./next.config.ts
 
-EXPOSE 3002
+EXPOSE 3003
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD pgrep -f bun || exit 1
 
 CMD ["bun", "run", "start"]
