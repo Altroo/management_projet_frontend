@@ -29,7 +29,7 @@ import {
 	Lock as LockIcon,
 } from '@mui/icons-material';
 import Image from 'next/image';
-import Logo from '../../../../../public/assets/images/reservation-logo.png';
+import Logo from '../../../../../public/assets/images/management-projet-logo.png';
 
 const inputTheme = textInputTheme();
 

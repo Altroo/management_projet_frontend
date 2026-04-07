@@ -4,7 +4,7 @@ import React, { ForwardedRef, forwardRef, useState } from 'react';
 import Styles from './authLayout.module.sass';
 import { Box, Stack } from '@mui/material';
 import Image from 'next/image';
-import Logo from '../../../../public/assets/images/reservation-logo.png';
+import Logo from '../../../../public/assets/images/management-projet-logo.png';
 import GanttSVG from '../../../../public/assets/images/auth_illu/gantt.svg';
 import TasksSVG from '../../../../public/assets/images/auth_illu/tasks.svg';
 import TeamSVG from '../../../../public/assets/images/auth_illu/team.svg';
