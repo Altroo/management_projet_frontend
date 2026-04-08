@@ -141,7 +141,7 @@ const getNavigationMenu = (isStaff: boolean, t: TranslationDictionary) => {
 			items: [
 				{ title: t.navigation.myProfile, label: t.navigation.myProfile, path: DASHBOARD_EDIT_PROFILE },
 				{ title: t.navigation.changePassword, label: t.navigation.changePassword, path: DASHBOARD_PASSWORD },
-				{ title: t.navigation.notifications, label: t.navigation.notifications, path: DASHBOARD_NOTIFICATIONS },
+				{ title: t.navigation.notifications, label: t.navigation.notificationPreferences, path: DASHBOARD_NOTIFICATIONS },
 			],
 		},
 	};
@@ -267,7 +267,6 @@ const NavigationBar = (props: Props) => {
 			// silent
 		}
 	};
-
 	const handleLoadMore = useCallback(async () => {
 		const nextPage = notifPage + 1;
 		setLoadingMore(true);
