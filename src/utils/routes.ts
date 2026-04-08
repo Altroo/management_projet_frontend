@@ -13,6 +13,7 @@ export const DASHBOARD = `${SITE_ROOT}dashboard`;
 // Settings
 export const DASHBOARD_EDIT_PROFILE = `${SITE_ROOT}dashboard/settings/edit-profile`;
 export const DASHBOARD_PASSWORD = `${SITE_ROOT}dashboard/settings/password`;
+export const DASHBOARD_NOTIFICATIONS = `${SITE_ROOT}dashboard/settings/notifications`;
 // Users (staff only)
 export const USERS_LIST = `${SITE_ROOT}dashboard/users`;
 export const USERS_ADD = `${SITE_ROOT}dashboard/users/new`;

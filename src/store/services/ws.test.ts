@@ -1,5 +1,5 @@
 import { initWebsocket } from './ws';
-import { WSMaintenanceAction, WSReconnectedAction, WSUserAvatarAction } from '@/store/actions/wsActions';
+import { WSMaintenanceAction, WSNotificationAction, WSReconnectedAction, WSUserAvatarAction } from '@/store/actions/wsActions';
 
 class MockWebSocket implements WebSocket {
   url: string;
@@ -123,6 +123,64 @@ describe('initWebsocket', () => {
     });
 
     expect(emitted).toEqual(WSMaintenanceAction(true));
+    channel.close();
+  });
+
+  it('emits WSNotificationAction for NOTIFICATION messages and falls back unknown types', async () => {
+    let createdSocket: MockWebSocket | null = null;
+
+    global.WebSocket = jest.fn((url: string) => {
+      createdSocket = new MockWebSocket(url);
+      return createdSocket as unknown as WebSocket;
+    }) as unknown as typeof WebSocket;
+
+    process.env.NEXT_PUBLIC_ROOT_WS_URL = 'ws://localhost';
+
+    type ExpectedAction = ReturnType<typeof WSNotificationAction>;
+    const channel = initWebsocket(async () => 'test-token');
+
+    const emitted = await new Promise<ExpectedAction>((resolve) => {
+      channel.take((action) => {
+        resolve(action as ExpectedAction);
+      });
+
+      const sendMessage = () => {
+        if (createdSocket == null) {
+          setTimeout(sendMessage, 0);
+          return;
+        }
+        const ev = new MessageEvent('message', {
+          data: JSON.stringify({
+            message: {
+              type: 'NOTIFICATION',
+              id: 9,
+              title: 'Project alert',
+              message: 'Threshold reached',
+              notification_type: 'unexpected_type',
+              object_id: 77,
+              is_read: false,
+              date_created: '2026-04-08T12:00:00.000Z',
+            },
+          }),
+        });
+        createdSocket.onmessage?.(ev);
+      };
+
+      sendMessage();
+    });
+
+    expect(emitted).toEqual(
+      WSNotificationAction({
+        id: 9,
+        title: 'Project alert',
+        message: 'Threshold reached',
+        notification_type: 'status_change',
+        object_id: 77,
+        is_read: false,
+        date_created: '2026-04-08T12:00:00.000Z',
+      }),
+    );
+
     channel.close();
   });
 

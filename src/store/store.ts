@@ -7,15 +7,19 @@ import accountReducer from '@/store/slices/accountSlice';
 import wsReducer from '@/store/slices/wsSlice';
 import { accountApi, profilApi, usersApi } from '@/store/services/account';
 import { projectApi } from '@/store/services/project';
+import { notificationApi } from '@/store/services/notification';
+import notificationReducer from '@/store/slices/notificationSlice';
 
 const rootReducer = combineReducers({
 	_init: _initReducer,
 	account: accountReducer,
 	ws: wsReducer,
+	notification: notificationReducer,
 	[accountApi.reducerPath]: accountApi.reducer,
 	[profilApi.reducerPath]: profilApi.reducer,
 	[usersApi.reducerPath]: usersApi.reducer,
 	[projectApi.reducerPath]: projectApi.reducer,
+	[notificationApi.reducerPath]: notificationApi.reducer,
 });
 
 export interface SagaStore extends Store {
@@ -44,6 +48,7 @@ export const makeStore = (): SagaStore => {
 					profilApi.middleware,
 					usersApi.middleware,
 					projectApi.middleware,
+					notificationApi.middleware,
 				),
 		devTools: process.env.NODE_ENV !== 'production',
 	}) as SagaStore;

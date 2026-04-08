@@ -7,10 +7,14 @@ import type { Action } from 'redux';
 import type { EventChannel, SagaIterator } from 'redux-saga';
 import * as Types from '@/store/actions';
 import { setWSMaintenance } from '@/store/slices/wsSlice';
+import { incrementUnreadCount, setLatestNotification } from '@/store/slices/notificationSlice';
+import { notificationApi } from '@/store/services/notification';
+import type { NotificationType } from '@/types/managementNotificationTypes';
 import { initMaintenanceSaga } from '@/store/sagas/_initSaga';
 
 type WSChannelAction = Action & {
 	maintenance?: boolean;
+	notification?: NotificationType;
 };
 
 function* monitorToken(
@@ -43,6 +47,16 @@ export function* watchWS(): SagaIterator<void> {
 				yield put(setWSMaintenance(action.maintenance));
 			} else if (action.type === Types.WS_RECONNECTED) {
 				yield call(initMaintenanceSaga);
+			} else if (action.type === Types.WS_NOTIFICATION && action.notification) {
+				yield put(incrementUnreadCount());
+				yield put(setLatestNotification(action.notification));
+				yield put(notificationApi.util.invalidateTags(['Notification']));
+				if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+					new Notification(action.notification.title, {
+						body: action.notification.message,
+						icon: '/assets/images/management-logo.png',
+					});
+				}
 			} else {
 				yield put(action);
 			}

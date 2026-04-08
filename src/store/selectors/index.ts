@@ -11,3 +11,6 @@ export const getProfilState = (state: RootState): UserClass => state.account.pro
 
 // WS
 export const getWSMaintenanceState = (state: RootState): boolean => state.ws.maintenance;
+
+// Notification
+export const getUnreadNotificationCount = (state: RootState): number => state.notification.unreadCount;

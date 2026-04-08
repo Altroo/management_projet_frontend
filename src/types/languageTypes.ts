@@ -95,6 +95,11 @@ export type TranslationDictionary = {
     newExpense: string;
     dashboard: string;
     viewDashboard: string;
+    notifications: string;
+    notificationPreferences: string;
+    markAllRead: string;
+    noNotifications: string;
+    loadMore: string;
   };
   users: {
     firstName: string;
@@ -157,6 +162,17 @@ export type TranslationDictionary = {
     updateError: string;
     passwordChangeSuccess: string;
     passwordChangeError: string;
+    notificationPreferences: string;
+    notificationUpdateSuccess: string;
+    notificationUpdateError: string;
+    notifyBudgetOverrun: string;
+    notifyBudgetThreshold: string;
+    notifyDeadlineApproaching: string;
+    notifyProjectOverdue: string;
+    notifyStatusChange: string;
+    budgetThresholdPercent: string;
+    deadlineAlertDays: string;
+    save: string;
   };
   auth: {
     login: string;
@@ -369,6 +385,8 @@ export type TranslationDictionary = {
     editProfileDescription: string;
     changePasswordTitle: string;
     changePasswordDescription: string;
+    notificationsTitle: string;
+    notificationsDescription: string;
     homeTitle: string;
     homeDescription: string;
     appTitle: string;

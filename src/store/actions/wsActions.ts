@@ -1,4 +1,5 @@
 import * as types from './index';
+import type { NotificationType } from '@/types/managementNotificationTypes';
 
 export const WSUserAvatarAction = (pk: number, avatar: string) => {
 	return {
@@ -18,5 +19,12 @@ export const WSMaintenanceAction = (maintenance: boolean) => {
 export const WSReconnectedAction = () => {
 	return {
 		type: types.WS_RECONNECTED,
+	};
+};
+
+export const WSNotificationAction = (notification: NotificationType) => {
+	return {
+		type: types.WS_NOTIFICATION,
+		notification,
 	};
 };
