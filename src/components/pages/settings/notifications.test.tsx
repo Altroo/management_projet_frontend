@@ -75,8 +75,23 @@ jest.mock('@/components/formikElements/apiLoading/apiProgress/apiProgress', () =
 	default: () => <div data-testid="api-loader">Loading...</div>,
 }));
 
+jest.mock('@/components/formikElements/customTextInput/customTextInput', () => ({
+	__esModule: true,
+	default: ({ id, label, value, onChange }: { id: string; label: string; value: string; onChange: (event: React.ChangeEvent<HTMLInputElement>) => void }) => (
+		<div data-testid={`custom-input-${id}`}>
+			<label htmlFor={id}>{label}</label>
+			<input id={id} value={value} onChange={onChange} />
+		</div>
+	),
+}));
+
 jest.mock('@/utils/helpers', () => ({
 	setFormikAutoErrors: jest.fn(),
+}));
+
+jest.mock('@/utils/themes', () => ({
+	__esModule: true,
+	textInputTheme: jest.fn(() => ({})),
 }));
 
 jest.mock('@/styles/dashboard/settings/settings.module.sass', () => ({
