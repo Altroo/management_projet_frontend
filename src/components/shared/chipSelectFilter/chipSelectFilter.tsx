@@ -1,15 +1,9 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
-import {
-	Autocomplete,
-	Chip,
-	TextField,
-	Box,
-	Typography,
-} from '@mui/material';
-import { ThemeProvider } from '@mui/material/styles';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Autocomplete, Box, Chip, TextField, Typography } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import { chipSelectFilterTheme } from '@/utils/themes';
 import { useLanguage } from '@/utils/hooks';
 
@@ -40,10 +34,7 @@ const ChipSelectFilter: React.FC<ChipSelectFilterProps> = ({
 
 	const appliedTheme = useMemo(() => theme ?? chipSelectFilterTheme(), [theme]);
 
-	const selectedOptions = useMemo(
-		() => options.filter((opt) => selectedIds.includes(opt.id)),
-		[options, selectedIds],
-	);
+	const selectedOptions = useMemo(() => options.filter((opt) => selectedIds.includes(opt.id)), [options, selectedIds]);
 
 	const handleChange = useCallback(
 		(_event: React.SyntheticEvent, newValue: ChipSelectOption[]) => {
@@ -52,20 +43,22 @@ const ChipSelectFilter: React.FC<ChipSelectFilterProps> = ({
 		[onChange],
 	);
 
-	const handleInputChange = useCallback(
-		(_event: React.SyntheticEvent, newInputValue: string) => {
-			setInputValue(newInputValue);
-		},
-		[],
-	);
+	const handleInputChange = useCallback((_event: React.SyntheticEvent, newInputValue: string) => {
+		setInputValue(newInputValue);
+	}, []);
 
 	return (
 		<ThemeProvider theme={appliedTheme}>
 			<Box sx={{ width: '100%' }}>
 				<Typography
 					variant="caption"
-					color="text.secondary"
-					sx={{ mb: 0.5, display: 'block', fontFamily: 'Poppins', fontSize: '12px' }}
+					sx={{
+						color: 'text.secondary',
+						mb: 0.5,
+						display: 'block',
+						fontFamily: 'Poppins',
+						fontSize: '12px',
+					}}
 				>
 					{label}
 				</Typography>
@@ -82,16 +75,7 @@ const ChipSelectFilter: React.FC<ChipSelectFilterProps> = ({
 					renderValue={(selected, getTagProps) =>
 						selected.map((option, index) => {
 							const { key, ...rest } = getTagProps({ index });
-							return (
-								<Chip
-									key={key}
-									label={option.nom}
-									size="small"
-									variant="outlined"
-									color="primary"
-									{...rest}
-								/>
-							);
+							return <Chip key={key} label={option.nom} size="small" variant="outlined" color="primary" {...rest} />;
 						})
 					}
 					renderInput={(params) => (

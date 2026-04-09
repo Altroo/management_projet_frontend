@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Box, Typography, Button, Paper } from '@mui/material';
-import { SentimentDissatisfied as SadIcon, Home as HomeIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { Box, Button, Paper, Stack, Typography } from '@mui/material';
+import { ArrowBack as ArrowBackIcon, Home as HomeIcon, SentimentDissatisfied as SadIcon } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { DASHBOARD } from '@/utils/routes';
 import { useLanguage } from '@/utils/hooks';
@@ -11,27 +11,67 @@ const NotFound = () => {
 	const router = useRouter();
 	const { t } = useLanguage();
 
+	const handleGoHome = () => {
+		router.push(DASHBOARD);
+	};
+
+	const handleGoBack = () => {
+		router.back();
+	};
+
 	return (
-		<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', p: 3 }}>
-			<Paper elevation={3} sx={{ p: 4, maxWidth: 500, textAlign: 'center' }}>
-				<SadIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
-				<Typography variant="h4" gutterBottom fontWeight={700}>
+		<Box
+			sx={{
+				display: 'flex',
+				justifyContent: 'center',
+				alignItems: 'center',
+				minHeight: '100vh',
+				backgroundColor: 'background.default',
+				p: 3,
+			}}
+		>
+			<Paper
+				elevation={3}
+				sx={{
+					p: { xs: 3, sm: 5 },
+					maxWidth: 500,
+					textAlign: 'center',
+					borderRadius: 2,
+				}}
+			>
+				<SadIcon sx={{ fontSize: 80, color: 'primary.main', mb: 2 }} />
+				<Typography
+					variant="h1"
+					sx={{ fontSize: { xs: '4rem', sm: '6rem' }, fontWeight: 700, color: 'primary.main', mb: 1 }}
+				>
 					404
 				</Typography>
-				<Typography variant="h6" gutterBottom>
-					{t.errors.pageNotFound}
+				<Typography variant="h5" gutterBottom sx={{ fontWeight: 500 }}>
+					{t.notFound.title}
 				</Typography>
-				<Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-					{t.errors.pageNotFoundText}
+				<Typography
+					variant="body1"
+					sx={{
+						color: 'text.secondary',
+						mb: 4,
+					}}
+				>
+					{t.notFound.message}
 				</Typography>
-				<Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-					<Button variant="contained" startIcon={<HomeIcon />} onClick={() => router.push(DASHBOARD)}>
-						{t.common.dashboard}
+				<Stack
+					direction={{ xs: 'column', sm: 'row' }}
+					spacing={2}
+					sx={{
+						justifyContent: 'center',
+					}}
+				>
+					<Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={handleGoBack} size="large">
+						{t.notFound.backBtn}
 					</Button>
-					<Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => router.back()}>
-						{t.common.back}
+					<Button variant="contained" startIcon={<HomeIcon />} onClick={handleGoHome} size="large">
+						{t.notFound.homeBtn}
 					</Button>
-				</Box>
+				</Stack>
 			</Paper>
 		</Box>
 	);

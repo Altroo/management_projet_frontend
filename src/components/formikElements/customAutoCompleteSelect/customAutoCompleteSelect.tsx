@@ -1,9 +1,9 @@
 import React, { type Key } from 'react';
 import TextField, { type TextFieldProps } from '@mui/material/TextField';
-import { ThemeProvider } from '@mui/material/styles';
 import type { Theme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import type { DropDownType } from '@/types/accountTypes';
-import { Autocomplete, InputAdornment, Box, Typography } from '@mui/material';
+import { Autocomplete, Box, InputAdornment, Typography } from '@mui/material';
 
 type Props = {
 	id: string;
@@ -73,7 +73,9 @@ const CustomAutoCompleteSelect: React.FC<Props> = ({
 				disabled={disabled}
 				isOptionEqualToValue={(option, val) => option.value === val.value}
 				onBlur={onBlur}
-				renderOption={(props, option) => (renderOptionProp || defaultRenderOption)(props as React.HTMLAttributes<HTMLLIElement> & { key: Key }, option)}
+				renderOption={(props, option) =>
+					(renderOptionProp || defaultRenderOption)(props as React.HTMLAttributes<HTMLLIElement> & { key: Key }, option)
+				}
 				renderInput={(params) => (
 					<TextField
 						{...params}
@@ -86,19 +88,21 @@ const CustomAutoCompleteSelect: React.FC<Props> = ({
 							},
 						}}
 						slotProps={{
+							...params.slotProps,
 							...slotProps,
+
 							input: {
-								...params.InputProps,
+								...params.slotProps.input,
 								...slotProps?.input,
 								startAdornment: (
 									<>
 										{startIcon && <InputAdornment position="start">{startIcon}</InputAdornment>}
-										{params.InputProps.startAdornment}
+										{params.slotProps.input.startAdornment}
 									</>
 								),
 								endAdornment: (
 									<>
-										{params.InputProps.endAdornment}
+										{params.slotProps.input.endAdornment}
 										{endIcon && <InputAdornment position="end">{endIcon}</InputAdornment>}
 									</>
 								),

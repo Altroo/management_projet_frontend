@@ -27,8 +27,12 @@ import { createNumericFilterOperators } from '@/components/shared/numericFilter/
 import { createDropdownFilterOperators } from '@/components/shared/dropdownFilter/dropdownFilter';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
 import { PROJECTS_ADD, PROJECTS_EDIT, PROJECTS_VIEW } from '@/utils/routes';
-import { useToast, useLanguage } from '@/utils/hooks';
-import { useDeleteProjectMutation, useBulkDeleteProjectsMutation, useGetProjectsListQuery } from '@/store/services/project';
+import { useLanguage, useToast } from '@/utils/hooks';
+import {
+	useBulkDeleteProjectsMutation,
+	useDeleteProjectMutation,
+	useGetProjectsListQuery,
+} from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
 import { projectStatusItemsList, STATUS_CHIP_COLORS } from '@/utils/rawData';
 
@@ -173,12 +177,7 @@ const ProjectsListClient: React.FC<SessionProps> = ({ session }) => {
 				const status = params.value as string;
 				return (
 					<DarkTooltip title={status}>
-						<Chip
-							label={status}
-							size="small"
-							color={STATUS_CHIP_COLORS[status] ?? 'default'}
-							variant="outlined"
-						/>
+						<Chip label={status} size="small" color={STATUS_CHIP_COLORS[status] ?? 'default'} variant="outlined" />
 					</DarkTooltip>
 				);
 			},
@@ -293,8 +292,11 @@ const ProjectsListClient: React.FC<SessionProps> = ({ session }) => {
 			direction="column"
 			spacing={2}
 			className={Styles.flexRootStack}
-			mt="48px"
-			sx={{ overflowX: 'auto', overflowY: 'hidden' }}
+			sx={{
+				mt: '48px',
+				overflowX: 'auto',
+				overflowY: 'hidden',
+			}}
 		>
 			<NavigationBar title={t.projects.projectsList}>
 				<Protected permission="can_view">

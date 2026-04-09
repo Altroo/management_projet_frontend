@@ -35,7 +35,7 @@ import ApiAlert from '@/components/formikElements/apiLoading/apiAlert/apiAlert';
 import ActionModals from '@/components/htmlElements/modals/actionModal/actionModals';
 import { Protected } from '@/components/layouts/protected/protected';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
-import { useToast, useLanguage } from '@/utils/hooks';
+import { useLanguage, useToast } from '@/utils/hooks';
 
 interface InfoRowProps {
 	icon: React.ReactNode;
@@ -47,16 +47,14 @@ const InfoRow: React.FC<InfoRowProps> = ({ icon, label, value }) => {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const displayValue =
-		isValidElement(value) || (value !== null && value !== undefined && value.toString().length > 0)
-			? value
-			: '-';
+		isValidElement(value) || (value !== null && value !== undefined && value.toString().length > 0) ? value : '-';
 
 	return (
 		<Stack
 			direction="row"
-			alignItems="flex-start"
 			spacing={2}
 			sx={{
+				alignItems: 'flex-start',
 				py: 1.5,
 				flexWrap: 'wrap',
 			}}
@@ -71,20 +69,19 @@ const InfoRow: React.FC<InfoRowProps> = ({ icon, label, value }) => {
 			>
 				{icon}
 			</Box>
-
 			<Stack
 				direction="row"
-				alignItems="center"
 				spacing={isMobile ? 0 : 2}
 				sx={{
+					alignItems: 'center',
 					flex: 1,
 					flexWrap: 'wrap',
 				}}
 			>
 				<Typography
-					fontWeight={600}
-					color="text.secondary"
 					sx={{
+						fontWeight: 600,
+						color: 'text.secondary',
 						minWidth: { xs: '100%', sm: 200 },
 						wordBreak: 'break-word',
 					}}
@@ -154,15 +151,24 @@ const RevenueViewClient: React.FC<Props> = ({ session, id }) => {
 	];
 
 	return (
-		<Stack direction="column" spacing={2} className={Styles.flexRootStack} mt="32px">
+		<Stack
+			direction="column"
+			spacing={2}
+			className={Styles.flexRootStack}
+			sx={{
+				mt: '32px',
+			}}
+		>
 			<NavigationBar title={t.revenues.revenueDetails}>
 				<Protected permission="can_view">
 					<Stack spacing={3} sx={{ p: { xs: 2, md: 3 }, mt: 2 }}>
 						<Stack
 							direction={isMobile ? 'column' : 'row'}
-							justifyContent="space-between"
-							alignItems={isMobile ? 'stretch' : 'center'}
 							spacing={2}
+							sx={{
+								justifyContent: 'space-between',
+								alignItems: isMobile ? 'stretch' : 'center',
+							}}
 						>
 							<Button
 								variant="outlined"
@@ -173,7 +179,13 @@ const RevenueViewClient: React.FC<Props> = ({ session, id }) => {
 								{t.revenues.revenuesList}
 							</Button>
 							{!isLoading && !error && revenue && (
-								<Stack direction="row" gap={1} flexWrap="wrap">
+								<Stack
+									direction="row"
+									sx={{
+										gap: 1,
+										flexWrap: 'wrap',
+									}}
+								>
 									<Protected permission="can_edit">
 										<Button
 											variant="outlined"
@@ -218,35 +230,44 @@ const RevenueViewClient: React.FC<Props> = ({ session, id }) => {
 								{/* Revenue Info */}
 								<Card elevation={2} sx={{ borderRadius: 2 }}>
 									<CardContent sx={{ p: 3 }}>
-										<Stack direction="row" spacing={3} alignItems="center">
+										<Stack
+											direction="row"
+											spacing={3}
+											sx={{
+												alignItems: 'center',
+											}}
+										>
 											<AttachMoneyIcon color="primary" />
-											<Typography variant="h6" fontWeight={700}>
-												{t.revenues.revenueNumber}{revenue.id}
+											<Typography
+												variant="h6"
+												sx={{
+													fontWeight: 700,
+												}}
+											>
+												{t.revenues.revenueNumber}
+												{revenue.id}
 											</Typography>
 										</Stack>
 										<Divider sx={{ mb: { xs: 1.5, md: 2 } }} />
 										<Stack spacing={0}>
-											<InfoRow
-												icon={<AssignmentIcon />}
-												label={t.common.project}
-												value={revenue.project_name}
-											/>
+											<InfoRow icon={<AssignmentIcon />} label={t.common.project} value={revenue.project_name} />
 											<Divider />
 											<InfoRow
 												icon={<AttachMoneyIcon />}
 												label={t.common.amount}
 												value={
-													<Typography fontWeight={600} color="primary">
+													<Typography
+														color="primary"
+														sx={{
+															fontWeight: 600,
+														}}
+													>
 														{Number(revenue.montant).toLocaleString('fr-MA')} MAD
 													</Typography>
 												}
 											/>
 											<Divider />
-											<InfoRow
-												icon={<CalendarTodayIcon />}
-												label={t.common.date}
-												value={formatDate(revenue.date)}
-											/>
+											<InfoRow icon={<CalendarTodayIcon />} label={t.common.date} value={formatDate(revenue.date)} />
 										</Stack>
 									</CardContent>
 								</Card>
@@ -254,25 +275,29 @@ const RevenueViewClient: React.FC<Props> = ({ session, id }) => {
 								{/* Details */}
 								<Card elevation={2} sx={{ borderRadius: 2 }}>
 									<CardContent sx={{ p: 3 }}>
-										<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+										<Stack
+											direction="row"
+											spacing={2}
+											sx={{
+												alignItems: 'center',
+												mb: 2,
+											}}
+										>
 											<NotesIcon color="primary" />
-											<Typography variant="h6" fontWeight={700}>
+											<Typography
+												variant="h6"
+												sx={{
+													fontWeight: 700,
+												}}
+											>
 												{t.revenues.revenueDetails}
 											</Typography>
 										</Stack>
 										<Divider sx={{ mb: { xs: 1.5, md: 2 } }} />
 										<Stack spacing={0}>
-											<InfoRow
-												icon={<NotesIcon />}
-												label={t.common.description}
-												value={revenue.description}
-											/>
+											<InfoRow icon={<NotesIcon />} label={t.common.description} value={revenue.description} />
 											<Divider />
-											<InfoRow
-												icon={<NotesIcon />}
-												label={t.common.notes}
-												value={revenue.notes}
-											/>
+											<InfoRow icon={<NotesIcon />} label={t.common.notes} value={revenue.notes} />
 											<Divider />
 											<InfoRow
 												icon={<PersonIcon />}
@@ -287,7 +312,6 @@ const RevenueViewClient: React.FC<Props> = ({ session, id }) => {
 					</Stack>
 				</Protected>
 			</NavigationBar>
-
 			{showDeleteModal && (
 				<ActionModals
 					title={t.revenues.deleteRevenue}

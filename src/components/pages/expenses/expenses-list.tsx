@@ -27,8 +27,14 @@ import { createNumericFilterOperators } from '@/components/shared/numericFilter/
 import { createDropdownFilterOperators } from '@/components/shared/dropdownFilter/dropdownFilter';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
 import { EXPENSES_ADD, EXPENSES_EDIT, EXPENSES_VIEW } from '@/utils/routes';
-import { useToast, useLanguage } from '@/utils/hooks';
-import { useDeleteExpenseMutation, useBulkDeleteExpensesMutation, useGetExpensesQuery, useGetProjectsListQuery, useGetCategoriesQuery } from '@/store/services/project';
+import { useLanguage, useToast } from '@/utils/hooks';
+import {
+	useBulkDeleteExpensesMutation,
+	useDeleteExpenseMutation,
+	useGetCategoriesQuery,
+	useGetExpensesQuery,
+	useGetProjectsListQuery,
+} from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
 
 const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
@@ -51,21 +57,20 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 	const { data: categoriesData } = useGetCategoriesQuery(undefined, { skip: !token });
 
 	const projects = useMemo(
-		() => Array.isArray(projectsData) ? projectsData : (projectsData && 'results' in projectsData ? projectsData.results : []),
+		() =>
+			Array.isArray(projectsData)
+				? projectsData
+				: projectsData && 'results' in projectsData
+					? projectsData.results
+					: [],
 		[projectsData],
 	);
 
 	const categories = useMemo(() => categoriesData ?? [], [categoriesData]);
 
-	const projectChipOptions = useMemo(
-		() => projects.map((p) => ({ id: p.id, nom: p.nom })),
-		[projects],
-	);
+	const projectChipOptions = useMemo(() => projects.map((p) => ({ id: p.id, nom: p.nom })), [projects]);
 
-	const categoryChipOptions = useMemo(
-		() => categories.map((c) => ({ id: c.id, nom: c.name })),
-		[categories],
-	);
+	const categoryChipOptions = useMemo(() => categories.map((c) => ({ id: c.id, nom: c.name })), [categories]);
 
 	const chipFilters = useMemo<ChipFilterConfig[]>(
 		() => [
@@ -99,11 +104,11 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 			const term = searchTerm.toLowerCase();
 			data = data.filter(
 				(e) =>
-					(e.description?.toLowerCase().includes(term)) ||
-					(e.project_name?.toLowerCase().includes(term)) ||
-					(e.category_name?.toLowerCase().includes(term)) ||
-					(e.element?.toLowerCase().includes(term)) ||
-					(e.fournisseur?.toLowerCase().includes(term)),
+					e.description?.toLowerCase().includes(term) ||
+					e.project_name?.toLowerCase().includes(term) ||
+					e.category_name?.toLowerCase().includes(term) ||
+					e.element?.toLowerCase().includes(term) ||
+					e.fournisseur?.toLowerCase().includes(term),
 			);
 		}
 
@@ -204,7 +209,10 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 		{
 			text: t.common.cancel,
 			active: false,
-			onClick: () => { setShowDeleteModal(false); setSelectedId(null); },
+			onClick: () => {
+				setShowDeleteModal(false);
+				setSelectedId(null);
+			},
 			icon: <CloseIcon />,
 			color: '#6B6B6B',
 		},
@@ -372,8 +380,11 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 			direction="column"
 			spacing={2}
 			className={Styles.flexRootStack}
-			mt="48px"
-			sx={{ overflowX: 'auto', overflowY: 'hidden' }}
+			sx={{
+				mt: '48px',
+				overflowX: 'auto',
+				overflowY: 'hidden',
+			}}
 		>
 			<NavigationBar title={t.expenses.expensesList}>
 				<Protected permission="can_view">
@@ -405,7 +416,14 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 								{t.expenses.newExpense}
 							</Button>
 							{filteredExpenses.length > 0 && (
-								<Typography variant="subtitle1" fontWeight={700} color="error.main" sx={{ ml: 'auto' }}>
+								<Typography
+									variant="subtitle1"
+									sx={{
+										fontWeight: 700,
+										color: 'error.main',
+										ml: 'auto',
+									}}
+								>
 									Total : {totalAmount.toLocaleString('fr-MA')} MAD
 								</Typography>
 							)}

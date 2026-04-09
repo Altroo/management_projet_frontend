@@ -17,8 +17,8 @@ import {
 	ListItem,
 	ListItemButton,
 	ListItemIcon,
-	ListItemText,
 	ListItemIcon as MenuListItemIcon,
+	ListItemText,
 	ListItemText as MenuListItemText,
 	Menu,
 	MenuItem,
@@ -80,8 +80,8 @@ import { Desktop, TabletAndMobile } from '@/utils/clientHelpers';
 import { setUnreadCount } from '@/store/slices/notificationSlice';
 import {
 	useGetNotificationsQuery,
-	useLazyGetNotificationsQuery,
 	useGetUnreadNotificationCountQuery,
+	useLazyGetNotificationsQuery,
 	useMarkNotificationsReadMutation,
 } from '@/store/services/notification';
 import type { NotificationType } from '@/types/managementNotificationTypes';
@@ -141,7 +141,11 @@ const getNavigationMenu = (isStaff: boolean, t: TranslationDictionary) => {
 			items: [
 				{ title: t.navigation.myProfile, label: t.navigation.myProfile, path: DASHBOARD_EDIT_PROFILE },
 				{ title: t.navigation.changePassword, label: t.navigation.changePassword, path: DASHBOARD_PASSWORD },
-				{ title: t.navigation.notifications, label: t.navigation.notificationPreferences, path: DASHBOARD_NOTIFICATIONS },
+				{
+					title: t.navigation.notifications,
+					label: t.navigation.notificationPreferences,
+					path: DASHBOARD_NOTIFICATIONS,
+				},
 			],
 		},
 	};
@@ -358,8 +362,21 @@ const NavigationBar = (props: Props) => {
 			<Box sx={{ display: 'flex' }}>
 				<AppBar position="fixed" open={open}>
 					<Toolbar>
-						<Stack direction="row" justifyContent="space-between" alignItems="center" width="100%">
-							<Stack direction="row" alignItems="center" spacing={1}>
+						<Stack
+							direction="row"
+							sx={{
+								justifyContent: 'space-between',
+								alignItems: 'center',
+								width: '100%',
+							}}
+						>
+							<Stack
+								direction="row"
+								spacing={1}
+								sx={{
+									alignItems: 'center',
+								}}
+							>
 								{isMobile && (
 									<IconButton
 										color="inherit"
@@ -377,18 +394,23 @@ const NavigationBar = (props: Props) => {
 							<Stack direction="row" spacing={1}>
 								{!loading && session && (
 									<>
-										<Desktop>										<IconButton
-											color="inherit"
-												onClick={handleNotifOpen}
-											aria-label={t.navigation.notifications}
-										>
-											<Badge badgeContent={unreadCount > 0 ? unreadCount : undefined} color="error" max={99}>
-												<NotificationsIcon />
-											</Badge>
-										</IconButton>
+										<Desktop>
+											{' '}
+											<IconButton color="inherit" onClick={handleNotifOpen} aria-label={t.navigation.notifications}>
+												<Badge badgeContent={unreadCount > 0 ? unreadCount : undefined} color="error" max={99}>
+													<NotificationsIcon />
+												</Badge>
+											</IconButton>
 											<LanguageSwitcher />
 											{is_staff && (
-												<Button variant="text" color="inherit" href={BACKEND_SITE_ADMIN} target="_blank" rel="noopener" endIcon={<DomainIcon />}>
+												<Button
+													variant="text"
+													color="inherit"
+													href={BACKEND_SITE_ADMIN}
+													target="_blank"
+													rel="noopener"
+													endIcon={<DomainIcon />}
+												>
 													{t.navigation.administration}
 												</Button>
 											)}
@@ -397,45 +419,63 @@ const NavigationBar = (props: Props) => {
 											</Button>
 										</Desktop>
 										<TabletAndMobile>
-										<IconButton
-											color="inherit"
-											onClick={handleNotifOpen}
-											aria-label={t.navigation.notifications}
-										>
-											<Badge badgeContent={unreadCount > 0 ? unreadCount : undefined} color="error" max={99}>
-												<NotificationsIcon />
-											</Badge>
-										</IconButton>
-										<IconButton
-											ref={moreVertRef}
-											color="inherit"
-											aria-label={t.accessibility.moreActions}
-											onClick={(e) => setMobileMenuAnchor(e.currentTarget)}
-										>
-											<MoreVertIcon />
-										</IconButton>
-										<Menu
-											anchorEl={mobileMenuAnchor}
-											open={Boolean(mobileMenuAnchor)}
-											onClose={() => setMobileMenuAnchor(null)}
-											anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-											transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-										>
-											<MenuItem onClick={() => { setLanguage(language === 'fr' ? 'en' : 'fr'); setMobileMenuAnchor(null); }}>
-												<MenuListItemIcon><span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{language === 'fr' ? '🇬🇧' : '🇫🇷'}</span></MenuListItemIcon>
-												<MenuListItemText>{language === 'fr' ? 'English' : 'Français'}</MenuListItemText>
-											</MenuItem>
-											{is_staff && (
-												<MenuItem component="a" href={BACKEND_SITE_ADMIN} target="_blank" rel="noopener" onClick={() => setMobileMenuAnchor(null)}>
-													<MenuListItemIcon><DomainIcon fontSize="small" /></MenuListItemIcon>
-													<MenuListItemText>{t.navigation.administration}</MenuListItemText>
+											<IconButton color="inherit" onClick={handleNotifOpen} aria-label={t.navigation.notifications}>
+												<Badge badgeContent={unreadCount > 0 ? unreadCount : undefined} color="error" max={99}>
+													<NotificationsIcon />
+												</Badge>
+											</IconButton>
+											<IconButton
+												ref={moreVertRef}
+												color="inherit"
+												aria-label={t.accessibility.moreActions}
+												onClick={(e) => setMobileMenuAnchor(e.currentTarget)}
+											>
+												<MoreVertIcon />
+											</IconButton>
+											<Menu
+												anchorEl={mobileMenuAnchor}
+												open={Boolean(mobileMenuAnchor)}
+												onClose={() => setMobileMenuAnchor(null)}
+												anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+												transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+											>
+												<MenuItem
+													onClick={() => {
+														setLanguage(language === 'fr' ? 'en' : 'fr');
+														setMobileMenuAnchor(null);
+													}}
+												>
+													<MenuListItemIcon>
+														<span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{language === 'fr' ? '🇬🇧' : '🇫🇷'}</span>
+													</MenuListItemIcon>
+													<MenuListItemText>{language === 'fr' ? 'English' : 'Français'}</MenuListItemText>
 												</MenuItem>
-											)}
-											<MenuItem onClick={() => { setMobileMenuAnchor(null); void logOutHandler(); }}>
-												<MenuListItemIcon><LogoutIcon fontSize="small" /></MenuListItemIcon>
-												<MenuListItemText>{t.navigation.logout}</MenuListItemText>
-											</MenuItem>
-										</Menu>
+												{is_staff && (
+													<MenuItem
+														component="a"
+														href={BACKEND_SITE_ADMIN}
+														target="_blank"
+														rel="noopener"
+														onClick={() => setMobileMenuAnchor(null)}
+													>
+														<MenuListItemIcon>
+															<DomainIcon fontSize="small" />
+														</MenuListItemIcon>
+														<MenuListItemText>{t.navigation.administration}</MenuListItemText>
+													</MenuItem>
+												)}
+												<MenuItem
+													onClick={() => {
+														setMobileMenuAnchor(null);
+														void logOutHandler();
+													}}
+												>
+													<MenuListItemIcon>
+														<LogoutIcon fontSize="small" />
+													</MenuListItemIcon>
+													<MenuListItemText>{t.navigation.logout}</MenuListItemText>
+												</MenuItem>
+											</Menu>
 										</TabletAndMobile>
 									</>
 								)}
@@ -484,7 +524,11 @@ const NavigationBar = (props: Props) => {
 						)}
 						<Box sx={{ display: 'flex', flexDirection: 'column' }}>
 							<Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-							{gender === 'Homme' ? t.navigation.welcomeMale : gender === 'Femme' ? t.navigation.welcomeFemale : t.navigation.welcomeNeutral}
+								{gender === 'Homme'
+									? t.navigation.welcomeMale
+									: gender === 'Femme'
+										? t.navigation.welcomeFemale
+										: t.navigation.welcomeNeutral}
 							</Typography>
 							<Typography variant="body2" sx={{ color: 'text.secondary' }}>
 								{first_name} {last_name}
@@ -571,8 +615,21 @@ const NavigationBar = (props: Props) => {
 				transformOrigin={{ vertical: 'top', horizontal: 'right' }}
 				slotProps={{ paper: { sx: { width: 360, maxHeight: 420 } } }}
 			>
-				<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ px: 2, py: 1.5 }}>
-					<Typography variant="subtitle1" fontWeight={700}>
+				<Stack
+					direction="row"
+					sx={{
+						justifyContent: 'space-between',
+						alignItems: 'center',
+						px: 2,
+						py: 1.5,
+					}}
+				>
+					<Typography
+						variant="subtitle1"
+						sx={{
+							fontWeight: 700,
+						}}
+					>
 						{t.navigation.notifications}
 					</Typography>
 					{unreadCount > 0 && (
@@ -602,13 +659,33 @@ const NavigationBar = (props: Props) => {
 									}}
 								>
 									<Box sx={{ minWidth: 0, flex: 1 }}>
-										<Typography variant="body2" fontWeight={notification.is_read ? 400 : 600} noWrap>
+										<Typography
+											variant="body2"
+											noWrap
+											sx={{
+												fontWeight: notification.is_read ? 400 : 600,
+											}}
+										>
 											{notification.title}
 										</Typography>
-										<Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.4 }}>
+										<Typography
+											variant="caption"
+											sx={{
+												color: 'text.secondary',
+												display: 'block',
+												lineHeight: 1.4,
+											}}
+										>
 											{notification.message}
 										</Typography>
-										<Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: 0.5 }}>
+										<Typography
+											variant="caption"
+											sx={{
+												color: 'text.disabled',
+												display: 'block',
+												mt: 0.5,
+											}}
+										>
 											{new Date(notification.date_created).toLocaleDateString()}
 										</Typography>
 									</Box>
@@ -624,7 +701,12 @@ const NavigationBar = (props: Props) => {
 						</>
 					) : (
 						<Box sx={{ p: 3, textAlign: 'center' }}>
-							<Typography variant="body2" color="text.secondary">
+							<Typography
+								variant="body2"
+								sx={{
+									color: 'text.secondary',
+								}}
+							>
 								{t.navigation.noNotifications}
 							</Typography>
 						</Box>

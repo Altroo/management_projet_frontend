@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Styles from '@/styles/auth/auth.module.sass';
-import { Stack, Divider } from '@mui/material';
+import { Divider, Stack } from '@mui/material';
 import CustomTextInput from '@/components/formikElements/customTextInput/customTextInput';
 import { allowAnyInstance, setFormikAutoErrors } from '@/utils/helpers';
 import { Desktop, TabletAndMobile } from '@/utils/clientHelpers';
@@ -11,7 +11,7 @@ import type { AccountPostLoginResponseType } from '@/types/accountTypes';
 import { postApi } from '@/utils/apiHelpers';
 import { AUTH_RESET_PASSWORD, DASHBOARD } from '@/utils/routes';
 import { signIn, useSession } from 'next-auth/react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppDispatch, useLanguage } from '@/utils/hooks';
 import AuthLayout from '@/components/layouts/auth/authLayout';
 import { useFormik } from 'formik';
@@ -23,10 +23,10 @@ import TextButton from '@/components/htmlElements/buttons/textButton/textButton'
 import { refreshAppTokenStatesAction } from '@/store/actions/_initActions';
 import PrimaryLoadingButton from '@/components/htmlElements/buttons/primaryLoadingButton/primaryLoadingButton';
 import {
-	LockReset as LockResetIcon,
-	Login as LoginIcon,
 	Email as EmailIcon,
 	Lock as LockIcon,
+	LockReset as LockResetIcon,
+	Login as LoginIcon,
 } from '@mui/icons-material';
 import Image from 'next/image';
 import Logo from '../../../../../public/assets/images/management-projet-logo.png';
@@ -77,7 +77,14 @@ const LoginPageContent = () => {
 
 	return (
 		<Stack direction="column" spacing={4} className={Styles.contentWrapper}>
-			<Stack direction="column" justifyContent="flex-start" alignItems="flex-start" width="100%">
+			<Stack
+				direction="column"
+				sx={{
+					justifyContent: 'flex-start',
+					alignItems: 'flex-start',
+					width: '100%',
+				}}
+			>
 				<h1 className={Styles.content}>{t.auth.login}</h1>
 			</Stack>
 			<Stack direction="column" spacing={2} className={Styles.mobileWidth}>
@@ -180,7 +187,13 @@ const LoginClient: React.FC = () => {
 			<TabletAndMobile>
 				<div style={{ display: 'flex', width: '100%', height: '100%' }}>
 					<main className={Styles.main}>
-						<Stack direction="row" alignItems="center" justifyContent="center">
+						<Stack
+							direction="row"
+							sx={{
+								alignItems: 'center',
+								justifyContent: 'center',
+							}}
+						>
 							<Image src={Logo} alt={t.common.appLogo} width="0" height="0" sizes="100vw" className={Styles.logo} />
 						</Stack>
 						<LoginPageContent />

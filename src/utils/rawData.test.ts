@@ -1,6 +1,4 @@
-import {
-	genderItemsList,
-} from './rawData';
+import { genderItemsList } from './rawData';
 import { translations } from '@/translations';
 
 const t = translations.fr;

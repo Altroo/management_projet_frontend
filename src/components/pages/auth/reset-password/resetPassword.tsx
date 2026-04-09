@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Styles from '@/styles/auth/auth.module.sass';
 import { setFormikAutoErrors } from '@/utils/helpers';
 import { toFormikValidationSchema } from 'zod-formik-adapter';
 import { Desktop, TabletAndMobile } from '@/utils/clientHelpers';
 import { cookiesPoster } from '@/utils/apiHelpers';
-import { AUTH_RESET_PASSWORD_ENTER_CODE, DASHBOARD, AUTH_LOGIN } from '@/utils/routes';
+import { AUTH_LOGIN, AUTH_RESET_PASSWORD_ENTER_CODE, DASHBOARD } from '@/utils/routes';
 import AuthLayout from '@/components/layouts/auth/authLayout';
-import { Stack, Divider } from '@mui/material';
+import { Divider, Stack } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { useFormik } from 'formik';
 import { emailSchema } from '@/utils/formValidationSchemas';
@@ -18,7 +18,7 @@ import PrimaryLoadingButton from '@/components/htmlElements/buttons/primaryLoadi
 import { useSendPasswordResetCodeMutation } from '@/store/services/account';
 import { useSession } from 'next-auth/react';
 import ApiProgress from '@/components/formikElements/apiLoading/apiProgress/apiProgress';
-import { Send as SendIcon, Email as EmailIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { ArrowBack as ArrowBackIcon, Email as EmailIcon, Send as SendIcon } from '@mui/icons-material';
 import TextButton from '@/components/htmlElements/buttons/textButton/textButton';
 import { useLanguage } from '@/utils/hooks';
 
@@ -53,14 +53,19 @@ const ResetPasswordPageContent = () => {
 
 	return (
 		<Stack direction="column" className={Styles.contentWrapper} spacing={4}>
-			<Stack direction="column" spacing={1} alignItems="flex-start" width="100%">
+			<Stack
+				direction="column"
+				spacing={1}
+				sx={{
+					alignItems: 'flex-start',
+					width: '100%',
+				}}
+			>
 				<Stack direction="column">
 					<span className={Styles.content}>{t.auth.recovery}</span>
 					<span className={Styles.subContent}>{t.auth.ofPassword}</span>
 				</Stack>
-				<span className={Styles.paragraphe}>
-					{t.auth.enterEmailDescription}
-				</span>
+				<span className={Styles.paragraphe}>{t.auth.enterEmailDescription}</span>
 			</Stack>
 			<Divider orientation="horizontal" flexItem className={Styles.divider} />
 			<form style={{ width: '100%' }} onSubmit={formik.handleSubmit} method="post">

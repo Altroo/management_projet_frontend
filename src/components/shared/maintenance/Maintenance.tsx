@@ -18,7 +18,7 @@ const Maintenance: React.FC = () => {
 	}
 
 	return (
-		<Box
+        <Box
 			data-testid="maintenance-gate"
 			sx={{
 				position: 'fixed',
@@ -28,7 +28,7 @@ const Maintenance: React.FC = () => {
 				overflowY: 'auto',
 			}}
 		>
-			<Box
+            <Box
 				sx={{
 					display: 'grid',
 					gridTemplateColumns: {
@@ -78,7 +78,13 @@ const Maintenance: React.FC = () => {
 						background: 'linear-gradient(180deg, #FFFFFF 0%, #FAFBFC 100%)',
 					}}
 				>
-					<Stack direction="row" justifyContent="center" sx={{ display: { xs: 'flex', md: 'none' }, mb: 4 }}>
+					<Stack
+                        direction="row"
+                        sx={{
+                            justifyContent: "center",
+                            display: { xs: 'flex', md: 'none' },
+                            mb: 4
+                        }}>
 						<Image
 							src={Logo}
 							alt={t.common.appLogo}
@@ -152,8 +158,8 @@ const Maintenance: React.FC = () => {
 					</Paper>
 				</Stack>
 			</Box>
-		</Box>
-	);
+        </Box>
+    );
 };
 
 export default Maintenance;

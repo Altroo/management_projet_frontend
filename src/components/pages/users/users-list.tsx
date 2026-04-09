@@ -2,30 +2,30 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Box, Button, Stack, Typography, Avatar } from '@mui/material';
+import { Avatar, Box, Button, Stack, Typography } from '@mui/material';
 import {
-	Edit as EditIcon,
-	Delete as DeleteIcon,
-	Visibility as VisibilityIcon,
-	CheckCircle as CheckCircleIcon,
-	Cancel as CancelIcon,
 	Add as AddIcon,
+	Cancel as CancelIcon,
+	CheckCircle as CheckCircleIcon,
 	Close as CloseIcon,
+	Delete as DeleteIcon,
+	Edit as EditIcon,
+	Visibility as VisibilityIcon,
 } from '@mui/icons-material';
-import { GridColDef, GridRenderCellParams, GridFilterModel, GridLogicOperator } from '@mui/x-data-grid';
+import { GridColDef, GridFilterModel, GridLogicOperator, GridRenderCellParams } from '@mui/x-data-grid';
 import { useInitAccessToken } from '@/contexts/InitContext';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
-import { useDeleteUserMutation, useGetUsersListQuery, useBulkDeleteUsersMutation } from '@/store/services/account';
-import { USERS_VIEW, USERS_EDIT, USERS_ADD } from '@/utils/routes';
+import { useBulkDeleteUsersMutation, useDeleteUserMutation, useGetUsersListQuery } from '@/store/services/account';
+import { USERS_ADD, USERS_EDIT, USERS_VIEW } from '@/utils/routes';
 import DarkTooltip from '@/components/htmlElements/tooltip/darkTooltip/darkTooltip';
 import type { PaginationResponseType, SessionProps } from '@/types/_initTypes';
 import PaginatedDataGrid from '@/components/shared/paginatedDataGrid/paginatedDataGrid';
 import ActionModals from '@/components/htmlElements/modals/actionModal/actionModals';
 import type { UserClass } from '@/models/classes';
-import { formatDate, extractApiErrorMessage } from '@/utils/helpers';
+import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
 import { Protected } from '@/components/layouts/protected/protected';
-import { useToast, useLanguage } from '@/utils/hooks';
+import { useLanguage, useToast } from '@/utils/hooks';
 import Image from 'next/image';
 import MobileActionsMenu from '@/components/shared/mobileActionsMenu/mobileActionsMenu';
 import {
@@ -91,7 +91,13 @@ const UsersListClient: React.FC<SessionProps> = ({ session }: SessionProps) => {
 	};
 
 	const deleteModalActions = [
-		{ text: t.common.cancel, active: false, onClick: () => setShowDeleteModal(false), icon: <CloseIcon />, color: '#6B6B6B' },
+		{
+			text: t.common.cancel,
+			active: false,
+			onClick: () => setShowDeleteModal(false),
+			icon: <CloseIcon />,
+			color: '#6B6B6B',
+		},
 		{ text: t.common.delete, active: true, onClick: deleteHandler, icon: <DeleteIcon />, color: '#D32F2F' },
 	];
 
@@ -118,8 +124,20 @@ const UsersListClient: React.FC<SessionProps> = ({ session }: SessionProps) => {
 	};
 
 	const bulkDeleteModalActions = [
-		{ text: t.common.cancel, active: false, onClick: () => setShowBulkDeleteModal(false), icon: <CloseIcon />, color: '#6B6B6B' },
-		{ text: `${t.common.delete} (${selectedUserIds.length})`, active: true, onClick: bulkDeleteHandler, icon: <DeleteIcon />, color: '#D32F2F' },
+		{
+			text: t.common.cancel,
+			active: false,
+			onClick: () => setShowBulkDeleteModal(false),
+			icon: <CloseIcon />,
+			color: '#6B6B6B',
+		},
+		{
+			text: `${t.common.delete} (${selectedUserIds.length})`,
+			active: true,
+			onClick: bulkDeleteHandler,
+			icon: <DeleteIcon />,
+			color: '#D32F2F',
+		},
 	];
 
 	const genderFilterOptions = React.useMemo(
@@ -345,8 +363,11 @@ const UsersListClient: React.FC<SessionProps> = ({ session }: SessionProps) => {
 			direction="column"
 			spacing={2}
 			className={Styles.flexRootStack}
-			mt="48px"
-			sx={{ overflowX: 'auto', overflowY: 'hidden' }}
+			sx={{
+				mt: '48px',
+				overflowX: 'auto',
+				overflowY: 'hidden',
+			}}
 		>
 			<NavigationBar title={t.navigation.usersList}>
 				<Protected>
@@ -411,8 +432,8 @@ const UsersListClient: React.FC<SessionProps> = ({ session }: SessionProps) => {
 						/>
 						{showDeleteModal && (
 							<ActionModals
-							title={t.users.deleteUser}
-							body={t.users.deleteUserConfirm}
+								title={t.users.deleteUser}
+								body={t.users.deleteUserConfirm}
 								actions={deleteModalActions}
 								titleIcon={<DeleteIcon />}
 								titleIconColor="#D32F2F"
@@ -420,8 +441,8 @@ const UsersListClient: React.FC<SessionProps> = ({ session }: SessionProps) => {
 						)}
 						{showBulkDeleteModal && (
 							<ActionModals
-							title={t.users.deleteUsers(selectedUserIds.length)}
-							body={t.users.bulkDeleteUserBody(selectedUserIds.length)}
+								title={t.users.deleteUsers(selectedUserIds.length)}
+								body={t.users.bulkDeleteUserBody(selectedUserIds.length)}
 								actions={bulkDeleteModalActions}
 								titleIcon={<DeleteIcon />}
 								titleIconColor="#D32F2F"

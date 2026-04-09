@@ -2,16 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-	Alert,
-	Box,
-	Button,
-	Card,
-	CardContent,
-	Divider,
-	Stack,
-	Typography,
-} from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import {
 	Add as AddIcon,
 	ArrowBack as ArrowBackIcon,
@@ -32,8 +23,8 @@ import { textInputTheme } from '@/utils/themes';
 import { categorySchema } from '@/utils/formValidationSchemas';
 import { getLabelForKey, setFormikAutoErrors } from '@/utils/helpers';
 import { CATEGORIES_LIST } from '@/utils/routes';
-import { useToast, useLanguage } from '@/utils/hooks';
-import { useCreateCategoryMutation, useUpdateCategoryMutation, useGetCategoryQuery } from '@/store/services/project';
+import { useLanguage, useToast } from '@/utils/hooks';
+import { useCreateCategoryMutation, useGetCategoryQuery, useUpdateCategoryMutation } from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
 
@@ -50,10 +41,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	const isEditMode = id !== undefined;
 	const router = useRouter();
 
-	const { data: rawData } = useGetCategoryQuery(
-		{ id: id! },
-		{ skip: !token || !isEditMode },
-	);
+	const { data: rawData } = useGetCategoryQuery({ id: id! }, { skip: !token || !isEditMode });
 
 	const [createCategory, { isLoading: isCreateLoading }] = useCreateCategoryMutation();
 	const [updateCategory, { isLoading: isUpdateLoading }] = useUpdateCategoryMutation();
@@ -97,7 +85,12 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 
 	return (
 		<Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
-			<Stack direction="row" justifyContent="space-between">
+			<Stack
+				direction="row"
+				sx={{
+					justifyContent: 'space-between',
+				}}
+			>
 				<Button
 					variant="outlined"
 					startIcon={<ArrowBackIcon />}
@@ -107,10 +100,14 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 					{t.categories.categoriesList}
 				</Button>
 			</Stack>
-
 			{showValidationAlert && (
 				<Alert severity="error" icon={<WarningIcon />}>
-					<Typography variant="subtitle2" fontWeight={600}>
+					<Typography
+						variant="subtitle2"
+						sx={{
+							fontWeight: 600,
+						}}
+					>
 						{t.common.validationErrorsDetected}
 					</Typography>
 					<ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
@@ -124,16 +121,26 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 					</ul>
 				</Alert>
 			)}
-
 			{isLoading && <ApiProgress backdropColor="#FFFFFF" circularColor="#0D070B" />}
-
 			<form onSubmit={formik.handleSubmit}>
 				<Stack spacing={3}>
 					<Card elevation={2} sx={{ borderRadius: 2 }}>
 						<CardContent sx={{ p: 3 }}>
-							<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+							<Stack
+								direction="row"
+								spacing={2}
+								sx={{
+									alignItems: 'center',
+									mb: 2,
+								}}
+							>
 								<CategoryIcon color="primary" />
-								<Typography variant="h6" fontWeight={700}>
+								<Typography
+									variant="h6"
+									sx={{
+										fontWeight: 700,
+									}}
+								>
 									{t.categories.categoryDetails}
 								</Typography>
 							</Stack>
@@ -187,7 +194,14 @@ const CategoryFormClient: React.FC<SessionProps & { id?: number }> = ({ session,
 	const title = id !== undefined ? t.categories.editCategory : t.categories.newCategory;
 
 	return (
-		<Stack direction="column" spacing={2} className={Styles.flexRootStack} mt="48px">
+		<Stack
+			direction="column"
+			spacing={2}
+			className={Styles.flexRootStack}
+			sx={{
+				mt: '48px',
+			}}
+		>
 			<NavigationBar title={title}>
 				<Protected permission={id !== undefined ? 'can_edit' : 'can_create'}>
 					<FormikContent token={token} id={id} />

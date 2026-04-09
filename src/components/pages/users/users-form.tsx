@@ -1,35 +1,35 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { ApiErrorResponseType, ResponseDataInterface, SessionProps } from '@/types/_initTypes';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import {
+	Alert,
 	Box,
 	Button,
-	FormControlLabel,
-	Checkbox,
-	Switch,
-	Stack,
-	Typography,
 	Card,
 	CardContent,
+	Checkbox,
 	Divider,
-	useTheme,
+	FormControlLabel,
+	Stack,
+	Switch,
+	Typography,
 	useMediaQuery,
-	Alert,
+	useTheme,
 } from '@mui/material';
 import {
+	AccountCircle as AccountCircleIcon,
+	Add as AddIcon,
+	AdminPanelSettings as AdminPanelSettingsIcon,
 	ArrowBack as ArrowBackIcon,
+	CheckCircle as CheckCircleIcon,
+	Edit as EditIcon,
 	Email as EmailIcon,
 	Groups as GroupsIcon,
-	PersonOutline as PersonOutlineIcon,
-	AdminPanelSettings as AdminPanelSettingsIcon,
-	CheckCircle as CheckCircleIcon,
-	AccountCircle as AccountCircleIcon,
+	PersonOutlined as PersonOutlineIcon,
 	Security as SecurityIcon,
-	Edit as EditIcon,
-	Add as AddIcon,
 	Warning as WarningIcon,
 } from '@mui/icons-material';
 import { useFormik } from 'formik';
@@ -42,12 +42,17 @@ import ApiAlert from '@/components/formikElements/apiLoading/apiAlert/apiAlert';
 import { userSchema } from '@/utils/formValidationSchemas';
 import { genderItemsList } from '@/utils/rawData';
 import { getLabelForKey, setFormikAutoErrors } from '@/utils/helpers';
-import { textInputTheme, customDropdownTheme } from '@/utils/themes';
+import { customDropdownTheme, textInputTheme } from '@/utils/themes';
 import { USERS_LIST, USERS_VIEW } from '@/utils/routes';
 import { useRouter } from 'next/navigation';
 import CustomSquareImageUploading from '@/components/formikElements/customSquareImageUploading/customSquareImageUploading';
-import { useToast, useLanguage } from '@/utils/hooks';
-import { useAddUserMutation, useCheckEmailMutation, useEditUserMutation, useGetUserQuery } from '@/store/services/account';
+import { useLanguage, useToast } from '@/utils/hooks';
+import {
+	useAddUserMutation,
+	useCheckEmailMutation,
+	useEditUserMutation,
+	useGetUserQuery,
+} from '@/store/services/account';
 import { useInitAccessToken } from '@/contexts/InitContext';
 import { Protected } from '@/components/layouts/protected/protected';
 
@@ -194,7 +199,14 @@ const FormikContent: React.FC<FormikContentProps> = (props: FormikContentProps) 
 
 	return (
 		<Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
-			<Stack direction={isMobile ? 'column' : 'row'} pt={2} justifyContent="space-between" spacing={2}>
+			<Stack
+				direction={isMobile ? 'column' : 'row'}
+				spacing={2}
+				sx={{
+					pt: 2,
+					justifyContent: 'space-between',
+				}}
+			>
 				<Button
 					variant="outlined"
 					startIcon={<ArrowBackIcon />}
@@ -211,7 +223,12 @@ const FormikContent: React.FC<FormikContentProps> = (props: FormikContentProps) 
 			</Stack>
 			{hasValidationErrors && (
 				<Alert severity="error" icon={<WarningIcon />} sx={{ mb: 2 }}>
-					<Typography variant="subtitle2" fontWeight={600}>
+					<Typography
+						variant="subtitle2"
+						sx={{
+							fontWeight: 600,
+						}}
+					>
 						{t.users.validationErrorsDetected}
 					</Typography>
 					<ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
@@ -236,10 +253,22 @@ const FormikContent: React.FC<FormikContentProps> = (props: FormikContentProps) 
 						{/* Profile Picture Card */}
 						<Card elevation={2} sx={{ borderRadius: 2 }}>
 							<CardContent sx={{ p: 3 }}>
-								<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+								<Stack
+									direction="row"
+									spacing={2}
+									sx={{
+										alignItems: 'center',
+										mb: 2,
+									}}
+								>
 									<AccountCircleIcon color="primary" />
-									<Typography variant="h6" fontWeight={700}>
-									{t.users.profilePhoto}
+									<Typography
+										variant="h6"
+										sx={{
+											fontWeight: 700,
+										}}
+									>
+										{t.users.profilePhoto}
 									</Typography>
 								</Stack>
 								<Divider sx={{ mb: 3 }} />
@@ -257,10 +286,22 @@ const FormikContent: React.FC<FormikContentProps> = (props: FormikContentProps) 
 						{/* Personal Information Card */}
 						<Card elevation={2} sx={{ borderRadius: 2 }}>
 							<CardContent sx={{ p: 3 }}>
-								<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+								<Stack
+									direction="row"
+									spacing={2}
+									sx={{
+										alignItems: 'center',
+										mb: 2,
+									}}
+								>
 									<PersonOutlineIcon color="primary" />
-									<Typography variant="h6" fontWeight={700}>
-									{t.users.personalInfo}
+									<Typography
+										variant="h6"
+										sx={{
+											fontWeight: 700,
+										}}
+									>
+										{t.users.personalInfo}
 									</Typography>
 								</Stack>
 								<Divider sx={{ mb: 3 }} />
@@ -328,10 +369,22 @@ const FormikContent: React.FC<FormikContentProps> = (props: FormikContentProps) 
 						{/* Account Settings Card */}
 						<Card elevation={2} sx={{ borderRadius: 2 }}>
 							<CardContent sx={{ p: 3 }}>
-								<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+								<Stack
+									direction="row"
+									spacing={2}
+									sx={{
+										alignItems: 'center',
+										mb: 2,
+									}}
+								>
 									<AdminPanelSettingsIcon color="primary" />
-									<Typography variant="h6" fontWeight={700}>
-									{t.users.accountSettings}
+									<Typography
+										variant="h6"
+										sx={{
+											fontWeight: 700,
+										}}
+									>
+										{t.users.accountSettings}
 									</Typography>
 								</Stack>
 								<Divider sx={{ mb: 3 }} />
@@ -346,7 +399,13 @@ const FormikContent: React.FC<FormikContentProps> = (props: FormikContentProps) 
 											/>
 										}
 										label={
-											<Stack direction="row" spacing={1} alignItems="center">
+											<Stack
+												direction="row"
+												spacing={1}
+												sx={{
+													alignItems: 'center',
+												}}
+											>
 												<CheckCircleIcon fontSize="small" color={formik.values.is_active ? 'success' : 'disabled'} />
 												<Typography>{t.users.activeAccount}</Typography>
 											</Stack>
@@ -362,7 +421,13 @@ const FormikContent: React.FC<FormikContentProps> = (props: FormikContentProps) 
 											/>
 										}
 										label={
-											<Stack direction="row" spacing={1} alignItems="center">
+											<Stack
+												direction="row"
+												spacing={1}
+												sx={{
+													alignItems: 'center',
+												}}
+											>
 												<AdminPanelSettingsIcon
 													fontSize="small"
 													color={formik.values.is_staff ? 'primary' : 'disabled'}
@@ -378,33 +443,51 @@ const FormikContent: React.FC<FormikContentProps> = (props: FormikContentProps) 
 						{/* Permissions Card */}
 						<Card elevation={2} sx={{ borderRadius: 2 }}>
 							<CardContent sx={{ p: 3 }}>
-								<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+								<Stack
+									direction="row"
+									spacing={2}
+									sx={{
+										alignItems: 'center',
+										mb: 2,
+									}}
+								>
 									<SecurityIcon color="primary" />
-									<Typography variant="h6" fontWeight={700}>
-									{t.users.permissions}
+									<Typography
+										variant="h6"
+										sx={{
+											fontWeight: 700,
+										}}
+									>
+										{t.users.permissions}
 									</Typography>
 								</Stack>
 								<Divider sx={{ mb: 3 }} />
 								<Stack spacing={1}>
 									<FormControlLabel
 										control={<Switch checked={formik.values.can_view} onChange={formik.handleChange} name="can_view" />}
-								label={t.users.canView}
+										label={t.users.canView}
 									/>
 									<FormControlLabel
-										control={<Switch checked={formik.values.can_print} onChange={formik.handleChange} name="can_print" />}
-								label={t.users.canPrint}
+										control={
+											<Switch checked={formik.values.can_print} onChange={formik.handleChange} name="can_print" />
+										}
+										label={t.users.canPrint}
 									/>
 									<FormControlLabel
-										control={<Switch checked={formik.values.can_create} onChange={formik.handleChange} name="can_create" />}
-								label={t.users.canCreate}
+										control={
+											<Switch checked={formik.values.can_create} onChange={formik.handleChange} name="can_create" />
+										}
+										label={t.users.canCreate}
 									/>
 									<FormControlLabel
 										control={<Switch checked={formik.values.can_edit} onChange={formik.handleChange} name="can_edit" />}
-								label={t.users.canEdit}
+										label={t.users.canEdit}
 									/>
 									<FormControlLabel
-										control={<Switch checked={formik.values.can_delete} onChange={formik.handleChange} name="can_delete" />}
-								label={t.users.canDelete}
+										control={
+											<Switch checked={formik.values.can_delete} onChange={formik.handleChange} name="can_delete" />
+										}
+										label={t.users.canDelete}
 									/>
 								</Stack>
 							</CardContent>

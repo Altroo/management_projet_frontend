@@ -27,8 +27,13 @@ import { createNumericFilterOperators } from '@/components/shared/numericFilter/
 import { createDropdownFilterOperators } from '@/components/shared/dropdownFilter/dropdownFilter';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
 import { REVENUES_ADD, REVENUES_EDIT, REVENUES_VIEW } from '@/utils/routes';
-import { useToast, useLanguage } from '@/utils/hooks';
-import { useDeleteRevenueMutation, useBulkDeleteRevenuesMutation, useGetRevenuesQuery, useGetProjectsListQuery } from '@/store/services/project';
+import { useLanguage, useToast } from '@/utils/hooks';
+import {
+	useBulkDeleteRevenuesMutation,
+	useDeleteRevenueMutation,
+	useGetProjectsListQuery,
+	useGetRevenuesQuery,
+} from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
 
 const RevenuesListClient: React.FC<SessionProps> = ({ session }) => {
@@ -50,7 +55,11 @@ const RevenuesListClient: React.FC<SessionProps> = ({ session }) => {
 	const { data: projectsData } = useGetProjectsListQuery({}, { skip: !token });
 
 	const projectOptions = useMemo(() => {
-		const projects = Array.isArray(projectsData) ? projectsData : (projectsData && 'results' in projectsData ? projectsData.results : []);
+		const projects = Array.isArray(projectsData)
+			? projectsData
+			: projectsData && 'results' in projectsData
+				? projectsData.results
+				: [];
 		return projects.map((p) => ({ id: String(p.id), nom: p.nom }));
 	}, [projectsData]);
 
@@ -316,8 +325,11 @@ const RevenuesListClient: React.FC<SessionProps> = ({ session }) => {
 			direction="column"
 			spacing={2}
 			className={Styles.flexRootStack}
-			mt="48px"
-			sx={{ overflowX: 'auto', overflowY: 'hidden' }}
+			sx={{
+				mt: '48px',
+				overflowX: 'auto',
+				overflowY: 'hidden',
+			}}
 		>
 			<NavigationBar title={t.revenues.revenuesList}>
 				<Protected permission="can_view">
@@ -349,7 +361,14 @@ const RevenuesListClient: React.FC<SessionProps> = ({ session }) => {
 								{t.revenues.newRevenue}
 							</Button>
 							{filteredRevenues.length > 0 && (
-								<Typography variant="subtitle1" fontWeight={700} color="success.main" sx={{ ml: 'auto' }}>
+								<Typography
+									variant="subtitle1"
+									sx={{
+										fontWeight: 700,
+										color: 'success.main',
+										ml: 'auto',
+									}}
+								>
 									Total : {totalAmount.toLocaleString('fr-MA')} MAD
 								</Typography>
 							)}

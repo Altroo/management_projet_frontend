@@ -1,28 +1,28 @@
 import React from 'react';
-import { render, screen, fireEvent, within, cleanup } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import CustomToast from './customToast';
 import '@testing-library/jest-dom';
 
 // Mock MUI icon modules used by the component
-jest.mock('@mui/icons-material/CheckCircleOutline', () => {
+jest.mock('@mui/icons-material/CheckCircle', () => {
 	return {
 		__esModule: true,
 		default: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="CheckCircleOutlineIcon" {...props} />,
 	};
 });
-jest.mock('@mui/icons-material/ErrorOutline', () => {
+jest.mock('@mui/icons-material/Error', () => {
 	return {
 		__esModule: true,
 		default: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="ErrorOutlineIcon" {...props} />,
 	};
 });
-jest.mock('@mui/icons-material/InfoOutlined', () => {
+jest.mock('@mui/icons-material/Info', () => {
 	return {
 		__esModule: true,
 		default: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="InfoOutlinedIcon" {...props} />,
 	};
 });
-jest.mock('@mui/icons-material/WarningAmberOutlined', () => {
+jest.mock('@mui/icons-material/WarningAmber', () => {
 	return {
 		__esModule: true,
 		default: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="WarningAmberOutlinedIcon" {...props} />,

@@ -6,32 +6,23 @@ import {
 	Card,
 	CardContent,
 	CardHeader,
-	Typography,
 	CircularProgress,
-	Stack,
 	IconButton,
+	Stack,
 	Tooltip as MuiTooltip,
+	Typography,
 } from '@mui/material';
 import {
-	AccountTree as ProjectsIcon,
 	AccountBalanceWallet as BudgetIcon,
-	TrendingUp as RevenueIcon,
-	TrendingDown as ExpensesIcon,
-	Savings as ProfitIcon,
-	PieChart as MarginIcon,
-	Speed as UtilisationIcon,
+	AccountTree as ProjectsIcon,
 	InfoOutlined as InfoIcon,
+	PieChart as MarginIcon,
+	Savings as ProfitIcon,
+	Speed as UtilisationIcon,
+	TrendingDown as ExpensesIcon,
+	TrendingUp as RevenueIcon,
 } from '@mui/icons-material';
-import {
-	Chart as ChartJS,
-	CategoryScale,
-	LinearScale,
-	BarElement,
-	ArcElement,
-	Title,
-	Tooltip,
-	Legend,
-} from 'chart.js';
+import { ArcElement, BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title, Tooltip } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { useGetMultiProjectDashboardQuery } from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
@@ -43,15 +34,7 @@ import type { SessionProps } from '@/types/_initTypes';
 import { CHART_COLORS, CHART_OPTS, STATUS_CHIP_COLORS } from '@/utils/rawData';
 import { formatNumber } from '@/utils/helpers';
 
-ChartJS.register(
-	CategoryScale,
-	LinearScale,
-	BarElement,
-	ArcElement,
-	Title,
-	Tooltip,
-	Legend,
-);
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
 /* ── KPI Card with left accent bar ─────────────────────────────────────────── */
 interface KpiCardProps {
@@ -82,10 +65,30 @@ const KpiCard: React.FC<KpiCardProps> = ({ icon, label, value, sub, color, toolt
 		}}
 	>
 		<CardContent sx={{ pl: 2.5 }}>
-			<Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-				<Stack direction="row" spacing={1.5} alignItems="center" mb={0.5}>
+			<Stack
+				direction="row"
+				sx={{
+					justifyContent: 'space-between',
+					alignItems: 'flex-start',
+				}}
+			>
+				<Stack
+					direction="row"
+					spacing={1.5}
+					sx={{
+						alignItems: 'center',
+						mb: 0.5,
+					}}
+				>
 					<Box sx={{ color, display: 'flex' }}>{icon}</Box>
-					<Typography variant="caption" color="text.secondary" textTransform="uppercase" letterSpacing={0.8}>
+					<Typography
+						variant="caption"
+						sx={{
+							color: 'text.secondary',
+							textTransform: 'uppercase',
+							letterSpacing: 0.8,
+						}}
+					>
 						{label}
 					</Typography>
 				</Stack>
@@ -97,11 +100,21 @@ const KpiCard: React.FC<KpiCardProps> = ({ icon, label, value, sub, color, toolt
 					</MuiTooltip>
 				)}
 			</Stack>
-			<Typography variant="h5" fontWeight={700}>
+			<Typography
+				variant="h5"
+				sx={{
+					fontWeight: 700,
+				}}
+			>
 				{value}
 			</Typography>
 			{sub && (
-				<Typography variant="body2" color="text.secondary">
+				<Typography
+					variant="body2"
+					sx={{
+						color: 'text.secondary',
+					}}
+				>
 					{sub}
 				</Typography>
 			)}
@@ -121,8 +134,23 @@ interface ChartCardProps {
 const ChartCard: React.FC<ChartCardProps> = ({ title, subheader, infoTooltip, children, height = 300 }) => (
 	<Card elevation={2} sx={{ overflow: 'hidden' }}>
 		<CardHeader
-			title={<Typography variant="h6" sx={{ fontSize: { xs: '0.95rem', md: '1.1rem' } }}>{title}</Typography>}
-			subheader={subheader && <Typography variant="caption" color="text.secondary">{subheader}</Typography>}
+			title={
+				<Typography variant="h6" sx={{ fontSize: { xs: '0.95rem', md: '1.1rem' } }}>
+					{title}
+				</Typography>
+			}
+			subheader={
+				subheader && (
+					<Typography
+						variant="caption"
+						sx={{
+							color: 'text.secondary',
+						}}
+					>
+						{subheader}
+					</Typography>
+				)
+			}
 			action={
 				infoTooltip ? (
 					<MuiTooltip title={infoTooltip} arrow placement="top">
@@ -144,17 +172,34 @@ const EmptyChart: React.FC<{ message?: string }> = ({ message }) => {
 	const { t } = useLanguage();
 	return (
 		<Box
-			display="flex"
-			flexDirection="column"
-			justifyContent="center"
-			alignItems="center"
-			height="100%"
-			sx={{ bgcolor: 'grey.50', borderRadius: 2, border: '1px dashed', borderColor: 'grey.300' }}
+			sx={{
+				display: 'flex',
+				flexDirection: 'column',
+				justifyContent: 'center',
+				alignItems: 'center',
+				height: '100%',
+				bgcolor: 'grey.50',
+				borderRadius: 2,
+				border: '1px dashed',
+				borderColor: 'grey.300',
+			}}
 		>
-			<Typography variant="h6" color="text.secondary" gutterBottom>
+			<Typography
+				variant="h6"
+				gutterBottom
+				sx={{
+					color: 'text.secondary',
+				}}
+			>
 				📊
 			</Typography>
-			<Typography variant="body2" color="text.secondary" textAlign="center">
+			<Typography
+				variant="body2"
+				sx={{
+					color: 'text.secondary',
+					textAlign: 'center',
+				}}
+			>
 				{message ?? t.analytics.noDataAvailable}
 			</Typography>
 		</Box>
@@ -192,10 +237,14 @@ const ProjectDashboardClient: React.FC<SessionProps> = ({ session }) => {
 	const statusColors = statusLabels.map((s) => {
 		const chipColor = STATUS_CHIP_COLORS[s];
 		switch (chipColor) {
-			case 'success': return 'rgba(46, 125, 50, 0.8)';
-			case 'info': return 'rgba(2, 136, 209, 0.8)';
-			case 'warning': return 'rgba(237, 108, 2, 0.8)';
-			default: return 'rgba(158, 158, 158, 0.8)';
+			case 'success':
+				return 'rgba(46, 125, 50, 0.8)';
+			case 'info':
+				return 'rgba(2, 136, 209, 0.8)';
+			case 'warning':
+				return 'rgba(237, 108, 2, 0.8)';
+			default:
+				return 'rgba(158, 158, 158, 0.8)';
 		}
 	});
 
@@ -231,9 +280,7 @@ const ProjectDashboardClient: React.FC<SessionProps> = ({ session }) => {
 			{
 				label: t.analytics.profit,
 				data: projects.map((p) => Number(p.profit)),
-				backgroundColor: projects.map((p) =>
-					Number(p.profit) >= 0 ? CHART_COLORS.secondary : CHART_COLORS.error,
-				),
+				backgroundColor: projects.map((p) => (Number(p.profit) >= 0 ? CHART_COLORS.secondary : CHART_COLORS.error)),
 				borderRadius: 4,
 			},
 		],
@@ -252,19 +299,44 @@ const ProjectDashboardClient: React.FC<SessionProps> = ({ session }) => {
 	};
 
 	return (
-		<Stack direction="column" spacing={2} className={Styles.flexRootStack} mt="48px">
+		<Stack
+			direction="column"
+			spacing={2}
+			className={Styles.flexRootStack}
+			sx={{
+				mt: '48px',
+			}}
+		>
 			<NavigationBar title={t.common.dashboard}>
 				<Protected permission="can_view">
 					<Box sx={{ px: { xs: 1, sm: 2, md: 3 }, pb: 4, pt: '10px' }}>
 						{/* Title */}
-						<Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-							<Typography variant="h5" fontWeight={600}>
+						<Stack
+							direction="row"
+							sx={{
+								justifyContent: 'space-between',
+								alignItems: 'center',
+								mb: 3,
+							}}
+						>
+							<Typography
+								variant="h5"
+								sx={{
+									fontWeight: 600,
+								}}
+							>
 								{t.analytics.overviewTitle}
 							</Typography>
 						</Stack>
 
 						{isLoading ? (
-							<Box display="flex" justifyContent="center" py={8}>
+							<Box
+								sx={{
+									display: 'flex',
+									justifyContent: 'center',
+									py: 8,
+								}}
+							>
 								<CircularProgress />
 							</Box>
 						) : (
@@ -332,11 +404,7 @@ const ProjectDashboardClient: React.FC<SessionProps> = ({ session }) => {
 								</Box>
 
 								{/* ── Budget vs Actual Bar ────────────────── */}
-								<ChartCard
-									title={t.analytics.budgetVsActual}
-									subheader={t.analytics.budgetVsActualSub}
-									height={320}
-								>
+								<ChartCard title={t.analytics.budgetVsActual} subheader={t.analytics.budgetVsActualSub} height={320}>
 									{projects.length > 0 ? (
 										<Bar
 											data={budgetVsActualData}

@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Box, CircularProgress } from '@mui/material';
-import { usePermission, useAppSelector } from '@/utils/hooks';
+import { useAppSelector, usePermission } from '@/utils/hooks';
 import { getProfilState } from '@/store/selectors';
 import NoPermission from '@/components/shared/noPermission/noPermission';
 
@@ -19,7 +19,14 @@ export const Protected = (props: ProtectedProps) => {
 	// Wait for profile to load before evaluating permissions — avoids false "Accès Refusé" on fresh page loads
 	if (!profil.id) {
 		return (
-			<Box display="flex" justifyContent="center" alignItems="center" py={8}>
+			<Box
+				sx={{
+					display: 'flex',
+					justifyContent: 'center',
+					alignItems: 'center',
+					py: 8,
+				}}
+			>
 				<CircularProgress />
 			</Box>
 		);

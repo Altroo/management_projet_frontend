@@ -2,25 +2,15 @@
 
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-	Alert,
-	Box,
-	Button,
-	Card,
-	CardContent,
-	Divider,
-	InputAdornment,
-	Stack,
-	Typography,
-} from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Divider, InputAdornment, Stack, Typography } from '@mui/material';
 import {
 	Add as AddIcon,
 	ArrowBack as ArrowBackIcon,
+	Assignment as AssignmentIcon,
 	AttachMoney as AttachMoneyIcon,
 	CalendarMonth as CalendarMonthIcon,
 	Edit as EditIcon,
 	Notes as NotesIcon,
-	Assignment as AssignmentIcon,
 	Warning as WarningIcon,
 } from '@mui/icons-material';
 import { useFormik } from 'formik';
@@ -43,8 +33,13 @@ import { textInputTheme } from '@/utils/themes';
 import { revenueSchema } from '@/utils/formValidationSchemas';
 import { getLabelForKey, setFormikAutoErrors } from '@/utils/helpers';
 import { REVENUES_LIST } from '@/utils/routes';
-import { useToast, useLanguage } from '@/utils/hooks';
-import { useCreateRevenueMutation, useUpdateRevenueMutation, useGetRevenueQuery, useGetProjectsListQuery } from '@/store/services/project';
+import { useLanguage, useToast } from '@/utils/hooks';
+import {
+	useCreateRevenueMutation,
+	useGetProjectsListQuery,
+	useGetRevenueQuery,
+	useUpdateRevenueMutation,
+} from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
 
@@ -61,15 +56,16 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	const isEditMode = id !== undefined;
 	const router = useRouter();
 
-	const { data: rawData } = useGetRevenueQuery(
-		{ id: id! },
-		{ skip: !token || !isEditMode },
-	);
+	const { data: rawData } = useGetRevenueQuery({ id: id! }, { skip: !token || !isEditMode });
 
 	const { data: projectsData } = useGetProjectsListQuery({}, { skip: !token });
 
 	const projectItems: DropDownType[] = useMemo(() => {
-		const projects = Array.isArray(projectsData) ? projectsData : (projectsData && 'results' in projectsData ? projectsData.results : []);
+		const projects = Array.isArray(projectsData)
+			? projectsData
+			: projectsData && 'results' in projectsData
+				? projectsData.results
+				: [];
 		return projects.map((p) => ({ code: String(p.id), value: p.nom }));
 	}, [projectsData]);
 
@@ -122,7 +118,12 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	return (
 		<LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
 			<Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
-				<Stack direction="row" justifyContent="space-between">
+				<Stack
+					direction="row"
+					sx={{
+						justifyContent: 'space-between',
+					}}
+				>
 					<Button
 						variant="outlined"
 						startIcon={<ArrowBackIcon />}
@@ -135,7 +136,12 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 
 				{showValidationAlert && (
 					<Alert severity="error" icon={<WarningIcon />}>
-						<Typography variant="subtitle2" fontWeight={600}>
+						<Typography
+							variant="subtitle2"
+							sx={{
+								fontWeight: 600,
+							}}
+						>
 							{t.common.validationErrorsDetected}
 						</Typography>
 						<ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
@@ -156,9 +162,21 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 					<Stack spacing={3}>
 						<Card elevation={2} sx={{ borderRadius: 2 }}>
 							<CardContent sx={{ p: 3 }}>
-								<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+								<Stack
+									direction="row"
+									spacing={2}
+									sx={{
+										alignItems: 'center',
+										mb: 2,
+									}}
+								>
 									<AttachMoneyIcon color="primary" />
-									<Typography variant="h6" fontWeight={700}>
+									<Typography
+										variant="h6"
+										sx={{
+											fontWeight: 700,
+										}}
+									>
 										{t.revenues.revenueDetails}
 									</Typography>
 								</Stack>
@@ -217,9 +235,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										<DatePicker
 											label={`${t.common.date} *`}
 											value={formik.values.date ? parseISO(formik.values.date) : null}
-											onChange={(date) =>
-												formik.setFieldValue('date', date ? format(date, 'yyyy-MM-dd') : '')
-											}
+											onChange={(date) => formik.setFieldValue('date', date ? format(date, 'yyyy-MM-dd') : '')}
 											disabled={isLoading}
 											slotProps={{
 												textField: {
@@ -228,12 +244,14 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 													onBlur: formik.handleBlur('date'),
 													error: formik.submitCount > 0 && Boolean(formik.errors.date),
 													helperText: formik.submitCount > 0 ? (formik.errors.date ?? '') : '',
-													InputProps: {
-														startAdornment: (
-															<InputAdornment position="start">
-																<CalendarMonthIcon fontSize="small" />
-															</InputAdornment>
-														),
+													slotProps: {
+														input: {
+															startAdornment: (
+																<InputAdornment position="start">
+																	<CalendarMonthIcon fontSize="small" />
+																</InputAdornment>
+															),
+														},
 													},
 												},
 											}}
@@ -265,14 +283,16 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 								loading={isPending}
 								active={!isPending}
 								type="submit"
-								startIcon={isEditMode ? <EditIcon /> : <AddIcon />}							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-								if (!formik.isValid) {
-									e.preventDefault();
-									formik.handleSubmit();
-									onError(t.users.fixValidationErrors);
-									window.scrollTo({ top: 0, behavior: 'smooth' });
-								}
-							}}								cssClass={Styles.submitButton}
+								startIcon={isEditMode ? <EditIcon /> : <AddIcon />}
+								onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+									if (!formik.isValid) {
+										e.preventDefault();
+										formik.handleSubmit();
+										onError(t.users.fixValidationErrors);
+										window.scrollTo({ top: 0, behavior: 'smooth' });
+									}
+								}}
+								cssClass={Styles.submitButton}
 							/>
 						</Box>
 					</Stack>
@@ -288,7 +308,14 @@ const RevenueFormClient: React.FC<SessionProps & { id?: number }> = ({ session, 
 	const title = id !== undefined ? t.revenues.editRevenue : t.revenues.newRevenue;
 
 	return (
-		<Stack direction="column" spacing={2} className={Styles.flexRootStack} mt="48px">
+		<Stack
+			direction="column"
+			spacing={2}
+			className={Styles.flexRootStack}
+			sx={{
+				mt: '48px',
+			}}
+		>
 			<NavigationBar title={title}>
 				<Protected permission={id !== undefined ? 'can_edit' : 'can_create'}>
 					<FormikContent token={token} id={id} />

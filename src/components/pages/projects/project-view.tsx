@@ -39,7 +39,7 @@ import ApiAlert from '@/components/formikElements/apiLoading/apiAlert/apiAlert';
 import ActionModals from '@/components/htmlElements/modals/actionModal/actionModals';
 import { Protected } from '@/components/layouts/protected/protected';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
-import { useToast, useLanguage } from '@/utils/hooks';
+import { useLanguage, useToast } from '@/utils/hooks';
 import { STATUS_CHIP_COLORS } from '@/utils/rawData';
 
 interface InfoRowProps {
@@ -52,16 +52,14 @@ const InfoRow: React.FC<InfoRowProps> = ({ icon, label, value }) => {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const displayValue =
-		isValidElement(value) || (value !== null && value !== undefined && value.toString().length > 0)
-			? value
-			: '-';
+		isValidElement(value) || (value !== null && value !== undefined && value.toString().length > 0) ? value : '-';
 
 	return (
 		<Stack
 			direction="row"
-			alignItems="flex-start"
 			spacing={2}
 			sx={{
+				alignItems: 'flex-start',
 				py: 1.5,
 				flexWrap: 'wrap',
 			}}
@@ -76,20 +74,19 @@ const InfoRow: React.FC<InfoRowProps> = ({ icon, label, value }) => {
 			>
 				{icon}
 			</Box>
-
 			<Stack
 				direction="row"
-				alignItems="center"
 				spacing={isMobile ? 0 : 2}
 				sx={{
+					alignItems: 'center',
 					flex: 1,
 					flexWrap: 'wrap',
 				}}
 			>
 				<Typography
-					fontWeight={600}
-					color="text.secondary"
 					sx={{
+						fontWeight: 600,
+						color: 'text.secondary',
 						minWidth: { xs: '100%', sm: 200 },
 						wordBreak: 'break-word',
 					}}
@@ -161,15 +158,24 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 	const statusColor = STATUS_CHIP_COLORS[project?.status ?? ''] ?? 'default';
 
 	return (
-		<Stack direction="column" spacing={2} className={Styles.flexRootStack} mt="32px">
+		<Stack
+			direction="column"
+			spacing={2}
+			className={Styles.flexRootStack}
+			sx={{
+				mt: '32px',
+			}}
+		>
 			<NavigationBar title={t.projects.projectDetails}>
 				<Protected permission="can_view">
 					<Stack spacing={3} sx={{ p: { xs: 2, md: 3 }, mt: 2 }}>
 						<Stack
 							direction={isMobile ? 'column' : 'row'}
-							justifyContent="space-between"
-							alignItems={isMobile ? 'stretch' : 'center'}
 							spacing={2}
+							sx={{
+								justifyContent: 'space-between',
+								alignItems: isMobile ? 'stretch' : 'center',
+							}}
 						>
 							<Button
 								variant="outlined"
@@ -180,7 +186,13 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 								{t.projects.projectsList}
 							</Button>
 							{!isLoading && !error && project && (
-								<Stack direction="row" gap={1} flexWrap="wrap">
+								<Stack
+									direction="row"
+									sx={{
+										gap: 1,
+										flexWrap: 'wrap',
+									}}
+								>
 									<Protected permission="can_edit">
 										<Button
 											variant="outlined"
@@ -225,9 +237,20 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 								{/* Identification */}
 								<Card elevation={2} sx={{ borderRadius: 2 }}>
 									<CardContent sx={{ p: 3 }}>
-										<Stack direction="row" spacing={3} alignItems="center">
+										<Stack
+											direction="row"
+											spacing={3}
+											sx={{
+												alignItems: 'center',
+											}}
+										>
 											<AssignmentIcon color="primary" />
-											<Typography variant="h6" fontWeight={700}>
+											<Typography
+												variant="h6"
+												sx={{
+													fontWeight: 700,
+												}}
+											>
 												{project.nom}
 											</Typography>
 										</Stack>
@@ -236,21 +259,19 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 											<InfoRow
 												icon={<AssignmentIcon />}
 												label={t.common.status}
-												value={
-													<Chip
-														label={project.status}
-														size="small"
-														color={statusColor}
-														variant="outlined"
-													/>
-												}
+												value={<Chip label={project.status} size="small" color={statusColor} variant="outlined" />}
 											/>
 											<Divider />
 											<InfoRow
 												icon={<AttachMoneyIcon />}
 												label={t.projects.budget}
 												value={
-													<Typography fontWeight={600} color="primary">
+													<Typography
+														color="primary"
+														sx={{
+															fontWeight: 600,
+														}}
+													>
 														{Number(project.budget_total).toLocaleString('fr-MA')} MAD
 													</Typography>
 												}
@@ -274,11 +295,7 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 												value={project.jours_restants}
 											/>
 											<Divider />
-											<InfoRow
-												icon={<PersonIcon />}
-												label={t.projects.projectManager}
-												value={project.chef_de_projet}
-											/>
+											<InfoRow icon={<PersonIcon />} label={t.projects.projectManager} value={project.chef_de_projet} />
 										</Stack>
 									</CardContent>
 								</Card>
@@ -286,9 +303,21 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 								{/* Financial Info */}
 								<Card elevation={2} sx={{ borderRadius: 2 }}>
 									<CardContent sx={{ p: 3 }}>
-										<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+										<Stack
+											direction="row"
+											spacing={2}
+											sx={{
+												alignItems: 'center',
+												mb: 2,
+											}}
+										>
 											<AttachMoneyIcon color="primary" />
-											<Typography variant="h6" fontWeight={700}>
+											<Typography
+												variant="h6"
+												sx={{
+													fontWeight: 700,
+												}}
+											>
 												{t.projects.financialInfo}
 											</Typography>
 										</Stack>
@@ -312,11 +341,7 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 												value={`${Number(project.benefice).toLocaleString('fr-MA')} MAD`}
 											/>
 											<Divider />
-											<InfoRow
-												icon={<AttachMoneyIcon />}
-												label={t.projects.margin}
-												value={`${project.marge}%`}
-											/>
+											<InfoRow icon={<AttachMoneyIcon />} label={t.projects.margin} value={`${project.marge}%`} />
 										</Stack>
 									</CardContent>
 								</Card>
@@ -324,31 +349,31 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 								{/* Client Info */}
 								<Card elevation={2} sx={{ borderRadius: 2 }}>
 									<CardContent sx={{ p: 3 }}>
-										<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+										<Stack
+											direction="row"
+											spacing={2}
+											sx={{
+												alignItems: 'center',
+												mb: 2,
+											}}
+										>
 											<PersonIcon color="primary" />
-											<Typography variant="h6" fontWeight={700}>
+											<Typography
+												variant="h6"
+												sx={{
+													fontWeight: 700,
+												}}
+											>
 												{t.projects.clientInfo}
 											</Typography>
 										</Stack>
 										<Divider sx={{ mb: { xs: 1.5, md: 2 } }} />
 										<Stack spacing={0}>
-											<InfoRow
-												icon={<PersonIcon />}
-												label={t.projects.clientName}
-												value={project.nom_client}
-											/>
+											<InfoRow icon={<PersonIcon />} label={t.projects.clientName} value={project.nom_client} />
 											<Divider />
-											<InfoRow
-												icon={<PhoneIcon />}
-												label={t.projects.clientPhone}
-												value={project.telephone_client}
-											/>
+											<InfoRow icon={<PhoneIcon />} label={t.projects.clientPhone} value={project.telephone_client} />
 											<Divider />
-											<InfoRow
-												icon={<EmailIcon />}
-												label={t.projects.clientEmail}
-												value={project.email_client}
-											/>
+											<InfoRow icon={<EmailIcon />} label={t.projects.clientEmail} value={project.email_client} />
 										</Stack>
 									</CardContent>
 								</Card>
@@ -356,25 +381,29 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 								{/* Notes & Details */}
 								<Card elevation={2} sx={{ borderRadius: 2 }}>
 									<CardContent sx={{ p: 3 }}>
-										<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+										<Stack
+											direction="row"
+											spacing={2}
+											sx={{
+												alignItems: 'center',
+												mb: 2,
+											}}
+										>
 											<NotesIcon color="primary" />
-											<Typography variant="h6" fontWeight={700}>
+											<Typography
+												variant="h6"
+												sx={{
+													fontWeight: 700,
+												}}
+											>
 												{t.projects.projectDetails}
 											</Typography>
 										</Stack>
 										<Divider sx={{ mb: { xs: 1.5, md: 2 } }} />
 										<Stack spacing={0}>
-											<InfoRow
-												icon={<NotesIcon />}
-												label={t.common.description}
-												value={project.description}
-											/>
+											<InfoRow icon={<NotesIcon />} label={t.common.description} value={project.description} />
 											<Divider />
-											<InfoRow
-												icon={<NotesIcon />}
-												label={t.common.notes}
-												value={project.notes}
-											/>
+											<InfoRow icon={<NotesIcon />} label={t.common.notes} value={project.notes} />
 											<Divider />
 											<InfoRow
 												icon={<PersonIcon />}
@@ -389,7 +418,6 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 					</Stack>
 				</Protected>
 			</NavigationBar>
-
 			{showDeleteModal && (
 				<ActionModals
 					title={t.projects.deleteProject}

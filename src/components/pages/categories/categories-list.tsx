@@ -3,12 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box, Button, Stack, Typography } from '@mui/material';
-import {
-	Add as AddIcon,
-	Close as CloseIcon,
-	Delete as DeleteIcon,
-	Edit as EditIcon,
-} from '@mui/icons-material';
+import { Add as AddIcon, Close as CloseIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import { GridColDef, GridFilterModel, GridLogicOperator, GridRenderCellParams } from '@mui/x-data-grid';
 import type { SessionProps } from '@/types/_initTypes';
 import type { CategoryType } from '@/types/projectTypes';
@@ -22,8 +17,12 @@ import DarkTooltip from '@/components/htmlElements/tooltip/darkTooltip/darkToolt
 import { createDropdownFilterOperators } from '@/components/shared/dropdownFilter/dropdownFilter';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
 import { CATEGORIES_ADD, CATEGORIES_EDIT } from '@/utils/routes';
-import { useToast, useLanguage } from '@/utils/hooks';
-import { useDeleteCategoryMutation, useBulkDeleteCategoriesMutation, useGetCategoriesQuery } from '@/store/services/project';
+import { useLanguage, useToast } from '@/utils/hooks';
+import {
+	useBulkDeleteCategoriesMutation,
+	useDeleteCategoryMutation,
+	useGetCategoriesQuery,
+} from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
 
 const CategoriesListClient: React.FC<SessionProps> = ({ session }) => {
@@ -64,9 +63,7 @@ const CategoriesListClient: React.FC<SessionProps> = ({ session }) => {
 		if (searchTerm.trim()) {
 			const term = searchTerm.toLowerCase();
 			result = result.filter(
-				(c) =>
-					c.name.toLowerCase().includes(term) ||
-					(c.created_by_user_name ?? '').toLowerCase().includes(term),
+				(c) => c.name.toLowerCase().includes(term) || (c.created_by_user_name ?? '').toLowerCase().includes(term),
 			);
 		}
 
@@ -218,8 +215,11 @@ const CategoriesListClient: React.FC<SessionProps> = ({ session }) => {
 			direction="column"
 			spacing={2}
 			className={Styles.flexRootStack}
-			mt="48px"
-			sx={{ overflowX: 'auto', overflowY: 'hidden' }}
+			sx={{
+				mt: '48px',
+				overflowX: 'auto',
+				overflowY: 'hidden',
+			}}
 		>
 			<NavigationBar title={t.categories.categoriesList}>
 				<Protected permission="can_view">

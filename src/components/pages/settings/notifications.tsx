@@ -3,14 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Styles from '@/styles/dashboard/settings/settings.module.sass';
 import CustomTextInput from '@/components/formikElements/customTextInput/customTextInput';
-import {
-	Box,
-	FormControlLabel,
-	Stack,
-	Switch,
-	useMediaQuery,
-	useTheme,
-} from '@mui/material';
+import { Box, FormControlLabel, Stack, Switch, useMediaQuery, useTheme } from '@mui/material';
 import { setFormikAutoErrors } from '@/utils/helpers';
 import { textInputTheme } from '@/utils/themes';
 import { useFormik } from 'formik';
@@ -21,7 +14,7 @@ import {
 } from '@/store/services/notification';
 import ApiProgress from '@/components/formikElements/apiLoading/apiProgress/apiProgress';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
-import { useToast, useLanguage } from '@/utils/hooks';
+import { useLanguage, useToast } from '@/utils/hooks';
 import { Edit as EditIcon } from '@mui/icons-material';
 import type { NotificationPreferenceFormValues } from '@/types/managementNotificationTypes';
 
@@ -75,14 +68,28 @@ const FormikContent: React.FC = () => {
 	}, []);
 
 	return (
-		<Stack direction="column" alignItems="center" spacing={2} className={`${Styles.flexRootStack}`} mt="32px">
+		<Stack
+			direction="column"
+			spacing={2}
+			className={`${Styles.flexRootStack}`}
+			sx={{
+				alignItems: 'center',
+				mt: '32px',
+			}}
+		>
 			{(isPreferencesLoading || isUpdateLoading || isPending) && (
 				<ApiProgress backdropColor="#FFFFFF" circularColor="#0D070B" />
 			)}
 			<h2 className={Styles.pageTitle}>{t.settings.notificationPreferences}</h2>
-
 			<form className={Styles.form} onSubmit={(e) => e.preventDefault()}>
-				<Stack direction="column" justifyContent="center" alignItems="center" spacing={3}>
+				<Stack
+					direction="column"
+					spacing={3}
+					sx={{
+						justifyContent: 'center',
+						alignItems: 'center',
+					}}
+				>
 					<Box sx={{ maxWidth: 365, width: '100%' }}>
 						<Stack spacing={2}>
 							<FormControlLabel

@@ -2,28 +2,18 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-	Alert,
-	Box,
-	Button,
-	Card,
-	CardContent,
-	Divider,
-	InputAdornment,
-	Stack,
-	Typography,
-} from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Divider, InputAdornment, Stack, Typography } from '@mui/material';
 import {
 	Add as AddIcon,
 	ArrowBack as ArrowBackIcon,
+	Assignment as AssignmentIcon,
 	AttachMoney as AttachMoneyIcon,
 	CalendarMonth as CalendarMonthIcon,
 	Edit as EditIcon,
+	Email as EmailIcon,
 	Notes as NotesIcon,
 	Person as PersonIcon,
 	Phone as PhoneIcon,
-	Email as EmailIcon,
-	Assignment as AssignmentIcon,
 	Warning as WarningIcon,
 } from '@mui/icons-material';
 import { useFormik } from 'formik';
@@ -46,8 +36,8 @@ import { textInputTheme } from '@/utils/themes';
 import { projectSchema } from '@/utils/formValidationSchemas';
 import { getLabelForKey, setFormikAutoErrors } from '@/utils/helpers';
 import { PROJECTS_LIST } from '@/utils/routes';
-import { useToast, useLanguage } from '@/utils/hooks';
-import { useCreateProjectMutation, useUpdateProjectMutation, useGetProjectQuery } from '@/store/services/project';
+import { useLanguage, useToast } from '@/utils/hooks';
+import { useCreateProjectMutation, useGetProjectQuery, useUpdateProjectMutation } from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
 import { projectStatusItemsList } from '@/utils/rawData';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
@@ -65,10 +55,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	const isEditMode = id !== undefined;
 	const router = useRouter();
 
-	const { data: rawData } = useGetProjectQuery(
-		{ id: id! },
-		{ skip: !token || !isEditMode },
-	);
+	const { data: rawData } = useGetProjectQuery({ id: id! }, { skip: !token || !isEditMode });
 
 	const [createProject, { isLoading: isCreateLoading }] = useCreateProjectMutation();
 	const [updateProject, { isLoading: isUpdateLoading }] = useUpdateProjectMutation();
@@ -127,7 +114,12 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	return (
 		<LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
 			<Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
-				<Stack direction="row" justifyContent="space-between">
+				<Stack
+					direction="row"
+					sx={{
+						justifyContent: 'space-between',
+					}}
+				>
 					<Button
 						variant="outlined"
 						startIcon={<ArrowBackIcon />}
@@ -140,7 +132,12 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 
 				{showValidationAlert && (
 					<Alert severity="error" icon={<WarningIcon />}>
-						<Typography variant="subtitle2" fontWeight={600}>
+						<Typography
+							variant="subtitle2"
+							sx={{
+								fontWeight: 600,
+							}}
+						>
 							{t.common.validationErrorsDetected}
 						</Typography>
 						<ul style={{ margin: '8px 0', paddingLeft: '20px' }}>
@@ -162,9 +159,21 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 						{/* Project Info */}
 						<Card elevation={2} sx={{ borderRadius: 2 }}>
 							<CardContent sx={{ p: 3 }}>
-								<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+								<Stack
+									direction="row"
+									spacing={2}
+									sx={{
+										alignItems: 'center',
+										mb: 2,
+									}}
+								>
 									<AssignmentIcon color="primary" />
-									<Typography variant="h6" fontWeight={700}>
+									<Typography
+										variant="h6"
+										sx={{
+											fontWeight: 700,
+										}}
+									>
 										{t.projects.projectInfo}
 									</Typography>
 								</Stack>
@@ -241,9 +250,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										<DatePicker
 											label={`${t.projects.dateDebut} *`}
 											value={formik.values.date_debut ? parseISO(formik.values.date_debut) : null}
-											onChange={(date) =>
-												formik.setFieldValue('date_debut', date ? format(date, 'yyyy-MM-dd') : '')
-											}
+											onChange={(date) => formik.setFieldValue('date_debut', date ? format(date, 'yyyy-MM-dd') : '')}
 											disabled={isLoading}
 											slotProps={{
 												textField: {
@@ -252,12 +259,14 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 													onBlur: formik.handleBlur('date_debut'),
 													error: formik.submitCount > 0 && Boolean(formik.errors.date_debut),
 													helperText: formik.submitCount > 0 ? (formik.errors.date_debut ?? '') : '',
-													InputProps: {
-														startAdornment: (
-															<InputAdornment position="start">
-																<CalendarMonthIcon fontSize="small" />
-															</InputAdornment>
-														),
+													slotProps: {
+														input: {
+															startAdornment: (
+																<InputAdornment position="start">
+																	<CalendarMonthIcon fontSize="small" />
+																</InputAdornment>
+															),
+														},
 													},
 												},
 											}}
@@ -265,9 +274,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										<DatePicker
 											label={`${t.projects.dateFin} *`}
 											value={formik.values.date_fin ? parseISO(formik.values.date_fin) : null}
-											onChange={(date) =>
-												formik.setFieldValue('date_fin', date ? format(date, 'yyyy-MM-dd') : '')
-											}
+											onChange={(date) => formik.setFieldValue('date_fin', date ? format(date, 'yyyy-MM-dd') : '')}
 											disabled={isLoading}
 											slotProps={{
 												textField: {
@@ -276,12 +283,14 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 													onBlur: formik.handleBlur('date_fin'),
 													error: formik.submitCount > 0 && Boolean(formik.errors.date_fin),
 													helperText: formik.submitCount > 0 ? (formik.errors.date_fin ?? '') : '',
-													InputProps: {
-														startAdornment: (
-															<InputAdornment position="start">
-																<CalendarMonthIcon fontSize="small" />
-															</InputAdornment>
-														),
+													slotProps: {
+														input: {
+															startAdornment: (
+																<InputAdornment position="start">
+																	<CalendarMonthIcon fontSize="small" />
+																</InputAdornment>
+															),
+														},
 													},
 												},
 											}}
@@ -308,9 +317,21 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 						{/* Client Info */}
 						<Card elevation={2} sx={{ borderRadius: 2 }}>
 							<CardContent sx={{ p: 3 }}>
-								<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+								<Stack
+									direction="row"
+									spacing={2}
+									sx={{
+										alignItems: 'center',
+										mb: 2,
+									}}
+								>
 									<PersonIcon color="primary" />
-									<Typography variant="h6" fontWeight={700}>
+									<Typography
+										variant="h6"
+										sx={{
+											fontWeight: 700,
+										}}
+									>
 										{t.projects.clientInfo}
 									</Typography>
 								</Stack>
@@ -367,9 +388,21 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 						{/* Notes */}
 						<Card elevation={2} sx={{ borderRadius: 2 }}>
 							<CardContent sx={{ p: 3 }}>
-								<Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+								<Stack
+									direction="row"
+									spacing={2}
+									sx={{
+										alignItems: 'center',
+										mb: 2,
+									}}
+								>
 									<NotesIcon color="primary" />
-									<Typography variant="h6" fontWeight={700}>
+									<Typography
+										variant="h6"
+										sx={{
+											fontWeight: 700,
+										}}
+									>
 										{t.common.notes}
 									</Typography>
 								</Stack>
@@ -399,14 +432,16 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 								loading={isPending}
 								active={!isPending}
 								type="submit"
-								startIcon={isEditMode ? <EditIcon /> : <AddIcon />}							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-								if (!formik.isValid) {
-									e.preventDefault();
-									formik.handleSubmit();
-									onError(t.users.fixValidationErrors);
-									window.scrollTo({ top: 0, behavior: 'smooth' });
-								}
-							}}								cssClass={Styles.submitButton}
+								startIcon={isEditMode ? <EditIcon /> : <AddIcon />}
+								onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+									if (!formik.isValid) {
+										e.preventDefault();
+										formik.handleSubmit();
+										onError(t.users.fixValidationErrors);
+										window.scrollTo({ top: 0, behavior: 'smooth' });
+									}
+								}}
+								cssClass={Styles.submitButton}
 							/>
 						</Box>
 					</Stack>
@@ -422,7 +457,14 @@ const ProjectFormClient: React.FC<SessionProps & { id?: number }> = ({ session, 
 	const title = id !== undefined ? t.projects.editProject : t.projects.newProject;
 
 	return (
-		<Stack direction="column" spacing={2} className={Styles.flexRootStack} mt="48px">
+		<Stack
+			direction="column"
+			spacing={2}
+			className={Styles.flexRootStack}
+			sx={{
+				mt: '48px',
+			}}
+		>
 			<NavigationBar title={title}>
 				<Protected permission={id !== undefined ? 'can_edit' : 'can_create'}>
 					<FormikContent token={token} id={id} />

@@ -15,7 +15,7 @@ export const projectStatusItemsList = (t: TranslationDictionary): Array<{ code: 
 ];
 
 export const STATUS_CHIP_COLORS: Record<string, 'success' | 'warning' | 'default' | 'info'> = {
-	'Complété': 'success',
+	Complété: 'success',
 	'En cours': 'info',
 	'Pas commencé': 'default',
 	'En attente': 'warning',
