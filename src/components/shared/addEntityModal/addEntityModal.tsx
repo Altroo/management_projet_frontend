@@ -59,7 +59,7 @@ const AddEntityModal: React.FC<AddEntityModalProps> = ({
 
 	const handleSubmit = async () => {
 		if (!newName.trim()) {
-			setError(`${label} ${t.common.isRequired ?? 'is required'}`);
+			setError(`${label} ${t.validation.required}`);
 			return;
 		}
 

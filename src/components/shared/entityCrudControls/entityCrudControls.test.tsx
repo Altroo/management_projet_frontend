@@ -5,6 +5,14 @@ import { createTheme } from '@mui/material/styles';
 import EntityCrudControls from './entityCrudControls';
 import type { DropDownType } from '@/types/accountTypes';
 
+type MutationResult = Promise<unknown> & { unwrap?: () => Promise<unknown> };
+
+const createMutationResult = (value: unknown): MutationResult => {
+	const promise = Promise.resolve(value) as MutationResult;
+	promise.unwrap = () => Promise.resolve(value);
+	return promise;
+};
+
 jest.mock('@/utils/hooks', () => ({
 	__esModule: true,
 	useLanguage: () => ({
@@ -66,9 +74,12 @@ describe('EntityCrudControls', () => {
 	const selectedItem: DropDownType = { code: 'Matériaux', value: '12' };
 
 	it('uses reservation item shape for edit and delete flows', async () => {
-		const editEntity = jest.fn(() => ({ unwrap: jest.fn().mockResolvedValue({}) }));
-		const deleteEntity = jest.fn(() => ({ unwrap: jest.fn().mockResolvedValue({}) }));
-		const addEntity = jest.fn(() => ({ unwrap: jest.fn().mockResolvedValue({ id: 33 }) }));
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const editEntity = jest.fn((_args: { id: number; data: Record<string, number | string> }) => createMutationResult({}));
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const deleteEntity = jest.fn((_args: { id: number }) => createMutationResult({}));
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const addEntity = jest.fn((_args: { data: Record<string, number | string> }) => createMutationResult({ id: 33 }));
 		const onAddSuccess = jest.fn();
 		const onDeleteSuccess = jest.fn();
 

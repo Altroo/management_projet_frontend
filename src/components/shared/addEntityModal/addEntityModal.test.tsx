@@ -25,7 +25,9 @@ jest.mock('@/utils/hooks', () => ({
 			common: {
 				add: 'Ajouter',
 				cancel: 'Annuler',
-				isRequired: 'is required',
+			},
+			validation: {
+				required: 'is required',
 			},
 		},
 	}),
@@ -47,6 +49,7 @@ describe('AddEntityModal', () => {
 	const inputId = `new_${label}`;
 
 	it('renders title, actions and input', () => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const mutationFn = jest.fn((_args: { data: Record<string, number | string> }) => createMutationResult({}));
 
 		render(
@@ -67,6 +70,7 @@ describe('AddEntityModal', () => {
 	});
 
 	it('shows a validation error when name is empty', async () => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const mutationFn = jest.fn((_args: { data: Record<string, number | string> }) => createMutationResult({}));
 
 		render(
@@ -92,6 +96,7 @@ describe('AddEntityModal', () => {
 	it('submits the default payload and returns the new id', async () => {
 		const setOpen = jest.fn();
 		const onSuccess = jest.fn();
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const mutationFn = jest.fn((_args: { data: Record<string, number | string> }) =>
 			createMutationResult({ data: { id: 14 } }),
 		);
@@ -122,6 +127,7 @@ describe('AddEntityModal', () => {
 	});
 
 	it('uses buildPayload when provided', async () => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const mutationFn = jest.fn((_args: { data: Record<string, number | string> }) => createMutationResult({}));
 
 		render(
@@ -145,6 +151,7 @@ describe('AddEntityModal', () => {
 	});
 
 	it('shows the API error message when the mutation fails', async () => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const mutationFn = jest.fn((_args: { data: Record<string, number | string> }) =>
 			createRejectedMutationResult({ error: { details: { name: ['Already exists'] } } }),
 		);
