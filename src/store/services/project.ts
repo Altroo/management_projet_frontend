@@ -8,6 +8,7 @@ import { initToken } from '@/store/slices/_initSlice';
 import type { ApiErrorResponseType, PaginationResponseType } from '@/types/_initTypes';
 import type {
 	CategoryType,
+	ExpenseCategoryTreeType,
 	SubCategoryType,
 	ProjectListType,
 	ProjectType,
@@ -45,6 +46,67 @@ export const projectApi = createApi({
 	tagTypes: ['Project', 'Category', 'SubCategory', 'Revenue', 'Expense', 'ProjectDashboard', 'MultiProjectDashboard'],
 	baseQuery: baseQueryWithRetry,
 	endpoints: (builder) => ({
+		// ── Expense Taxonomy ────────────────────────────────────────────────
+		getExpenseTaxonomy: builder.query<ExpenseCategoryTreeType[], void>({
+			query: () => ({
+				url: process.env.NEXT_PUBLIC_PROJECT_EXPENSE_TAXONOMY,
+				method: 'GET',
+			}),
+			providesTags: ['Category', 'SubCategory'],
+		}),
+
+		createExpenseCategory: builder.mutation<CategoryType | ApiErrorResponseType, { data: Omit<CategoryFormValues, 'globalError'> }>({
+			query: ({ data }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_EXPENSE_TAXONOMY}categories/`,
+				method: 'POST',
+				data,
+			}),
+			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
+		}),
+
+		updateExpenseCategory: builder.mutation<CategoryType | ApiErrorResponseType, { id: number; data: Omit<CategoryFormValues, 'globalError'> }>({
+			query: ({ id, data }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_EXPENSE_TAXONOMY}categories/${id}/`,
+				method: 'PUT',
+				data,
+			}),
+			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
+		}),
+
+		deleteExpenseCategory: builder.mutation<void, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_EXPENSE_TAXONOMY}categories/${id}/`,
+				method: 'DELETE',
+			}),
+			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
+		}),
+
+		createExpenseSubCategory: builder.mutation<SubCategoryType | ApiErrorResponseType, { data: Omit<SubCategoryFormValues, 'globalError'> }>({
+			query: ({ data }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_EXPENSE_TAXONOMY}subcategories/`,
+				method: 'POST',
+				data,
+			}),
+			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
+		}),
+
+		updateExpenseSubCategory: builder.mutation<SubCategoryType | ApiErrorResponseType, { id: number; data: Omit<SubCategoryFormValues, 'globalError'> }>({
+			query: ({ id, data }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_EXPENSE_TAXONOMY}subcategories/${id}/`,
+				method: 'PUT',
+				data,
+			}),
+			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
+		}),
+
+		deleteExpenseSubCategory: builder.mutation<void, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_EXPENSE_TAXONOMY}subcategories/${id}/`,
+				method: 'DELETE',
+			}),
+			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
+		}),
+
 		// ── Categories ──────────────────────────────────────────────────────
 		getCategories: builder.query<CategoryType[], void>({
 			query: () => ({
@@ -365,6 +427,14 @@ export const projectApi = createApi({
 });
 
 export const {
+	// Expense Taxonomy
+	useGetExpenseTaxonomyQuery,
+	useCreateExpenseCategoryMutation,
+	useUpdateExpenseCategoryMutation,
+	useDeleteExpenseCategoryMutation,
+	useCreateExpenseSubCategoryMutation,
+	useUpdateExpenseSubCategoryMutation,
+	useDeleteExpenseSubCategoryMutation,
 	// Categories
 	useGetCategoriesQuery,
 	useGetCategoryQuery,

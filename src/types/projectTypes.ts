@@ -20,6 +20,10 @@ export interface SubCategoryType {
 	date_updated: string;
 }
 
+export interface ExpenseCategoryTreeType extends CategoryType {
+	subcategories: SubCategoryType[];
+}
+
 export interface ProjectListType {
 	id: number;
 	nom: string;

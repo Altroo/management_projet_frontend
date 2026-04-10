@@ -31,17 +31,23 @@ import CustomTextInput from '@/components/formikElements/customTextInput/customT
 import CustomAutoCompleteSelect from '@/components/formikElements/customAutoCompleteSelect/customAutoCompleteSelect';
 import PrimaryLoadingButton from '@/components/htmlElements/buttons/primaryLoadingButton/primaryLoadingButton';
 import ApiProgress from '@/components/formikElements/apiLoading/apiProgress/apiProgress';
+import EntityCrudControls from '@/components/shared/entityCrudControls/entityCrudControls';
 import { textInputTheme } from '@/utils/themes';
 import { expenseSchema } from '@/utils/formValidationSchemas';
 import { getLabelForKey, setFormikAutoErrors } from '@/utils/helpers';
 import { EXPENSES_LIST } from '@/utils/routes';
 import { useLanguage, useToast } from '@/utils/hooks';
 import {
+	useCreateExpenseCategoryMutation,
+	useCreateExpenseSubCategoryMutation,
 	useCreateExpenseMutation,
-	useGetCategoriesQuery,
+	useDeleteExpenseCategoryMutation,
+	useDeleteExpenseSubCategoryMutation,
+	useGetExpenseTaxonomyQuery,
 	useGetExpenseQuery,
 	useGetProjectsListQuery,
-	useGetSubCategoriesQuery,
+	useUpdateExpenseCategoryMutation,
+	useUpdateExpenseSubCategoryMutation,
 	useUpdateExpenseMutation,
 } from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
@@ -63,8 +69,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	const { data: rawData } = useGetExpenseQuery({ id: id! }, { skip: !token || !isEditMode });
 
 	const { data: projectsData } = useGetProjectsListQuery({}, { skip: !token });
-	const { data: categoriesData } = useGetCategoriesQuery(undefined, { skip: !token });
-	const { data: subCategoriesData } = useGetSubCategoriesQuery({}, { skip: !token });
+	const { data: expenseTaxonomy } = useGetExpenseTaxonomyQuery(undefined, { skip: !token });
 
 	const projectItems: DropDownType[] = useMemo(() => {
 		const projects = Array.isArray(projectsData)
@@ -76,9 +81,15 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	}, [projectsData]);
 
 	const categoryItems: DropDownType[] = useMemo(() => {
-		return (categoriesData ?? []).map((c) => ({ code: String(c.id), value: c.name }));
-	}, [categoriesData]);
+		return (expenseTaxonomy ?? []).map((category) => ({ code: category.name, value: String(category.id) }));
+	}, [expenseTaxonomy]);
 
+	const [createExpenseCategory] = useCreateExpenseCategoryMutation();
+	const [updateExpenseCategory] = useUpdateExpenseCategoryMutation();
+	const [deleteExpenseCategory] = useDeleteExpenseCategoryMutation();
+	const [createExpenseSubCategory] = useCreateExpenseSubCategoryMutation();
+	const [updateExpenseSubCategory] = useUpdateExpenseSubCategoryMutation();
+	const [deleteExpenseSubCategory] = useDeleteExpenseSubCategoryMutation();
 	const [createExpense, { isLoading: isCreateLoading }] = useCreateExpenseMutation();
 	const [updateExpense, { isLoading: isUpdateLoading }] = useUpdateExpenseMutation();
 	const [isPending, setIsPending] = useState(false);
@@ -122,16 +133,17 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	});
 
 	const selectedProject = projectItems.find((p) => p.code === String(formik.values.project)) ?? null;
-	const selectedCategory = categoryItems.find((c) => c.code === String(formik.values.category)) ?? null;
+	const selectedCategory = categoryItems.find((c) => c.value === String(formik.values.category)) ?? null;
 
 	const subCategoryItems: DropDownType[] = useMemo(() => {
-		const filtered = (subCategoriesData ?? []).filter(
-			(sc) => !formik.values.category || sc.category === Number(formik.values.category),
-		);
-		return filtered.map((sc) => ({ code: String(sc.id), value: sc.name }));
-	}, [subCategoriesData, formik.values.category]);
+		const activeCategory = (expenseTaxonomy ?? []).find((category) => category.id === Number(formik.values.category));
+		return (activeCategory?.subcategories ?? []).map((subCategory) => ({
+			code: subCategory.name,
+			value: String(subCategory.id),
+		}));
+	}, [expenseTaxonomy, formik.values.category]);
 
-	const selectedSubCategory = subCategoryItems.find((sc) => sc.code === String(formik.values.sous_categorie)) ?? null;
+	const selectedSubCategory = subCategoryItems.find((sc) => sc.value === String(formik.values.sous_categorie)) ?? null;
 
 	const validationEntries = Object.entries(formik.errors).filter(([k]) => k !== 'globalError') as [string, string][];
 	const hasValidationErrors = validationEntries.length > 0;
@@ -319,13 +331,36 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										value={selectedCategory}
 										fullWidth
 										onChange={(_, newVal) => {
-											formik.setFieldValue('category', newVal ? Number(newVal.code) : '');
+												formik.setFieldValue('category', newVal ? Number(newVal.value) : '');
 											formik.setFieldValue('sous_categorie', '');
 										}}
 										onBlur={formik.handleBlur('category')}
 										error={formik.submitCount > 0 && Boolean(formik.errors.category)}
 										helperText={formik.submitCount > 0 ? ((formik.errors.category as string) ?? '') : ''}
 										startIcon={<CategoryIcon fontSize="small" />}
+										endIcon={
+											<EntityCrudControls
+												label={t.common.category.toLowerCase()}
+												icon={<CategoryIcon fontSize="small" />}
+												inputTheme={inputTheme}
+												selectedItem={selectedCategory}
+												addEntity={({ data }) => createExpenseCategory({ data: { name: String(data.name ?? '') } })}
+												editEntity={({ id: entityId, data }) =>
+													updateExpenseCategory({ id: entityId, data: { name: String(data.name ?? '') } })
+												}
+												deleteEntity={({ id: entityId }) => deleteExpenseCategory({ id: entityId })}
+												buildAddPayload={(name) => ({ name })}
+												buildEditPayload={(name) => ({ name })}
+												onAddSuccess={(newId) => {
+													formik.setFieldValue('category', newId);
+													formik.setFieldValue('sous_categorie', '');
+												}}
+												onDeleteSuccess={() => {
+													formik.setFieldValue('category', '');
+													formik.setFieldValue('sous_categorie', '');
+												}}
+											/>
+										}
 									/>
 									<CustomAutoCompleteSelect
 										id="sous_categorie"
@@ -337,12 +372,48 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										value={selectedSubCategory}
 										fullWidth
 										onChange={(_, newVal) => {
-											formik.setFieldValue('sous_categorie', newVal ? Number(newVal.code) : '');
+												formik.setFieldValue('sous_categorie', newVal ? Number(newVal.value) : '');
 										}}
 										onBlur={formik.handleBlur('sous_categorie')}
 										error={formik.submitCount > 0 && Boolean(formik.errors.sous_categorie)}
 										helperText={formik.submitCount > 0 ? ((formik.errors.sous_categorie as string) ?? '') : ''}
 										startIcon={<CategoryIcon fontSize="small" />}
+										endIcon={
+											<EntityCrudControls
+												label={t.expenses.subCategory.toLowerCase()}
+												icon={<CategoryIcon fontSize="small" />}
+												inputTheme={inputTheme}
+												selectedItem={selectedSubCategory}
+												addEntity={({ data }) =>
+													createExpenseSubCategory({
+														data: {
+															name: String(data.name ?? ''),
+															category: Number(data.category ?? formik.values.category),
+														},
+													})
+												}
+												editEntity={({ id: entityId, data }) =>
+													updateExpenseSubCategory({
+														id: entityId,
+														data: {
+															name: String(data.name ?? ''),
+															category: Number(data.category ?? formik.values.category),
+														},
+													})
+												}
+												deleteEntity={({ id: entityId }) => deleteExpenseSubCategory({ id: entityId })}
+												buildAddPayload={(name) => ({ name, category: Number(formik.values.category) })}
+												buildEditPayload={(name) => ({ name, category: Number(formik.values.category) })}
+												addDisabled={!formik.values.category}
+												disabled={!formik.values.category}
+												onAddSuccess={(newId) => {
+													formik.setFieldValue('sous_categorie', newId);
+												}}
+												onDeleteSuccess={() => {
+													formik.setFieldValue('sous_categorie', '');
+												}}
+											/>
+										}
 									/>
 									<CustomTextInput
 										theme={inputTheme}

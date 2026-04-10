@@ -34,7 +34,6 @@ import {
 import {
 	Assignment as AssignmentIcon,
 	AttachMoney as AttachMoneyIcon,
-	Category as CategoryIcon,
 	Dashboard as DashboardIcon,
 	Domain as DomainIcon,
 	DoneAll as DoneAllIcon,
@@ -55,8 +54,6 @@ import type { TranslationDictionary } from '@/types/languageTypes';
 import {
 	AUTH_LOGIN,
 	BACKEND_SITE_ADMIN,
-	CATEGORIES_ADD,
-	CATEGORIES_LIST,
 	DASHBOARD,
 	DASHBOARD_EDIT_PROFILE,
 	DASHBOARD_NOTIFICATIONS,
@@ -99,14 +96,6 @@ const getNavigationMenu = (isStaff: boolean, t: TranslationDictionary) => {
 			items: [
 				{ title: t.navigation.projectsList, label: t.navigation.projectsList, path: PROJECTS_LIST },
 				{ title: t.navigation.newProject, label: t.navigation.newProject, path: PROJECTS_ADD },
-			],
-		},
-		categories: {
-			title: t.navigation.categories,
-			icon: <CategoryIcon />,
-			items: [
-				{ title: t.navigation.categoriesList, label: t.navigation.categoriesList, path: CATEGORIES_LIST },
-				{ title: t.navigation.newCategory, label: t.navigation.newCategory, path: CATEGORIES_ADD },
 			],
 		},
 		revenus: {

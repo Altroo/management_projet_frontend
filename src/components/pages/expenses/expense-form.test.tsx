@@ -41,6 +41,8 @@ jest.mock('@/contexts/InitContext', () => ({
 const mockUseGetExpenseQuery = jest.fn();
 const mockCreateExpense = jest.fn();
 const mockUpdateExpense = jest.fn();
+const mockUseGetProjectsListQuery = jest.fn(() => ({ data: [], isLoading: false }));
+const mockUseGetExpenseTaxonomyQuery = jest.fn(() => ({ data: [], isLoading: false }));
 
 jest.mock('@/store/services/project', () => ({
 	__esModule: true,
@@ -48,9 +50,14 @@ jest.mock('@/store/services/project', () => ({
 		mockUseGetExpenseQuery(params, options),
 	useCreateExpenseMutation: () => [mockCreateExpense, { isLoading: false, error: undefined }],
 	useUpdateExpenseMutation: () => [mockUpdateExpense, { isLoading: false, error: undefined }],
-	useGetProjectsListQuery: () => ({ data: [], isLoading: false }),
-	useGetCategoriesQuery: () => ({ data: [], isLoading: false }),
-	useGetSubCategoriesQuery: () => ({ data: [], isLoading: false }),
+	useGetProjectsListQuery: () => mockUseGetProjectsListQuery(),
+	useGetExpenseTaxonomyQuery: () => mockUseGetExpenseTaxonomyQuery(),
+	useCreateExpenseCategoryMutation: () => [jest.fn(), { isLoading: false }],
+	useUpdateExpenseCategoryMutation: () => [jest.fn(), { isLoading: false }],
+	useDeleteExpenseCategoryMutation: () => [jest.fn(), { isLoading: false }],
+	useCreateExpenseSubCategoryMutation: () => [jest.fn(), { isLoading: false }],
+	useUpdateExpenseSubCategoryMutation: () => [jest.fn(), { isLoading: false }],
+	useDeleteExpenseSubCategoryMutation: () => [jest.fn(), { isLoading: false }],
 }));
 
 jest.mock('@/components/layouts/protected/protected', () => ({
@@ -79,6 +86,11 @@ jest.mock('@/components/formikElements/customAutoCompleteSelect/customAutoComple
 			<label>{label}</label>
 		</div>
 	),
+}));
+
+jest.mock('@/components/shared/entityCrudControls/entityCrudControls', () => ({
+	__esModule: true,
+	default: () => <div data-testid="entity-crud-controls" />,
 }));
 
 jest.mock('@/components/htmlElements/buttons/primaryLoadingButton/primaryLoadingButton', () => ({
