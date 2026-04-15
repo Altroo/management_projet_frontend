@@ -81,7 +81,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	}, [projectsData]);
 
 	const categoryItems: DropDownType[] = useMemo(() => {
-		return (expenseTaxonomy ?? []).map((category) => ({ code: category.name, value: String(category.id) }));
+		return (expenseTaxonomy ?? []).map((category) => ({ code: String(category.id), value: category.name }));
 	}, [expenseTaxonomy]);
 
 	const [createExpenseCategory] = useCreateExpenseCategoryMutation();
@@ -133,17 +133,17 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	});
 
 	const selectedProject = projectItems.find((p) => p.code === String(formik.values.project)) ?? null;
-	const selectedCategory = categoryItems.find((c) => c.value === String(formik.values.category)) ?? null;
+	const selectedCategory = categoryItems.find((c) => c.code === String(formik.values.category)) ?? null;
 
 	const subCategoryItems: DropDownType[] = useMemo(() => {
 		const activeCategory = (expenseTaxonomy ?? []).find((category) => category.id === Number(formik.values.category));
 		return (activeCategory?.subcategories ?? []).map((subCategory) => ({
-			code: subCategory.name,
-			value: String(subCategory.id),
+			code: String(subCategory.id),
+			value: subCategory.name,
 		}));
 	}, [expenseTaxonomy, formik.values.category]);
 
-	const selectedSubCategory = subCategoryItems.find((sc) => sc.value === String(formik.values.sous_categorie)) ?? null;
+	const selectedSubCategory = subCategoryItems.find((sc) => sc.code === String(formik.values.sous_categorie)) ?? null;
 
 	const validationEntries = Object.entries(formik.errors).filter(([k]) => k !== 'globalError') as [string, string][];
 	const hasValidationErrors = validationEntries.length > 0;
@@ -331,7 +331,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										value={selectedCategory}
 										fullWidth
 										onChange={(_, newVal) => {
-												formik.setFieldValue('category', newVal ? Number(newVal.value) : '');
+											formik.setFieldValue('category', newVal ? Number(newVal.code) : '');
 											formik.setFieldValue('sous_categorie', '');
 										}}
 										onBlur={formik.handleBlur('category')}
@@ -372,7 +372,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										value={selectedSubCategory}
 										fullWidth
 										onChange={(_, newVal) => {
-												formik.setFieldValue('sous_categorie', newVal ? Number(newVal.value) : '');
+											formik.setFieldValue('sous_categorie', newVal ? Number(newVal.code) : '');
 										}}
 										onBlur={formik.handleBlur('sous_categorie')}
 										error={formik.submitCount > 0 && Boolean(formik.errors.sous_categorie)}
