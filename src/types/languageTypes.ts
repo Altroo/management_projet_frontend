@@ -371,6 +371,7 @@ export type TranslationDictionary = {
 		expenseNumber: string;
 		supplier: string;
 		subCategory: string;
+		subCategoryDeletedSuccess: string;
 		noSubCategoryFound: string;
 		element: string;
 		categoryInfo: string;
