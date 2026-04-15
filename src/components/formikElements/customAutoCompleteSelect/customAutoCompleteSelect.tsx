@@ -49,7 +49,7 @@ const CustomAutoCompleteSelect: React.FC<Props> = ({
 		return (
 			<Box component="li" key={key} {...rest}>
 				<Typography variant="body2" noWrap sx={{ flex: 1 }}>
-					{option.code}
+					{option.value}
 				</Typography>
 			</Box>
 		);
@@ -63,10 +63,10 @@ const CustomAutoCompleteSelect: React.FC<Props> = ({
 				fullWidth={fullWidth}
 				noOptionsText={noOptionsText}
 				options={items}
-				getOptionLabel={(option) => option.code}
+				getOptionLabel={(option) => option.value}
 				getOptionKey={(option) => option.value}
 				filterOptions={(options, state) =>
-					options.filter((opt) => opt.code.toLowerCase().includes(state.inputValue.toLowerCase()))
+					options.filter((opt) => opt.value.toLowerCase().includes(state.inputValue.toLowerCase()))
 				}
 				value={value}
 				onChange={onChange}

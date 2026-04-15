@@ -57,8 +57,15 @@ const requiredDateField = (getLabel: () => string) =>
 
 const optionalNumberField = () =>
 	z.preprocess(
-		(val) => (val === undefined || val === null || val === '' ? undefined : val),
-		z.string().optional(),
+		(val) => {
+			if (val === undefined || val === null || val === '') return undefined;
+			if (typeof val === 'string') {
+				const parsed = Number(val);
+				return Number.isNaN(parsed) ? val : parsed;
+			}
+			return val;
+		},
+		z.number().optional(),
 	);
 
 const singleDigit = z
