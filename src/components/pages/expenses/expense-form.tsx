@@ -358,6 +358,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 												onDeleteSuccess={() => {
 													formik.setFieldValue('category', '');
 													formik.setFieldValue('sous_categorie', '');
+													onSuccess(t.categories.categoryDeletedSuccess);
 												}}
 											/>
 										}
@@ -411,6 +412,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 												}}
 												onDeleteSuccess={() => {
 													formik.setFieldValue('sous_categorie', '');
+													onSuccess(t.expenses.subCategoryDeletedSuccess);
 												}}
 											/>
 										}

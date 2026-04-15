@@ -70,14 +70,14 @@ const EntityCrudControls: React.FC<EntityCrudControlsProps> = ({
 	const [actionLoading, setActionLoading] = useState(false);
 
 	const selectedId = useMemo(() => {
-		if (!selectedItem?.value) return null;
-		const parsed = Number(selectedItem.value);
+		if (!selectedItem?.code) return null;
+		const parsed = Number(selectedItem.code);
 		return Number.isFinite(parsed) ? parsed : null;
 	}, [selectedItem]);
 
 	const handleEditOpen = () => {
-		if (!selectedItem?.code) return;
-		setEditName(selectedItem.code);
+		if (!selectedItem?.value) return;
+		setEditName(selectedItem.value);
 		setEditError(null);
 		setOpenEditDialog(true);
 	};
@@ -188,7 +188,7 @@ const EntityCrudControls: React.FC<EntityCrudControlsProps> = ({
 			{openDeleteDialog && selectedItem && (
 				<ActionModals
 					title={`${t.common.delete} ${label}`}
-					body={`${t.common.delete} ${selectedItem.code} ?`}
+					body={`${t.common.delete} ${selectedItem.value} ?`}
 					actions={[
 						{
 							text: t.common.cancel,

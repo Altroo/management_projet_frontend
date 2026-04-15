@@ -71,9 +71,9 @@ jest.mock('@/components/htmlElements/modals/actionModal/actionModals', () => ({
 
 describe('EntityCrudControls', () => {
 	const inputTheme = createTheme();
-	const selectedItem: DropDownType = { code: 'Matériaux', value: '12' };
+	const selectedItem: DropDownType = { code: '12', value: 'Matériaux' };
 
-	it('uses reservation item shape for edit and delete flows', async () => {
+	it('uses id in code and label in value for edit and delete flows', async () => {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const editEntity = jest.fn((_args: { id: number; data: Record<string, number | string> }) => createMutationResult({}));
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -126,6 +126,10 @@ describe('EntityCrudControls', () => {
 		await waitFor(() => {
 			expect(deleteEntity).toHaveBeenCalledWith({ id: 12 });
 			expect(onDeleteSuccess).toHaveBeenCalled();
+		});
+
+		await waitFor(() => {
+			expect(screen.queryByTestId('action-modal')).not.toBeInTheDocument();
 		});
 	});
 });

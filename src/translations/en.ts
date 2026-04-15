@@ -403,6 +403,7 @@ export const en: TranslationDictionary = {
 		expenseNumber: 'Expense #',
 		supplier: 'Supplier',
 		subCategory: 'Sub-category',
+		subCategoryDeletedSuccess: 'Sub-category deleted successfully',
 		noSubCategoryFound: 'No sub-category found',
 		element: 'Element',
 		categoryInfo: 'Category information',
