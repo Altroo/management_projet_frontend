@@ -8,6 +8,7 @@ import {
 	Close as CloseIcon,
 	Delete as DeleteIcon,
 	Edit as EditIcon,
+	TrendingDown as TrendingDownIcon,
 	Visibility as VisibilityIcon,
 } from '@mui/icons-material';
 import { GridColDef, GridFilterModel, GridLogicOperator, GridRenderCellParams } from '@mui/x-data-grid';
@@ -25,6 +26,7 @@ import ChipSelectFilterBar from '@/components/shared/chipSelectFilter/chipSelect
 import { createDateRangeFilterOperator } from '@/components/shared/dateRangeFilter/dateRangeFilterOperator';
 import { createNumericFilterOperators } from '@/components/shared/numericFilter/numericFilterOperator';
 import { createDropdownFilterOperators } from '@/components/shared/dropdownFilter/dropdownFilter';
+import SummaryKpiCard from '@/components/shared/summaryKpiCard/summaryKpiCard';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
 import { EXPENSES_ADD, EXPENSES_EDIT, EXPENSES_VIEW } from '@/utils/routes';
 import { useLanguage, useToast } from '@/utils/hooks';
@@ -415,30 +417,32 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 							>
 								{t.expenses.newExpense}
 							</Button>
-							{filteredExpenses.length > 0 && (
-								<Typography
-									variant="subtitle1"
-									sx={{
-										fontWeight: 700,
-										color: 'error.main',
-										ml: 'auto',
-									}}
-								>
-									Total : {totalAmount.toLocaleString('fr-MA')} MAD
-								</Typography>
-							)}
 							{selectedIds.length > 0 && (
 								<Button
 									variant="outlined"
 									color="error"
 									onClick={() => setShowBulkDeleteModal(true)}
 									startIcon={<DeleteIcon fontSize="small" />}
-									sx={{ whiteSpace: 'nowrap' }}
+									sx={{ whiteSpace: 'nowrap', ml: 'auto' }}
 								>
 									{t.common.delete} ({selectedIds.length})
 								</Button>
 							)}
 						</Box>
+
+						{filteredExpenses.length > 0 && (
+							<Box sx={{ px: { xs: 1, sm: 2, md: 3 }, mb: { xs: 1, sm: 2, md: 3 } }}>
+								<Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'minmax(280px, 380px)' }, gap: 2 }}>
+									<SummaryKpiCard
+										icon={<TrendingDownIcon />}
+										label={t.analytics.totalExpenses}
+										value={`${totalAmount.toLocaleString('fr-MA')} MAD`}
+										color="#D84315"
+										testId="expenses-total-card"
+									/>
+								</Box>
+							</Box>
+						)}
 
 						<ChipSelectFilterBar filters={chipFilters} onFilterChange={setChipFilterParams} columns={1} />
 

@@ -20,7 +20,10 @@ jest.mock('@/utils/hooks', () => {
 
 jest.mock('@/store/services/project', () => ({
 	...jest.requireActual('@/store/services/project'),
-	useGetRevenuesQuery: jest.fn(() => ({ data: [], isLoading: false })),
+	useGetRevenuesQuery: jest.fn(() => ({
+		data: [{ id: 1, montant: 1200, description: 'Mission', project: 1, project_name: 'Projet Alpha', date: '2024-01-01' }],
+		isLoading: false,
+	})),
 	useGetProjectsListQuery: jest.fn(() => ({ data: [], isLoading: false })),
 	useDeleteRevenueMutation: jest.fn(() => [jest.fn(), { isLoading: false }]),
 	useBulkDeleteRevenuesMutation: jest.fn(() => [jest.fn(), { isLoading: false }]),
@@ -92,6 +95,17 @@ jest.mock('@/components/shared/dropdownFilter/dropdownFilter', () => ({
 	createDropdownFilterOperators: jest.fn(() => []),
 }));
 
+jest.mock('@/components/shared/summaryKpiCard/summaryKpiCard', () => {
+	const Mock = ({ label, value, testId }: { label: string; value: string; testId?: string }) => (
+		<div data-testid={testId ?? 'summary-kpi-card'}>
+			<span>{label}</span>
+			<span>{value}</span>
+		</div>
+	);
+	Mock.displayName = 'SummaryKpiCard';
+	return { __esModule: true, default: Mock };
+});
+
 const mockSession: AppSession = {
 	accessToken: 'mock-token',
 	refreshToken: 'mock-refresh-token',
@@ -140,6 +154,17 @@ describe('RevenuesListClient', () => {
 			</Provider>,
 		);
 		expect(screen.getByText('Nouveau revenu')).toBeInTheDocument();
+	});
+
+	it('renders revenue total card', () => {
+		render(
+			<Provider store={store}>
+				<RevenuesListClient session={mockSession} />
+			</Provider>,
+		);
+		expect(screen.getByTestId('revenues-total-card')).toBeInTheDocument();
+		expect(screen.getByText('Revenu total')).toBeInTheDocument();
+		expect(screen.getByText('1.200 MAD')).toBeInTheDocument();
 	});
 
 	it('renders protected wrapper', () => {
