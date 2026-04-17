@@ -1,4 +1,16 @@
+import { AxiosHeaders } from 'axios';
+import type { InternalAxiosRequestConfig } from 'axios';
 import { hexToRGB, formatDate, formatLocalDate, formatNumber, parseNumber, setFormikAutoErrors } from './helpers';
+
+type RequestInterceptorWithHandlers = {
+	handlers?: Array<{
+		fulfilled?: (config: InternalAxiosRequestConfig) => InternalAxiosRequestConfig | Promise<InternalAxiosRequestConfig>;
+	}>;
+};
+
+beforeEach(() => {
+	jest.clearAllMocks();
+});
 
 // ─── hexToRGB ────────────────────────────────────────────────────────────────
 
@@ -171,6 +183,7 @@ describe('setFormikAutoErrors', () => {
 // ─── handleUnauthorized ──────────────────────────────────────────────────────
 
 jest.mock('next-auth/react', () => ({
+	getSession: jest.fn().mockResolvedValue(null),
 	signOut: jest.fn().mockResolvedValue(undefined),
 }));
 jest.mock('@/utils/routes', () => ({ SITE_ROOT: 'https://example.com/' }));
@@ -211,6 +224,39 @@ describe('isAuthenticatedInstance', () => {
 		const instance = isAuthenticatedInstance();
 		expect(typeof instance.request).toBe('function');
 		expect(typeof instance.interceptors).toBe('object');
+	});
+
+	it('falls back to the NextAuth session token when Redux auth state is empty', async () => {
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		const { getSession } = require('next-auth/react');
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		const { isAuthenticatedInstance } = require('./helpers');
+
+		getSession.mockResolvedValueOnce({ accessToken: 'session-access-token' });
+		const instance = isAuthenticatedInstance(() => undefined);
+		const requestInterceptor = instance.interceptors.request as typeof instance.interceptors.request & RequestInterceptorWithHandlers;
+		const handler = requestInterceptor.handlers?.[0]?.fulfilled;
+
+		const config = await handler?.({ headers: new AxiosHeaders() } as InternalAxiosRequestConfig);
+
+		expect(getSession).toHaveBeenCalledTimes(1);
+		expect(new AxiosHeaders(config?.headers).get('Authorization')).toBe('Bearer session-access-token');
+	});
+
+	it('prefers the Redux token and skips NextAuth fallback when access is already present', async () => {
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		const { getSession } = require('next-auth/react');
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		const { isAuthenticatedInstance } = require('./helpers');
+
+		const instance = isAuthenticatedInstance(() => ({ access: 'redux-access-token' }));
+		const requestInterceptor = instance.interceptors.request as typeof instance.interceptors.request & RequestInterceptorWithHandlers;
+		const handler = requestInterceptor.handlers?.[0]?.fulfilled;
+
+		const config = await handler?.({ headers: new AxiosHeaders() } as InternalAxiosRequestConfig);
+
+		expect(getSession).not.toHaveBeenCalled();
+		expect(new AxiosHeaders(config?.headers).get('Authorization')).toBe('Bearer redux-access-token');
 	});
 });
 
