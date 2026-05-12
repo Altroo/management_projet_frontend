@@ -10,6 +10,7 @@ export const AUTH_RESET_PASSWORD_SET_PASSWORD = `${SITE_ROOT}/reset-password/set
 export const AUTH_RESET_PASSWORD_COMPLETE = `${SITE_ROOT}/reset-password/set-password-complete`;
 // Dashboard
 export const DASHBOARD = `${SITE_ROOT}dashboard`;
+export const CLIENT_DASHBOARD = `${SITE_ROOT}dashboard/client-dashboard`;
 // Settings
 export const DASHBOARD_EDIT_PROFILE = `${SITE_ROOT}dashboard/settings/edit-profile`;
 export const DASHBOARD_PASSWORD = `${SITE_ROOT}dashboard/settings/password`;

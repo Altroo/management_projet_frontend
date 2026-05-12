@@ -2,7 +2,19 @@
 
 import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Alert, Box, Button, Card, CardContent, Divider, InputAdornment, Stack, Typography } from '@mui/material';
+import {
+	Alert,
+	Box,
+	Button,
+	Card,
+	CardContent,
+	Checkbox,
+	Divider,
+	FormControlLabel,
+	InputAdornment,
+	Stack,
+	Typography,
+} from '@mui/material';
 import {
 	Add as AddIcon,
 	ArrowBack as ArrowBackIcon,
@@ -13,6 +25,7 @@ import {
 	Edit as EditIcon,
 	Notes as NotesIcon,
 	Person as PersonIcon,
+	Percent as PercentIcon,
 	Warning as WarningIcon,
 } from '@mui/icons-material';
 import { useFormik } from 'formik';
@@ -23,7 +36,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { fr } from 'date-fns/locale';
 import { format, parseISO } from 'date-fns';
 import type { SessionProps } from '@/types/_initTypes';
-import type { ExpenseFormValues } from '@/types/projectTypes';
+import type { ExpenseFormValues, ServiceFeeType } from '@/types/projectTypes';
 import type { DropDownType } from '@/types/accountTypes';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import { Protected } from '@/components/layouts/protected/protected';
@@ -84,6 +97,14 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 		return (expenseTaxonomy ?? []).map((category) => ({ code: String(category.id), value: category.name }));
 	}, [expenseTaxonomy]);
 
+	const serviceFeeTypeItems: DropDownType[] = useMemo(
+		() => [
+			{ code: 'percentage', value: t.expenses.serviceFeePercent },
+			{ code: 'fixed', value: t.expenses.serviceFeeFixed },
+		],
+		[t],
+	);
+
 	const [createExpenseCategory] = useCreateExpenseCategoryMutation();
 	const [updateExpenseCategory] = useUpdateExpenseCategoryMutation();
 	const [deleteExpenseCategory] = useDeleteExpenseCategoryMutation();
@@ -103,6 +124,9 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 			element: rawData?.element ?? '',
 			description: rawData?.description ?? '',
 			montant: rawData?.montant ?? '',
+			frais_de_service: rawData?.frais_de_service ?? false,
+			frais_de_service_valeur: rawData?.frais_de_service_valeur ?? '',
+			frais_de_service_type: rawData?.frais_de_service_type ?? 'fixed',
 			fournisseur: rawData?.fournisseur ?? '',
 			notes: rawData?.notes ?? '',
 			globalError: '',
@@ -114,12 +138,17 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 			setIsPending(true);
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const { globalError, ...fields } = data;
+			const payload = {
+				...fields,
+				frais_de_service_valeur: fields.frais_de_service ? fields.frais_de_service_valeur : null,
+				frais_de_service_type: fields.frais_de_service ? fields.frais_de_service_type : 'fixed',
+			};
 			try {
 				if (isEditMode) {
-					await updateExpense({ id: id!, data: fields }).unwrap();
+					await updateExpense({ id: id!, data: payload }).unwrap();
 					onSuccess(t.expenses.expenseUpdatedSuccess);
 				} else {
-					await createExpense({ data: fields }).unwrap();
+					await createExpense({ data: payload }).unwrap();
 					onSuccess(t.expenses.expenseAddedSuccess);
 				}
 				router.push(EXPENSES_LIST);
@@ -144,6 +173,8 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	}, [expenseTaxonomy, formik.values.category]);
 
 	const selectedSubCategory = subCategoryItems.find((sc) => sc.code === String(formik.values.sous_categorie)) ?? null;
+	const selectedServiceFeeType =
+		serviceFeeTypeItems.find((item) => item.code === formik.values.frais_de_service_type) ?? serviceFeeTypeItems[1];
 
 	const validationEntries = Object.entries(formik.errors).filter(([k]) => k !== 'globalError') as [string, string][];
 	const hasValidationErrors = validationEntries.length > 0;
@@ -294,6 +325,61 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 											}}
 										/>
 									</Stack>
+									<FormControlLabel
+										control={
+											<Checkbox
+												checked={formik.values.frais_de_service}
+												onChange={(e) => {
+													const checked = e.target.checked;
+													formik.setFieldValue('frais_de_service', checked);
+													if (!checked) {
+														formik.setFieldValue('frais_de_service_valeur', '');
+														formik.setFieldValue('frais_de_service_type', 'fixed');
+													}
+												}}
+											/>
+										}
+										label={t.expenses.serviceFee}
+									/>
+									{formik.values.frais_de_service && (
+										<Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+											<CustomTextInput
+												theme={inputTheme}
+												id="frais_de_service_valeur"
+												type="text"
+												size="small"
+												label={`${t.expenses.serviceFeeValue} *`}
+												value={formik.values.frais_de_service_valeur ?? ''}
+												onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+													if (/^(0|[1-9]\d*)?([.,]\d*)?$/.test(e.target.value))
+														formik.setFieldValue('frais_de_service_valeur', e.target.value);
+												}}
+												onBlur={formik.handleBlur('frais_de_service_valeur')}
+												error={formik.submitCount > 0 && Boolean(formik.errors.frais_de_service_valeur)}
+												helperText={formik.submitCount > 0 ? (formik.errors.frais_de_service_valeur ?? '') : ''}
+												fullWidth
+												startIcon={<AttachMoneyIcon fontSize="small" />}
+												slotProps={{ input: { inputProps: { inputMode: 'decimal' } } }}
+											/>
+											<CustomAutoCompleteSelect
+												id="frais_de_service_type"
+												size="small"
+												noOptionsText={t.common.noOptions}
+												label={`${t.expenses.serviceFeeType} *`}
+												items={serviceFeeTypeItems}
+												theme={inputTheme}
+												value={selectedServiceFeeType}
+												fullWidth
+												onChange={(_, newVal) => {
+													formik.setFieldValue('frais_de_service_type', (newVal?.code ?? 'fixed') as ServiceFeeType);
+												}}
+												onBlur={formik.handleBlur('frais_de_service_type')}
+												error={formik.submitCount > 0 && Boolean(formik.errors.frais_de_service_type)}
+												helperText={formik.submitCount > 0 ? (formik.errors.frais_de_service_type ?? '') : ''}
+												startIcon={<PercentIcon fontSize="small" />}
+											/>
+										</Stack>
+									)}
 								</Stack>
 							</CardContent>
 						</Card>

@@ -43,6 +43,9 @@ jest.mock('chart.js', () => ({
 	LinearScale: jest.fn(),
 	BarElement: jest.fn(),
 	ArcElement: jest.fn(),
+	LineElement: jest.fn(),
+	PointElement: jest.fn(),
+	Filler: jest.fn(),
 	Title: jest.fn(),
 	Tooltip: jest.fn(),
 	Legend: jest.fn(),
@@ -51,6 +54,7 @@ jest.mock('chart.js', () => ({
 jest.mock('react-chartjs-2', () => ({
 	Bar: () => <div data-testid="bar-chart" />,
 	Doughnut: () => <div data-testid="doughnut-chart" />,
+	Line: () => <div data-testid="line-chart" />,
 }));
 
 jest.mock('@/components/layouts/navigationBar/navigationBar', () => {

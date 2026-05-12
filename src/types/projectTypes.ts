@@ -1,4 +1,5 @@
 export type ProjectStatusType = 'Complété' | 'En cours' | 'Pas commencé' | 'En attente';
+export type ServiceFeeType = 'percentage' | 'fixed';
 
 export interface CategoryType {
 	id: number;
@@ -112,6 +113,10 @@ export interface ExpenseType {
 	element: string | null;
 	description: string;
 	montant: string;
+	frais_de_service: boolean;
+	frais_de_service_valeur: string | null;
+	frais_de_service_type: ServiceFeeType;
+	frais_de_service_montant: string;
 	fournisseur: string | null;
 	notes: string | null;
 	created_by_user: number | null;
@@ -128,12 +133,40 @@ export interface ExpenseFormValues {
 	element: string;
 	description: string;
 	montant: string;
+	frais_de_service: boolean;
+	frais_de_service_valeur: string | null;
+	frais_de_service_type: ServiceFeeType;
 	fournisseur: string;
 	notes: string;
 	globalError: string;
 }
 
 // Dashboard types
+export interface DashboardClientTotalType {
+	client: string;
+	total: string;
+}
+
+export interface DashboardCategoryTotalType {
+	category__name: string | null;
+	total: string;
+}
+
+export interface DashboardSubCategoryTotalType {
+	sous_categorie__name: string | null;
+	total: string;
+}
+
+export interface DashboardVendorTotalType {
+	fournisseur: string;
+	total: string;
+}
+
+export interface DashboardHistoryPointType {
+	date: string;
+	total: string;
+}
+
 export interface ProjectDashboardType {
 	project_id: number;
 	nom: string;
@@ -143,11 +176,11 @@ export interface ProjectDashboardType {
 	benefice: string;
 	marge: number;
 	budget_utilisation: number;
-	top_categories: Array<{ category__name: string | null; total: string }>;
-	top_subcategories: Array<{ sous_categorie__name: string | null; total: string }>;
-	top_vendors: Array<{ fournisseur: string; total: string }>;
-	expense_history: Array<{ date: string; total: string }>;
-	revenue_history: Array<{ date: string; total: string }>;
+	top_categories: DashboardCategoryTotalType[];
+	top_subcategories: DashboardSubCategoryTotalType[];
+	top_vendors: DashboardVendorTotalType[];
+	expense_history: DashboardHistoryPointType[];
+	revenue_history: DashboardHistoryPointType[];
 }
 
 export interface ProjectSummaryType {
@@ -168,5 +201,38 @@ export interface MultiProjectDashboardType {
 	total_profit: string;
 	total_margin: number;
 	budget_utilisation: number;
+	top_expense_clients: DashboardClientTotalType[];
+	top_revenue_clients: DashboardClientTotalType[];
+	top_categories: DashboardCategoryTotalType[];
+	top_subcategories: DashboardSubCategoryTotalType[];
+	top_vendors: DashboardVendorTotalType[];
+	expense_history: DashboardHistoryPointType[];
+	revenue_history: DashboardHistoryPointType[];
 	projects: ProjectSummaryType[];
+}
+
+export interface ClientDashboardProjectType {
+	id: number;
+	nom: string;
+	client: string;
+	revenue: string;
+	service_fees: string;
+	revenue_reelle: string;
+}
+
+export interface ClientDashboardRevenueType {
+	client: string;
+	revenue: string;
+	service_fees: string;
+	revenue_reelle: string;
+}
+
+export interface ClientDashboardType {
+	total_projects: number;
+	total_revenue: string;
+	total_service_fees: string;
+	total_revenue_reelle: string;
+	total_expenses: string;
+	top_clients_revenue_reelle: ClientDashboardRevenueType[];
+	projects: ClientDashboardProjectType[];
 }

@@ -29,6 +29,7 @@ import {
 	Edit as EditIcon,
 	Notes as NotesIcon,
 	Person as PersonIcon,
+	Percent as PercentIcon,
 } from '@mui/icons-material';
 import { EXPENSES_EDIT, EXPENSES_LIST } from '@/utils/routes';
 import ApiProgress from '@/components/formikElements/apiLoading/apiProgress/apiProgress';
@@ -121,6 +122,8 @@ const ExpenseViewClient: React.FC<Props> = ({ session, id }) => {
 	const [deleteExpense] = useDeleteExpenseMutation();
 	const { onSuccess, onError } = useToast();
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const serviceFeeTypeLabel = (type: string | null | undefined) =>
+		type === 'percentage' ? t.expenses.serviceFeePercent : t.expenses.serviceFeeFixed;
 
 	const handleDelete = async () => {
 		try {
@@ -267,6 +270,36 @@ const ExpenseViewClient: React.FC<Props> = ({ session, id }) => {
 													</Typography>
 												}
 											/>
+											<Divider />
+											<InfoRow
+												icon={<PercentIcon />}
+												label={t.expenses.serviceFee}
+												value={expense.frais_de_service ? t.common.yes : t.common.no}
+											/>
+											{expense.frais_de_service && (
+												<>
+													<Divider />
+													<InfoRow
+														icon={<PercentIcon />}
+														label={t.expenses.serviceFeeValue}
+														value={`${Number(expense.frais_de_service_valeur).toLocaleString('fr-MA')} ${
+															expense.frais_de_service_type === 'percentage' ? '%' : 'MAD'
+														}`}
+													/>
+													<Divider />
+													<InfoRow
+														icon={<PercentIcon />}
+														label={t.expenses.serviceFeeType}
+														value={serviceFeeTypeLabel(expense.frais_de_service_type)}
+													/>
+													<Divider />
+													<InfoRow
+														icon={<PercentIcon />}
+														label={t.expenses.serviceFeeAmount}
+														value={`${Number(expense.frais_de_service_montant).toLocaleString('fr-MA')} MAD`}
+													/>
+												</>
+											)}
 											<Divider />
 											<InfoRow icon={<CalendarTodayIcon />} label={t.common.date} value={formatDate(expense.date)} />
 										</Stack>

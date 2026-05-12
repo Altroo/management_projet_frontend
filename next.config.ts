@@ -1,9 +1,11 @@
 import type { NextConfig } from 'next';
 import type { RemotePattern } from 'next/dist/shared/lib/image-config';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 const isDev = process.env.NODE_ENV === 'development';
 const isProd = process.env.NODE_ENV === 'production';
+const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 type http = 'http' | 'https' | undefined;
 
@@ -52,7 +54,7 @@ const nextConfig: NextConfig = {
 	},
 
 	sassOptions: {
-		includePaths: [path.join(__dirname, 'src', 'styles'), path.join(__dirname, 'public')],
+		includePaths: [path.join(dirname, 'src', 'styles'), path.join(dirname, 'public')],
 	},
 
 	images: {

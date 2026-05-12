@@ -54,6 +54,7 @@ import type { TranslationDictionary } from '@/types/languageTypes';
 import {
 	AUTH_LOGIN,
 	BACKEND_SITE_ADMIN,
+	CLIENT_DASHBOARD,
 	DASHBOARD,
 	DASHBOARD_EDIT_PROFILE,
 	DASHBOARD_NOTIFICATIONS,
@@ -88,7 +89,10 @@ const getNavigationMenu = (isStaff: boolean, t: TranslationDictionary) => {
 		dashboard: {
 			title: t.navigation.dashboard,
 			icon: <DashboardIcon />,
-			items: [{ title: t.navigation.dashboard, label: t.navigation.viewDashboard, path: DASHBOARD }],
+			items: [
+				{ title: t.navigation.dashboard, label: t.navigation.viewDashboard, path: DASHBOARD },
+				{ title: t.navigation.clientDashboard, label: t.navigation.clientDashboard, path: CLIENT_DASHBOARD },
+			],
 		},
 		projets: {
 			title: t.navigation.projects,

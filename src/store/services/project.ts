@@ -21,6 +21,7 @@ import type {
 	ExpenseFormValues,
 	ProjectDashboardType,
 	MultiProjectDashboardType,
+	ClientDashboardType,
 } from '@/types/projectTypes';
 
 const rawBaseQuery = axiosBaseQuery((api) =>
@@ -43,7 +44,16 @@ const baseQueryWithRetry = retry(
 
 export const projectApi = createApi({
 	reducerPath: 'projectApi',
-	tagTypes: ['Project', 'Category', 'SubCategory', 'Revenue', 'Expense', 'ProjectDashboard', 'MultiProjectDashboard'],
+	tagTypes: [
+		'Project',
+		'Category',
+		'SubCategory',
+		'Revenue',
+		'Expense',
+		'ProjectDashboard',
+		'MultiProjectDashboard',
+		'ClientDashboard',
+	],
 	baseQuery: baseQueryWithRetry,
 	endpoints: (builder) => ({
 		// ── Expense Taxonomy ────────────────────────────────────────────────
@@ -257,7 +267,7 @@ export const projectApi = createApi({
 				method: 'POST',
 				data,
 			}),
-			invalidatesTags: ['Project', 'ProjectDashboard', 'MultiProjectDashboard'],
+			invalidatesTags: ['Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
 		updateProject: builder.mutation<ProjectType | ApiErrorResponseType, { id: number; data: Omit<ProjectFormValues, 'globalError'> }>({
@@ -266,7 +276,7 @@ export const projectApi = createApi({
 				method: 'PUT',
 				data,
 			}),
-			invalidatesTags: ['Project', 'ProjectDashboard', 'MultiProjectDashboard'],
+			invalidatesTags: ['Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
 		deleteProject: builder.mutation<void, { id: number }>({
@@ -274,7 +284,7 @@ export const projectApi = createApi({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_LIST}${id}/`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: ['Project', 'ProjectDashboard', 'MultiProjectDashboard', 'Revenue', 'Expense'],
+			invalidatesTags: ['Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Revenue', 'Expense'],
 		}),
 
 		bulkDeleteProjects: builder.mutation<void, { ids: number[] }>({
@@ -283,7 +293,7 @@ export const projectApi = createApi({
 				method: 'DELETE',
 				data: { ids },
 			}),
-			invalidatesTags: ['Project', 'ProjectDashboard', 'MultiProjectDashboard', 'Revenue', 'Expense'],
+			invalidatesTags: ['Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Revenue', 'Expense'],
 		}),
 
 		// ── Revenues ────────────────────────────────────────────────────────
@@ -313,7 +323,7 @@ export const projectApi = createApi({
 				method: 'POST',
 				data,
 			}),
-			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard'],
+			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
 		updateRevenue: builder.mutation<RevenueType | ApiErrorResponseType, { id: number; data: Omit<RevenueFormValues, 'globalError'> }>({
@@ -322,7 +332,7 @@ export const projectApi = createApi({
 				method: 'PUT',
 				data,
 			}),
-			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard'],
+			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
 		deleteRevenue: builder.mutation<void, { id: number }>({
@@ -330,7 +340,7 @@ export const projectApi = createApi({
 				url: `${process.env.NEXT_PUBLIC_REVENUE_LIST}${id}/`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard'],
+			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
 		bulkDeleteRevenues: builder.mutation<void, { ids: number[] }>({
@@ -339,7 +349,7 @@ export const projectApi = createApi({
 				method: 'DELETE',
 				data: { ids },
 			}),
-			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard'],
+			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
 		// ── Expenses ────────────────────────────────────────────────────────
@@ -378,7 +388,7 @@ export const projectApi = createApi({
 				method: 'POST',
 				data,
 			}),
-			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard'],
+			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
 		updateExpense: builder.mutation<ExpenseType | ApiErrorResponseType, { id: number; data: Omit<ExpenseFormValues, 'globalError'> }>({
@@ -387,7 +397,7 @@ export const projectApi = createApi({
 				method: 'PUT',
 				data,
 			}),
-			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard'],
+			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
 		deleteExpense: builder.mutation<void, { id: number }>({
@@ -395,7 +405,7 @@ export const projectApi = createApi({
 				url: `${process.env.NEXT_PUBLIC_EXPENSE_LIST}${id}/`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard'],
+			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
 		bulkDeleteExpenses: builder.mutation<void, { ids: number[] }>({
@@ -404,7 +414,7 @@ export const projectApi = createApi({
 				method: 'DELETE',
 				data: { ids },
 			}),
-			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard'],
+			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
 		// ── Dashboard ───────────────────────────────────────────────────────
@@ -422,6 +432,14 @@ export const projectApi = createApi({
 				method: 'GET',
 			}),
 			providesTags: ['MultiProjectDashboard'],
+		}),
+
+		getClientDashboard: builder.query<ClientDashboardType, void>({
+			query: () => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_LIST}dashboard/client/`,
+				method: 'GET',
+			}),
+			providesTags: ['ClientDashboard'],
 		}),
 	}),
 });
@@ -473,4 +491,5 @@ export const {
 	// Dashboard
 	useGetProjectDashboardQuery,
 	useGetMultiProjectDashboardQuery,
+	useGetClientDashboardQuery,
 } = projectApi;

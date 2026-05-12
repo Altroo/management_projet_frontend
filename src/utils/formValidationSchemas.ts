@@ -192,21 +192,54 @@ export const revenueSchema = z.object({
 	globalError: optionalTextField(1, 500),
 });
 
-export const expenseSchema = z.object({
-	project: z.preprocess(
-		(val) => (val === undefined || val === null || val === '' ? '' : String(val)),
-		z.string().nonempty({ error: INPUT_REQUIRED }),
-	),
-	date: requiredDateField(() => getT().common.date),
-	category: optionalNumberField(),
-	sous_categorie: optionalNumberField(),
-	element: optionalTextField(1, 500),
-	description: requiredTextField(2, 500),
-	montant: z.preprocess(
-		(val) => (val === undefined || val === null ? '' : String(val)),
-		z.string().nonempty({ error: INPUT_REQUIRED }),
-	),
-	fournisseur: optionalTextField(1, 255),
-	notes: optionalTextField(1, 2000),
-	globalError: optionalTextField(1, 500),
-});
+export const expenseSchema = z
+	.object({
+		project: z.preprocess(
+			(val) => (val === undefined || val === null || val === '' ? '' : String(val)),
+			z.string().nonempty({ error: INPUT_REQUIRED }),
+		),
+		date: requiredDateField(() => getT().common.date),
+		category: optionalNumberField(),
+		sous_categorie: optionalNumberField(),
+		element: optionalTextField(1, 500),
+		description: requiredTextField(2, 500),
+		montant: z.preprocess(
+			(val) => (val === undefined || val === null ? '' : String(val)),
+			z.string().nonempty({ error: INPUT_REQUIRED }),
+		),
+		frais_de_service: z.boolean(),
+		frais_de_service_valeur: z.preprocess(
+			(val) => (val === undefined || val === null ? '' : String(val)),
+			z.string().optional(),
+		),
+		frais_de_service_type: z.enum(['percentage', 'fixed']),
+		fournisseur: optionalTextField(1, 255),
+		notes: optionalTextField(1, 2000),
+		globalError: optionalTextField(1, 500),
+	})
+	.superRefine((data, ctx) => {
+		if (!data.frais_de_service) return;
+		if (!data.frais_de_service_valeur) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: INPUT_REQUIRED(),
+				path: ['frais_de_service_valeur'],
+			});
+			return;
+		}
+		const value = Number(data.frais_de_service_valeur.replace(',', '.'));
+		if (Number.isNaN(value) || value <= 0) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: getT().validation.serviceFeePositive,
+				path: ['frais_de_service_valeur'],
+			});
+		}
+		if (data.frais_de_service_type === 'percentage' && value > 100) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: getT().validation.serviceFeePercentageMax,
+				path: ['frais_de_service_valeur'],
+			});
+		}
+	});
