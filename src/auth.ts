@@ -201,8 +201,8 @@ export const { handlers, auth } = NextAuth({
 	cookies: getAuthCookies('ebh-management-projet'),
 
 	pages: {
-		signIn: 'login',
-		error: 'login',
+		signIn: '/login',
+		error: '/login',
 	},
 
 	callbacks: {
