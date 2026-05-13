@@ -49,7 +49,7 @@ import {
 import { useAppDispatch, useAppSelector, useLanguage } from '@/utils/hooks';
 import { getProfilState, getUnreadNotificationCount } from '@/store/selectors';
 import { cookiesDeleter } from '@/utils/apiHelpers';
-import LanguageSwitcher from '@/components/shared/languageSwitcher/languageSwitcher';
+import LanguageSwitcher, { LanguageFlag } from '@/components/shared/languageSwitcher/languageSwitcher';
 import type { TranslationDictionary } from '@/types/languageTypes';
 import {
 	AUTH_LOGIN,
@@ -439,7 +439,7 @@ const NavigationBar = (props: Props) => {
 													}}
 												>
 													<MenuListItemIcon>
-														<span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{language === 'fr' ? '🇬🇧' : '🇫🇷'}</span>
+														<LanguageFlag language={language === 'fr' ? 'en' : 'fr'} />
 													</MenuListItemIcon>
 													<MenuListItemText>{language === 'fr' ? 'English' : 'Français'}</MenuListItemText>
 												</MenuItem>

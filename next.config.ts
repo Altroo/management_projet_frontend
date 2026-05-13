@@ -6,6 +6,12 @@ import { fileURLToPath } from 'url';
 const isDev = process.env.NODE_ENV === 'development';
 const isProd = process.env.NODE_ENV === 'production';
 const dirname = path.dirname(fileURLToPath(import.meta.url));
+const devApiPort = process.env.NEXT_PUBLIC_API_ROOT_PORT || '8003';
+const devApiHosts = Array.from(
+	new Set([process.env.NEXT_PUBLIC_API_ROOT_URL || 'localhost', 'localhost', '127.0.0.1']),
+);
+const devHttpOrigins = devApiHosts.map((host) => `http://${host}:${devApiPort}`).join(' ');
+const devWsOrigins = devApiHosts.map((host) => `ws://${host}:${devApiPort}`).join(' ');
 
 type http = 'http' | 'https' | undefined;
 
@@ -127,8 +133,8 @@ const nextConfig: NextConfig = {
 							"script-src 'self' 'unsafe-inline' 'unsafe-eval'",
 							"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 							"font-src 'self' https://fonts.gstatic.com data:",
-						  `img-src 'self' https://management-projet-api.elbouazzatiholding.ma data: blob:${isDev ? ' http://localhost:8002 http://127.0.0.1:8002' : ''}`,
-						  `connect-src 'self' https://management-projet-api.elbouazzatiholding.ma wss://management-projet-api.elbouazzatiholding.ma${isDev ? ' http://localhost:8002 http://127.0.0.1:8002 ws://localhost:8002 ws://127.0.0.1:8002' : ''}`,
+							`img-src 'self' https://management-projet-api.elbouazzatiholding.ma data: blob:${isDev ? ` ${devHttpOrigins}` : ''}`,
+							`connect-src 'self' https://management-projet-api.elbouazzatiholding.ma wss://management-projet-api.elbouazzatiholding.ma${isDev ? ` ${devHttpOrigins} ${devWsOrigins}` : ''}`,
 							"frame-ancestors 'self'",
 							"base-uri 'self'",
 							"form-action 'self'",

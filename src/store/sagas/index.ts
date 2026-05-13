@@ -1,4 +1,4 @@
-import { all, spawn, call, fork } from 'redux-saga/effects';
+import { all, call, delay, fork, spawn } from 'redux-saga/effects';
 import { watchInit } from '@/store/sagas/_initSaga';
 import { watchAccount } from '@/store/sagas/accountSaga';
 import { watchWS } from '@/store/sagas/wsSaga';
@@ -13,7 +13,8 @@ export function* rootSaga() {
 					try {
 						yield call(saga);
 					} catch (e) {
-						throw new Error('Saga error : ' + e);
+						console.error('Saga error:', e);
+						yield delay(1000);
 					}
 				}
 			}),
