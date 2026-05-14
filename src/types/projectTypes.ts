@@ -211,28 +211,4 @@ export interface MultiProjectDashboardType {
 	projects: ProjectSummaryType[];
 }
 
-export interface ClientDashboardProjectType {
-	id: number;
-	nom: string;
-	client: string;
-	revenue: string;
-	service_fees: string;
-	revenue_reelle: string;
-}
-
-export interface ClientDashboardRevenueType {
-	client: string;
-	revenue: string;
-	service_fees: string;
-	revenue_reelle: string;
-}
-
-export interface ClientDashboardType {
-	total_projects: number;
-	total_revenue: string;
-	total_service_fees: string;
-	total_revenue_reelle: string;
-	total_expenses: string;
-	top_clients_revenue_reelle: ClientDashboardRevenueType[];
-	projects: ClientDashboardProjectType[];
-}
+export type ClientDashboardType = MultiProjectDashboardType;

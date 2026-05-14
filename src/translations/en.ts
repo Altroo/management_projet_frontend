@@ -489,7 +489,7 @@ export const en: TranslationDictionary = {
 		budgetUtilisation: 'Budget Utilisation',
 		projectBreakdown: 'Project Breakdown',
 		projectOverview: 'Project overview',
-		projectOverviewSelect: 'Search for a project',
+		projectOverviewSelect: 'Search by project',
 		selectProjectForOverview: 'Select a project to display its overview.',
 		budgetVsActual: 'Budget vs Actual',
 		budgetVsActualSub: 'Comparison of budget, revenue, and expenses per project',

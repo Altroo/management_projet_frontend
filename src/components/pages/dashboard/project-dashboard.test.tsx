@@ -24,6 +24,18 @@ jest.mock('@/store/services/project', () => ({
 		data: undefined,
 		isLoading: false,
 	})),
+	useGetClientDashboardQuery: jest.fn(() => ({
+		data: undefined,
+		isLoading: false,
+	})),
+	useGetProjectDashboardQuery: jest.fn(() => ({
+		data: undefined,
+		isFetching: false,
+	})),
+	useGetClientProjectDashboardQuery: jest.fn(() => ({
+		data: undefined,
+		isFetching: false,
+	})),
 }));
 
 jest.mock('@/utils/rawData', () => ({
@@ -94,13 +106,13 @@ describe('ProjectDashboardClient', () => {
 		expect(screen.getByTestId('navigation-bar')).toBeInTheDocument();
 	});
 
-	it('renders overview title', () => {
+	it('renders project search filter', () => {
 		render(
 			<Provider store={store}>
 				<ProjectDashboardClient session={mockSession} />
 			</Provider>,
 		);
-		expect(screen.getByText(/aperçu des projets/i)).toBeInTheDocument();
+		expect(screen.getByLabelText(/rechercher par projet/i)).toBeInTheDocument();
 	});
 
 	it('renders KPI cards with data', () => {

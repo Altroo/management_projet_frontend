@@ -37,7 +37,12 @@ import {
 	Tooltip,
 } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
-import { useGetMultiProjectDashboardQuery, useGetProjectDashboardQuery } from '@/store/services/project';
+import {
+	useGetClientDashboardQuery,
+	useGetClientProjectDashboardQuery,
+	useGetMultiProjectDashboardQuery,
+	useGetProjectDashboardQuery,
+} from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import { Protected } from '@/components/layouts/protected/protected';
@@ -342,19 +347,22 @@ const makeHorizontalData = (labels: string[], values: number[], color: string) =
 	],
 });
 
-const ProjectDashboardClient: React.FC<SessionProps> = ({ session }) => {
+interface ProjectDashboardClientProps extends SessionProps {
+	clientFacing?: boolean;
+}
+
+const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session, clientFacing = false }) => {
 	const { t } = useLanguage();
 	const token = useInitAccessToken(session);
 
-	const { data, isLoading } = useGetMultiProjectDashboardQuery(undefined, { skip: !token });
-
-	const totalProjects = data?.total_projects ?? 0;
-	const totalBudget = data?.total_budget ?? '0';
-	const totalRevenue = data?.total_revenue ?? '0';
-	const totalExpenses = data?.total_expenses ?? '0';
-	const totalProfit = data?.total_profit ?? '0';
-	const totalMargin = data?.total_margin ?? 0;
-	const budgetUtilisation = data?.budget_utilisation ?? 0;
+	const { data: internalData, isLoading: isInternalLoading } = useGetMultiProjectDashboardQuery(undefined, {
+		skip: !token || clientFacing,
+	});
+	const { data: clientData, isLoading: isClientLoading } = useGetClientDashboardQuery(undefined, {
+		skip: !token || !clientFacing,
+	});
+	const data = clientFacing ? clientData : internalData;
+	const isLoading = clientFacing ? isClientLoading : isInternalLoading;
 
 	const projects = useMemo(() => data?.projects ?? [], [data?.projects]);
 	const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
@@ -363,29 +371,57 @@ const ProjectDashboardClient: React.FC<SessionProps> = ({ session }) => {
 		[projects],
 	);
 	const selectedProjectOption = projectOptions.find((project) => Number(project.code) === selectedProjectId) ?? null;
-	const { data: projectOverview, isFetching: isProjectOverviewLoading } = useGetProjectDashboardQuery(
+	const { data: internalProjectOverview, isFetching: isInternalProjectLoading } = useGetProjectDashboardQuery(
 		{ id: selectedProjectId! },
-		{ skip: !token || selectedProjectId === null },
+		{ skip: !token || selectedProjectId === null || clientFacing },
+	);
+	const { data: clientProjectOverview, isFetching: isClientProjectLoading } = useGetClientProjectDashboardQuery(
+		{ id: selectedProjectId! },
+		{ skip: !token || selectedProjectId === null || !clientFacing },
+	);
+	const projectOverview = clientFacing ? clientProjectOverview : internalProjectOverview;
+	const isProjectOverviewLoading = clientFacing ? isClientProjectLoading : isInternalProjectLoading;
+	const isProjectFiltered = selectedProjectId !== null;
+	const showInternalFinancials = !clientFacing;
+
+	const totalProjects = data?.total_projects ?? 0;
+	const totalBudget = projectOverview?.budget_total ?? data?.total_budget ?? '0';
+	const totalRevenue = projectOverview?.revenue_total ?? data?.total_revenue ?? '0';
+	const totalExpenses = projectOverview?.depenses_totales ?? data?.total_expenses ?? '0';
+	const totalProfit = projectOverview?.benefice ?? data?.total_profit ?? '0';
+	const totalMargin = projectOverview?.marge ?? data?.total_margin ?? 0;
+	const budgetUtilisation = projectOverview?.budget_utilisation ?? data?.budget_utilisation ?? 0;
+
+	const activeTopCategories = projectOverview?.top_categories ?? data?.top_categories ?? [];
+	const activeTopSubcategories = projectOverview?.top_subcategories ?? data?.top_subcategories ?? [];
+	const activeTopVendors = projectOverview?.top_vendors ?? data?.top_vendors ?? [];
+	const activeHistoryData = useMemo(
+		() =>
+			buildCumulativeHistoryData(
+				projectOverview?.expense_history ?? data?.expense_history ?? [],
+				projectOverview?.revenue_history ?? data?.revenue_history ?? [],
+				t,
+			),
+		[
+			data?.expense_history,
+			data?.revenue_history,
+			projectOverview?.expense_history,
+			projectOverview?.revenue_history,
+			t,
+		],
 	);
 
-	const globalTopCategories = data?.top_categories ?? [];
-	const globalTopSubcategories = data?.top_subcategories ?? [];
-	const globalTopVendors = data?.top_vendors ?? [];
-	const globalHistoryData = useMemo(
-		() => buildCumulativeHistoryData(data?.expense_history ?? [], data?.revenue_history ?? [], t),
-		[data?.expense_history, data?.revenue_history, t],
-	);
 	const categoryBreakdownData = makeDoughnutData(
-		globalTopCategories.map((item: DashboardCategoryTotalType) => item.category__name ?? t.common.category),
-		globalTopCategories.map((item: DashboardCategoryTotalType) => Number(item.total)),
+		activeTopCategories.map((item: DashboardCategoryTotalType) => item.category__name ?? t.common.category),
+		activeTopCategories.map((item: DashboardCategoryTotalType) => Number(item.total)),
 	);
 	const subcategoryBreakdownData = makeDoughnutData(
-		globalTopSubcategories.map((item: DashboardSubCategoryTotalType) => item.sous_categorie__name ?? t.expenses.subCategory),
-		globalTopSubcategories.map((item: DashboardSubCategoryTotalType) => Number(item.total)),
+		activeTopSubcategories.map((item: DashboardSubCategoryTotalType) => item.sous_categorie__name ?? t.expenses.subCategory),
+		activeTopSubcategories.map((item: DashboardSubCategoryTotalType) => Number(item.total)),
 	);
 	const vendorBreakdownData = makeDoughnutData(
-		globalTopVendors.map((item: DashboardVendorTotalType) => item.fournisseur),
-		globalTopVendors.map((item: DashboardVendorTotalType) => Number(item.total)),
+		activeTopVendors.map((item: DashboardVendorTotalType) => item.fournisseur),
+		activeTopVendors.map((item: DashboardVendorTotalType) => Number(item.total)),
 	);
 
 	const topBudgetProjects = useMemo(
@@ -423,29 +459,22 @@ const ProjectDashboardClient: React.FC<SessionProps> = ({ session }) => {
 		],
 	};
 
-	const projectTopCategories = projectOverview?.top_categories ?? [];
-	const projectTopSubcategories = projectOverview?.top_subcategories ?? [];
-	const projectTopVendors = projectOverview?.top_vendors ?? [];
 	const projectTopCategoriesData = makeHorizontalData(
-		projectTopCategories.map((item) => item.category__name ?? t.common.category),
-		projectTopCategories.map((item) => Number(item.total)),
+		activeTopCategories.map((item) => item.category__name ?? t.common.category),
+		activeTopCategories.map((item) => Number(item.total)),
 		'rgba(232, 198, 189, 0.95)',
 	);
 	const projectTopSubcategoriesData = makeHorizontalData(
-		projectTopSubcategories.map((item) => item.sous_categorie__name ?? t.expenses.subCategory),
-		projectTopSubcategories.map((item) => Number(item.total)),
+		activeTopSubcategories.map((item) => item.sous_categorie__name ?? t.expenses.subCategory),
+		activeTopSubcategories.map((item) => Number(item.total)),
 		'rgba(205, 225, 198, 0.95)',
 	);
 	const projectTopVendorsData = makeHorizontalData(
-		projectTopVendors.map((item) => item.fournisseur),
-		projectTopVendors.map((item) => Number(item.total)),
+		activeTopVendors.map((item) => item.fournisseur),
+		activeTopVendors.map((item) => Number(item.total)),
 		'rgba(201, 224, 240, 0.95)',
 	);
-	const projectHistoryData = useMemo(
-		() => buildCumulativeHistoryData(projectOverview?.expense_history ?? [], projectOverview?.revenue_history ?? [], t),
-		[projectOverview?.expense_history, projectOverview?.revenue_history, t],
-	);
-	const projectBudgetUtilisation = projectOverview?.budget_utilisation ?? 0;
+	const projectBudgetUtilisation = budgetUtilisation;
 	const projectBudgetUsed = clampPercent(projectBudgetUtilisation);
 	const projectBudgetData = makeDoughnutData(
 		[t.analytics.usedBudget, t.analytics.remainingBudget],
@@ -458,6 +487,7 @@ const ProjectDashboardClient: React.FC<SessionProps> = ({ session }) => {
 		[projectProfitMargin, Math.max(100 - projectProfitMargin, 0)],
 		['rgba(205, 225, 198, 0.95)', 'rgba(240, 247, 236, 0.95)'],
 	);
+	const pageTitle = clientFacing ? t.analytics.clientDashboard : t.common.dashboard;
 
 	return (
 		<Stack
@@ -468,29 +498,35 @@ const ProjectDashboardClient: React.FC<SessionProps> = ({ session }) => {
 				mt: '48px',
 			}}
 		>
-			<NavigationBar title={t.common.dashboard}>
+			<NavigationBar title={pageTitle}>
 				<Protected permission="can_view">
 					<Box sx={{ px: { xs: 1, sm: 2, md: 3 }, pb: 4, pt: '10px' }}>
-						{/* Title */}
 						<Stack
-							direction="row"
+							direction={{ xs: 'column', md: 'row' }}
+							spacing={2}
 							sx={{
-								justifyContent: 'space-between',
-								alignItems: 'center',
+								justifyContent: 'flex-end',
+								alignItems: { xs: 'stretch', md: 'center' },
 								mb: 3,
 							}}
 						>
-							<Typography
-								variant="h5"
-								sx={{
-									fontWeight: 600,
-								}}
-							>
-								{t.analytics.overviewTitle}
-							</Typography>
+							<Box sx={{ width: { xs: '100%', md: 380 } }}>
+								<CustomAutoCompleteSelect
+									id={clientFacing ? 'client-project-filter' : 'project-filter'}
+									size="small"
+									noOptionsText={t.projects.noProjectFound}
+									label={t.analytics.projectOverviewSelect}
+									items={projectOptions}
+									theme={inputTheme}
+									value={selectedProjectOption}
+									fullWidth
+									onChange={(_, newVal) => setSelectedProjectId(newVal ? Number(newVal.code) : null)}
+									startIcon={<ProjectsIcon fontSize="small" />}
+								/>
+							</Box>
 						</Stack>
 
-						{isLoading ? (
+						{isLoading || (isProjectFiltered && isProjectOverviewLoading) ? (
 							<Box
 								sx={{
 									display: 'flex',
@@ -510,12 +546,14 @@ const ProjectDashboardClient: React.FC<SessionProps> = ({ session }) => {
 										gap: 2,
 									}}
 								>
-									<KpiCard
-										icon={<ProjectsIcon fontSize="small" />}
-										label={t.analytics.totalProjects}
-										value={totalProjects.toString()}
-										color="#1976d2"
-									/>
+									{!projectOverview && (
+										<KpiCard
+											icon={<ProjectsIcon fontSize="small" />}
+											label={t.analytics.totalProjects}
+											value={totalProjects.toString()}
+											color="#1976d2"
+										/>
+									)}
 									<KpiCard
 										icon={<BudgetIcon fontSize="small" />}
 										label={t.analytics.totalBudget}
@@ -534,35 +572,53 @@ const ProjectDashboardClient: React.FC<SessionProps> = ({ session }) => {
 										value={`${formatNumber(totalExpenses)} MAD`}
 										color="#d32f2f"
 									/>
+									{projectOverview && showInternalFinancials && (
+										<KpiCard
+											icon={<ProfitIcon fontSize="small" />}
+											label={t.analytics.totalProfit}
+											value={`${formatNumber(totalProfit)} MAD`}
+											color={Number(totalProfit) >= 0 ? '#2e7d32' : '#d32f2f'}
+										/>
+									)}
+									{projectOverview && !showInternalFinancials && (
+										<KpiCard
+											icon={<UtilisationIcon fontSize="small" />}
+											label={t.analytics.budgetUtilisation}
+											value={`${budgetUtilisation.toFixed(1)}%`}
+											color="#0288d1"
+										/>
+									)}
 								</Box>
 
 								{/* ── Profit & Margin KPIs ───────────────── */}
-								<Box
-									sx={{
-										display: 'grid',
-										gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
-										gap: 2,
-									}}
-								>
-									<KpiCard
-										icon={<ProfitIcon fontSize="small" />}
-										label={t.analytics.totalProfit}
-										value={`${formatNumber(totalProfit)} MAD`}
-										color={Number(totalProfit) >= 0 ? '#2e7d32' : '#d32f2f'}
-									/>
-									<KpiCard
-										icon={<MarginIcon fontSize="small" />}
-										label={t.analytics.profitMargin}
-										value={`${totalMargin.toFixed(1)}%`}
-										color="#9c27b0"
-									/>
-									<KpiCard
-										icon={<UtilisationIcon fontSize="small" />}
-										label={t.analytics.budgetUtilisation}
-										value={`${budgetUtilisation.toFixed(1)}%`}
-										color="#0288d1"
-									/>
-								</Box>
+								{showInternalFinancials && !projectOverview && (
+									<Box
+										sx={{
+											display: 'grid',
+											gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+											gap: 2,
+										}}
+									>
+										<KpiCard
+											icon={<ProfitIcon fontSize="small" />}
+											label={t.analytics.totalProfit}
+											value={`${formatNumber(totalProfit)} MAD`}
+											color={Number(totalProfit) >= 0 ? '#2e7d32' : '#d32f2f'}
+										/>
+										<KpiCard
+											icon={<MarginIcon fontSize="small" />}
+											label={t.analytics.profitMargin}
+											value={`${totalMargin.toFixed(1)}%`}
+											color="#9c27b0"
+										/>
+										<KpiCard
+											icon={<UtilisationIcon fontSize="small" />}
+											label={t.analytics.budgetUtilisation}
+											value={`${budgetUtilisation.toFixed(1)}%`}
+											color="#0288d1"
+										/>
+									</Box>
+								)}
 
 								<Card elevation={2}>
 									<CardContent>
@@ -591,166 +647,51 @@ const ProjectDashboardClient: React.FC<SessionProps> = ({ session }) => {
 									</CardContent>
 								</Card>
 
-								{/* ── Global breakdowns ──────────────────── */}
-								<Box
-									sx={{
-										display: 'grid',
-										gridTemplateColumns: { xs: '1fr', lg: 'repeat(3, 1fr)' },
-										gap: 2,
-									}}
-								>
-									<ChartCard title={t.analytics.categoryBreakdown} height={300}>
-										{globalTopCategories.length > 0 ? (
-											<Doughnut data={categoryBreakdownData} options={doughnutOptions} />
-										) : (
-											<EmptyChart />
-										)}
-									</ChartCard>
-									<ChartCard title={t.analytics.subcategoryBreakdown} height={300}>
-										{globalTopSubcategories.length > 0 ? (
-											<Doughnut data={subcategoryBreakdownData} options={doughnutOptions} />
-										) : (
-											<EmptyChart />
-										)}
-									</ChartCard>
-									<ChartCard title={t.analytics.vendorBreakdown} height={300}>
-										{globalTopVendors.length > 0 ? (
-											<Doughnut data={vendorBreakdownData} options={doughnutOptions} />
-										) : (
-											<EmptyChart />
-										)}
-									</ChartCard>
-								</Box>
-
-								<Box
-									sx={{
-										display: 'grid',
-										gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' },
-										gap: 2,
-									}}
-								>
-									<ChartCard title={t.analytics.expenseIncome} subheader={t.analytics.expenseIncomeSub} height={340}>
-										{globalHistoryData.labels.length > 0 ? (
-											<Line data={globalHistoryData} options={areaChartOptions} />
-										) : (
-											<EmptyChart />
-										)}
-									</ChartCard>
-									<ChartCard title={t.analytics.projectRanking} subheader={t.analytics.projectRankingSub} height={340}>
-										{topBudgetProjects.length > 0 ? (
-											<Bar data={projectRankingData} options={horizontalBarOptions} />
-										) : (
-											<EmptyChart />
-										)}
-									</ChartCard>
-								</Box>
-
-								{/* ── Per-project overview ───────────────── */}
-								<Stack spacing={2}>
-									<Stack
-										direction={{ xs: 'column', md: 'row' }}
-										spacing={2}
-										sx={{ alignItems: { xs: 'stretch', md: 'center' }, justifyContent: 'space-between' }}
-									>
-										<Typography variant="h6" sx={{ fontWeight: 600 }}>
-											{t.analytics.projectOverview}
-										</Typography>
-										<Box sx={{ width: { xs: '100%', md: 360 } }}>
-											<CustomAutoCompleteSelect
-												id="project-overview"
-												size="small"
-												noOptionsText={t.projects.noProjectFound}
-												label={t.analytics.projectOverviewSelect}
-												items={projectOptions}
-												theme={inputTheme}
-												value={selectedProjectOption}
-												fullWidth
-												onChange={(_, newVal) => setSelectedProjectId(newVal ? Number(newVal.code) : null)}
-												startIcon={<ProjectsIcon fontSize="small" />}
-											/>
-										</Box>
-									</Stack>
-
-									{isProjectOverviewLoading ? (
-										<Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-											<CircularProgress />
-										</Box>
-									) : projectOverview ? (
-										<Stack spacing={2}>
-											<Box
-												sx={{
-													display: 'grid',
-													gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
-													gap: 2,
-												}}
-											>
-												<KpiCard
-													icon={<BudgetIcon fontSize="small" />}
-													label={t.analytics.totalBudget}
-													value={`${formatNumber(projectOverview.budget_total)} MAD`}
-													color="#ed6c02"
-												/>
-												<KpiCard
-													icon={<RevenueIcon fontSize="small" />}
-													label={t.analytics.totalRevenue}
-													value={`${formatNumber(projectOverview.revenue_total)} MAD`}
-													color="#2e7d32"
-												/>
-												<KpiCard
-													icon={<ExpensesIcon fontSize="small" />}
-													label={t.analytics.totalExpenses}
-													value={`${formatNumber(projectOverview.depenses_totales)} MAD`}
-													color="#d32f2f"
-												/>
-												<KpiCard
-													icon={<ProfitIcon fontSize="small" />}
-													label={t.analytics.totalProfit}
-													value={`${formatNumber(projectOverview.benefice)} MAD`}
-													color={Number(projectOverview.benefice) >= 0 ? '#2e7d32' : '#d32f2f'}
-												/>
-											</Box>
-											<Box
-												sx={{
-													display: 'grid',
-													gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' },
-													gap: 2,
-												}}
-											>
-												<ChartCard title={t.analytics.projectBudgetUtilization} subheader={projectOverview.nom} height={300}>
-													<Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ height: '100%', alignItems: 'center' }}>
-														<Box sx={{ height: 230, width: { xs: '100%', sm: 230 }, position: 'relative' }}>
-															<Doughnut data={projectBudgetData} options={{ ...doughnutOptions, plugins: { legend: { display: false } } }} />
-															<Stack
-																spacing={0.5}
-																sx={{
-																	position: 'absolute',
-																	inset: 0,
-																	alignItems: 'center',
-																	justifyContent: 'center',
-																	pointerEvents: 'none',
-																}}
-															>
-																<Typography variant="h5" sx={{ fontWeight: 700 }}>
-																	{projectBudgetUsed.toFixed(1)}%
-																</Typography>
-																<Typography variant="caption" sx={{ color: 'text.secondary' }}>
-																	{projectBudgetUtilisation <= 100 ? t.analytics.withinBudget : t.analytics.overBudget}
-																</Typography>
-															</Stack>
-														</Box>
-														<Stack spacing={1.25} sx={{ flex: 1, minWidth: 0 }}>
-															<Typography variant="body2">
-																{t.analytics.totalBudget}: <strong>{compactCurrency(projectOverview.budget_total)}</strong>
+								{projectOverview ? (
+									<Stack spacing={2}>
+										<Box
+											sx={{
+												display: 'grid',
+												gridTemplateColumns: { xs: '1fr', md: showInternalFinancials ? '2fr 1fr' : '1fr' },
+												gap: 2,
+											}}
+										>
+											<ChartCard title={t.analytics.projectBudgetUtilization} subheader={projectOverview.nom} height={300}>
+												<Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ height: '100%', alignItems: 'center' }}>
+													<Box sx={{ height: 230, width: { xs: '100%', sm: 230 }, position: 'relative' }}>
+														<Doughnut data={projectBudgetData} options={{ ...doughnutOptions, plugins: { legend: { display: false } } }} />
+														<Stack
+															spacing={0.5}
+															sx={{
+																position: 'absolute',
+																inset: 0,
+																alignItems: 'center',
+																justifyContent: 'center',
+																pointerEvents: 'none',
+															}}
+														>
+															<Typography variant="h5" sx={{ fontWeight: 700 }}>
+																{projectBudgetUsed.toFixed(1)}%
 															</Typography>
-															<Typography variant="body2">
-																{t.analytics.totalExpenses}: <strong>{compactCurrency(projectOverview.depenses_totales)}</strong>
-															</Typography>
-															<Typography variant="body2">
-																{t.analytics.usedBudget}: <strong>{projectBudgetUsed.toFixed(1)}%</strong>
+															<Typography variant="caption" sx={{ color: 'text.secondary' }}>
+																{projectBudgetUtilisation <= 100 ? t.analytics.withinBudget : t.analytics.overBudget}
 															</Typography>
 														</Stack>
+													</Box>
+													<Stack spacing={1.25} sx={{ flex: 1, minWidth: 0 }}>
+														<Typography variant="body2">
+															{t.analytics.totalBudget}: <strong>{compactCurrency(totalBudget)}</strong>
+														</Typography>
+														<Typography variant="body2">
+															{t.analytics.totalExpenses}: <strong>{compactCurrency(totalExpenses)}</strong>
+														</Typography>
+														<Typography variant="body2">
+															{t.analytics.usedBudget}: <strong>{projectBudgetUsed.toFixed(1)}%</strong>
+														</Typography>
 													</Stack>
-												</ChartCard>
+												</Stack>
+											</ChartCard>
+											{showInternalFinancials && (
 												<ChartCard title={t.analytics.profitGauge} subheader={t.analytics.profitMargin} height={300}>
 													<Box sx={{ height: '100%', position: 'relative' }}>
 														<Doughnut data={projectProfitData} options={{ ...doughnutOptions, plugins: { legend: { display: false } } }} />
@@ -765,98 +706,135 @@ const ProjectDashboardClient: React.FC<SessionProps> = ({ session }) => {
 															}}
 														>
 															<Typography variant="h6" sx={{ fontWeight: 700 }}>
-																{compactCurrency(projectOverview.benefice)}
+																{compactCurrency(totalProfit)}
 															</Typography>
 															<Typography variant="caption" sx={{ color: 'text.secondary' }}>
-																{projectOverview.marge.toFixed(1)}%
+																{totalMargin.toFixed(1)}%
 															</Typography>
 														</Stack>
 													</Box>
 												</ChartCard>
-											</Box>
-											<Box
-												sx={{
-													display: 'grid',
-													gridTemplateColumns: { xs: '1fr', lg: 'repeat(3, 1fr)' },
-													gap: 2,
-												}}
-											>
-												<ChartCard title={t.analytics.costByCategory} height={300}>
-													{projectTopCategories.length > 0 ? (
-														<Bar data={projectTopCategoriesData} options={horizontalBarOptions} />
-													) : (
-														<EmptyChart />
-													)}
-												</ChartCard>
-												<ChartCard title={t.analytics.costBySubcategory} height={300}>
-													{projectTopSubcategories.length > 0 ? (
-														<Bar data={projectTopSubcategoriesData} options={horizontalBarOptions} />
-													) : (
-														<EmptyChart />
-													)}
-												</ChartCard>
-												<ChartCard title={t.analytics.costByVendor} height={300}>
-													{projectTopVendors.length > 0 ? (
-														<Bar data={projectTopVendorsData} options={horizontalBarOptions} />
-													) : (
-														<EmptyChart />
-													)}
-												</ChartCard>
-											</Box>
-											<ChartCard title={t.analytics.cumulativeIncomeExpenses} subheader={projectOverview.nom} height={340}>
-												{projectHistoryData.labels.length > 0 ? (
-													<Line data={projectHistoryData} options={areaChartOptions} />
+											)}
+										</Box>
+										<Box
+											sx={{
+												display: 'grid',
+												gridTemplateColumns: { xs: '1fr', lg: 'repeat(3, 1fr)' },
+												gap: 2,
+											}}
+										>
+											<ChartCard title={t.analytics.costByCategory} height={300}>
+												{activeTopCategories.length > 0 ? (
+													<Bar data={projectTopCategoriesData} options={horizontalBarOptions} />
 												) : (
 													<EmptyChart />
 												)}
 											</ChartCard>
-										</Stack>
-									) : (
-										<Box sx={{ height: 180 }}>
-											<EmptyChart message={t.analytics.selectProjectForOverview} />
+											<ChartCard title={t.analytics.costBySubcategory} height={300}>
+												{activeTopSubcategories.length > 0 ? (
+													<Bar data={projectTopSubcategoriesData} options={horizontalBarOptions} />
+												) : (
+													<EmptyChart />
+												)}
+											</ChartCard>
+											<ChartCard title={t.analytics.costByVendor} height={300}>
+												{activeTopVendors.length > 0 ? (
+													<Bar data={projectTopVendorsData} options={horizontalBarOptions} />
+												) : (
+													<EmptyChart />
+												)}
+											</ChartCard>
 										</Box>
-									)}
-								</Stack>
+										<ChartCard title={t.analytics.cumulativeIncomeExpenses} subheader={projectOverview.nom} height={340}>
+											{activeHistoryData.labels.length > 0 ? (
+												<Line data={activeHistoryData} options={areaChartOptions} />
+											) : (
+												<EmptyChart />
+											)}
+										</ChartCard>
+									</Stack>
+								) : (
+									<>
+										<Box
+											sx={{
+												display: 'grid',
+												gridTemplateColumns: { xs: '1fr', lg: 'repeat(3, 1fr)' },
+												gap: 2,
+											}}
+										>
+											<ChartCard title={t.analytics.categoryBreakdown} height={300}>
+												{activeTopCategories.length > 0 ? (
+													<Doughnut data={categoryBreakdownData} options={doughnutOptions} />
+												) : (
+													<EmptyChart />
+												)}
+											</ChartCard>
+											<ChartCard title={t.analytics.subcategoryBreakdown} height={300}>
+												{activeTopSubcategories.length > 0 ? (
+													<Doughnut data={subcategoryBreakdownData} options={doughnutOptions} />
+												) : (
+													<EmptyChart />
+												)}
+											</ChartCard>
+											<ChartCard title={t.analytics.vendorBreakdown} height={300}>
+												{activeTopVendors.length > 0 ? (
+													<Doughnut data={vendorBreakdownData} options={doughnutOptions} />
+												) : (
+													<EmptyChart />
+												)}
+											</ChartCard>
+										</Box>
+
+										<Box
+											sx={{
+												display: 'grid',
+												gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' },
+												gap: 2,
+											}}
+										>
+											<ChartCard title={t.analytics.expenseIncome} subheader={t.analytics.expenseIncomeSub} height={340}>
+												{activeHistoryData.labels.length > 0 ? (
+													<Line data={activeHistoryData} options={areaChartOptions} />
+												) : (
+													<EmptyChart />
+												)}
+											</ChartCard>
+											<ChartCard title={t.analytics.projectRanking} subheader={t.analytics.projectRankingSub} height={340}>
+												{topBudgetProjects.length > 0 ? (
+													<Bar data={projectRankingData} options={horizontalBarOptions} />
+												) : (
+													<EmptyChart />
+												)}
+											</ChartCard>
+										</Box>
+									</>
+								)}
 
 								{/* ── Top clients ─────────────────────────── */}
-								<Box
-									sx={{
-										display: 'grid',
-										gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-										gap: 2,
-									}}
-								>
-									<ChartCard title={t.analytics.topExpenseClients} subheader={t.analytics.topExpenseClientsSub} height={280}>
-										{topExpenseClients.length > 0 ? (
-											<Bar
-												data={topExpenseClientsData}
-												options={{
-													...CHART_OPTS,
-													indexAxis: 'y' as const,
-													plugins: { legend: { display: false } },
-													scales: { x: { beginAtZero: true } },
-												}}
-											/>
-										) : (
-											<EmptyChart />
-										)}
-									</ChartCard>
-									<ChartCard title={t.analytics.topRevenueClients} subheader={t.analytics.topRevenueClientsSub} height={280}>
-										{topRevenueClients.length > 0 ? (
-											<Bar
-												data={topRevenueClientsData}
-												options={{
-													...CHART_OPTS,
-													indexAxis: 'y' as const,
-													plugins: { legend: { display: false } },
-													scales: { x: { beginAtZero: true } },
-												}}
-											/>
-										) : (
-											<EmptyChart />
-										)}
-									</ChartCard>
-								</Box>
+								{!projectOverview && (
+									<Box
+										sx={{
+											display: 'grid',
+											gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+											gap: 2,
+										}}
+									>
+										<ChartCard title={t.analytics.topExpenseClients} subheader={t.analytics.topExpenseClientsSub} height={280}>
+											{topExpenseClients.length > 0 ? (
+												<Bar data={topExpenseClientsData} options={horizontalBarOptions} />
+											) : (
+												<EmptyChart />
+											)}
+										</ChartCard>
+										<ChartCard title={t.analytics.topRevenueClients} subheader={t.analytics.topRevenueClientsSub} height={280}>
+											{topRevenueClients.length > 0 ? (
+												<Bar data={topRevenueClientsData} options={horizontalBarOptions} />
+											) : (
+												<EmptyChart />
+											)}
+										</ChartCard>
+									</Box>
+								)}
 							</Stack>
 						)}
 					</Box>

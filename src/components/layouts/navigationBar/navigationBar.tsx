@@ -89,10 +89,7 @@ const getNavigationMenu = (isStaff: boolean, t: TranslationDictionary) => {
 		dashboard: {
 			title: t.navigation.dashboard,
 			icon: <DashboardIcon />,
-			items: [
-				{ title: t.navigation.dashboard, label: t.navigation.viewDashboard, path: DASHBOARD },
-				{ title: t.navigation.clientDashboard, label: t.navigation.clientDashboard, path: CLIENT_DASHBOARD },
-			],
+			items: [{ title: t.navigation.clientDashboard, label: t.navigation.clientDashboard, path: CLIENT_DASHBOARD }],
 		},
 		projets: {
 			title: t.navigation.projects,
@@ -132,6 +129,7 @@ const getNavigationMenu = (isStaff: boolean, t: TranslationDictionary) => {
 			title: t.navigation.settings,
 			icon: <SettingsIcon />,
 			items: [
+				{ title: t.navigation.dashboard, label: t.navigation.viewDashboard, path: DASHBOARD },
 				{ title: t.navigation.myProfile, label: t.navigation.myProfile, path: DASHBOARD_EDIT_PROFILE },
 				{ title: t.navigation.changePassword, label: t.navigation.changePassword, path: DASHBOARD_PASSWORD },
 				{

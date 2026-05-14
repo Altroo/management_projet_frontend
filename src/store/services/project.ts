@@ -441,6 +441,14 @@ export const projectApi = createApi({
 			}),
 			providesTags: ['ClientDashboard'],
 		}),
+
+		getClientProjectDashboard: builder.query<ProjectDashboardType, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_LIST}dashboard/client/${id}/`,
+				method: 'GET',
+			}),
+			providesTags: ['ClientDashboard'],
+		}),
 	}),
 });
 
@@ -492,4 +500,5 @@ export const {
 	useGetProjectDashboardQuery,
 	useGetMultiProjectDashboardQuery,
 	useGetClientDashboardQuery,
+	useGetClientProjectDashboardQuery,
 } = projectApi;
