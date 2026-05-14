@@ -150,6 +150,60 @@ describe('ProjectDashboardClient', () => {
 		expect(screen.getByText('5')).toBeInTheDocument();
 	});
 
+	it('shows service fee totals on the internal dashboard', () => {
+		const { useGetMultiProjectDashboardQuery } = jest.requireMock('@/store/services/project');
+		(useGetMultiProjectDashboardQuery as jest.Mock).mockReturnValue({
+			data: {
+				total_projects: 1,
+				total_budget: '100000',
+				total_revenue: '90000',
+				total_expenses: '80000',
+				total_profit: '10000',
+				total_margin: 11.1,
+				budget_utilisation: 80.0,
+				total_service_fees: '5000',
+				total_revenue_reelle: '95000',
+				projects: [],
+			},
+			isLoading: false,
+		});
+
+		render(
+			<Provider store={store}>
+				<ProjectDashboardClient session={mockSession} />
+			</Provider>,
+		);
+
+		expect(screen.getByText('Frais de service')).toBeInTheDocument();
+		expect(screen.getByText('Revenu réel')).toBeInTheDocument();
+	});
+
+	it('hides service fee totals on the client dashboard', () => {
+		const { useGetClientDashboardQuery } = jest.requireMock('@/store/services/project');
+		(useGetClientDashboardQuery as jest.Mock).mockReturnValue({
+			data: {
+				total_projects: 1,
+				total_budget: '100000',
+				total_revenue: '90000',
+				total_expenses: '85000',
+				total_profit: '5000',
+				total_margin: 5.6,
+				budget_utilisation: 85.0,
+				projects: [],
+			},
+			isLoading: false,
+		});
+
+		render(
+			<Provider store={store}>
+				<ProjectDashboardClient session={mockSession} clientFacing />
+			</Provider>,
+		);
+
+		expect(screen.queryByText('Frais de service')).not.toBeInTheDocument();
+		expect(screen.queryByText('Revenu réel')).not.toBeInTheDocument();
+	});
+
 	it('renders loading spinner when loading', () => {
 		const { useGetMultiProjectDashboardQuery } = jest.requireMock('@/store/services/project');
 		(useGetMultiProjectDashboardQuery as jest.Mock).mockReturnValue({

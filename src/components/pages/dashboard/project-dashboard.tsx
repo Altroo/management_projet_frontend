@@ -18,6 +18,7 @@ import {
 	AccountTree as ProjectsIcon,
 	InfoOutlined as InfoIcon,
 	PieChart as MarginIcon,
+	ReceiptLong as ServiceFeeIcon,
 	Savings as ProfitIcon,
 	Speed as UtilisationIcon,
 	TrendingDown as ExpensesIcon,
@@ -391,6 +392,8 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 	const totalProfit = projectOverview?.benefice ?? data?.total_profit ?? '0';
 	const totalMargin = projectOverview?.marge ?? data?.total_margin ?? 0;
 	const budgetUtilisation = projectOverview?.budget_utilisation ?? data?.budget_utilisation ?? 0;
+	const totalServiceFees = projectOverview?.service_fees ?? data?.total_service_fees ?? '0';
+	const totalRevenueReelle = projectOverview?.revenue_reelle ?? data?.total_revenue_reelle ?? '0';
 
 	const activeTopCategories = projectOverview?.top_categories ?? data?.top_categories ?? [];
 	const activeTopSubcategories = projectOverview?.top_subcategories ?? data?.top_subcategories ?? [];
@@ -580,6 +583,22 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 											color={Number(totalProfit) >= 0 ? '#2e7d32' : '#d32f2f'}
 										/>
 									)}
+									{projectOverview && showInternalFinancials && (
+										<KpiCard
+											icon={<ServiceFeeIcon fontSize="small" />}
+											label={t.analytics.serviceFees}
+											value={`${formatNumber(totalServiceFees)} MAD`}
+											color="#1976d2"
+										/>
+									)}
+									{projectOverview && showInternalFinancials && (
+										<KpiCard
+											icon={<RevenueIcon fontSize="small" />}
+											label={t.analytics.revenueReelle}
+											value={`${formatNumber(totalRevenueReelle)} MAD`}
+											color="#0288d1"
+										/>
+									)}
 									{projectOverview && !showInternalFinancials && (
 										<KpiCard
 											icon={<UtilisationIcon fontSize="small" />}
@@ -595,7 +614,7 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 									<Box
 										sx={{
 											display: 'grid',
-											gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
+											gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(5, 1fr)' },
 											gap: 2,
 										}}
 									>
@@ -615,6 +634,18 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 											icon={<UtilisationIcon fontSize="small" />}
 											label={t.analytics.budgetUtilisation}
 											value={`${budgetUtilisation.toFixed(1)}%`}
+											color="#0288d1"
+										/>
+										<KpiCard
+											icon={<ServiceFeeIcon fontSize="small" />}
+											label={t.analytics.serviceFees}
+											value={`${formatNumber(totalServiceFees)} MAD`}
+											color="#1976d2"
+										/>
+										<KpiCard
+											icon={<RevenueIcon fontSize="small" />}
+											label={t.analytics.revenueReelle}
+											value={`${formatNumber(totalRevenueReelle)} MAD`}
 											color="#0288d1"
 										/>
 									</Box>

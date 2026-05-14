@@ -176,6 +176,8 @@ export interface ProjectDashboardType {
 	benefice: string;
 	marge: number;
 	budget_utilisation: number;
+	service_fees?: string;
+	revenue_reelle?: string;
 	top_categories: DashboardCategoryTotalType[];
 	top_subcategories: DashboardSubCategoryTotalType[];
 	top_vendors: DashboardVendorTotalType[];
@@ -201,6 +203,8 @@ export interface MultiProjectDashboardType {
 	total_profit: string;
 	total_margin: number;
 	budget_utilisation: number;
+	total_service_fees?: string;
+	total_revenue_reelle?: string;
 	top_expense_clients: DashboardClientTotalType[];
 	top_revenue_clients: DashboardClientTotalType[];
 	top_categories: DashboardCategoryTotalType[];

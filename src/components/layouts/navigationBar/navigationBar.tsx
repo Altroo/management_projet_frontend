@@ -87,7 +87,7 @@ import type { NotificationType } from '@/types/managementNotificationTypes';
 const getNavigationMenu = (isStaff: boolean, t: TranslationDictionary) => {
 	return {
 		dashboard: {
-			title: t.navigation.dashboard,
+			title: t.navigation.clientDashboard,
 			icon: <DashboardIcon />,
 			items: [{ title: t.navigation.clientDashboard, label: t.navigation.clientDashboard, path: CLIENT_DASHBOARD }],
 		},

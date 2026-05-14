@@ -159,6 +159,19 @@ describe('NavigationBar', () => {
 		expect(screen.queryByText('Utilisateurs')).not.toBeInTheDocument();
 	});
 
+	it('labels the main dashboard menu as the client dashboard', () => {
+		render(
+			<Provider store={store}>
+				<NavigationBar title="Dashboard">
+					<div />
+				</NavigationBar>
+			</Provider>,
+		);
+
+		expect(screen.getByText('Tableau de bord client')).toBeInTheDocument();
+		expect(screen.getByText('Voir le tableau de bord')).toBeInTheDocument();
+	});
+
 	it('drawer toggle button only appears on mobile', async () => {
 		mockIsMobile = false;
 		const { rerender } = render(
