@@ -82,6 +82,7 @@ describe('UsersViewClient', () => {
 		);
 		expect(screen.getByText('Marie Martin')).toBeInTheDocument();
 		expect(screen.getByText('marie@test.com')).toBeInTheDocument();
+		expect(screen.queryByText('Peut imprimer')).not.toBeInTheDocument();
 	});
 
 	it('renders modify and delete buttons', () => {

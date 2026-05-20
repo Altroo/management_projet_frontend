@@ -415,18 +415,6 @@ const UsersViewClient: React.FC<Props> = ({ session, id }) => {
 											<Divider />
 											<InfoRow
 												icon={<CheckCircleIcon />}
-												label={t.users.canPrint}
-												value={
-													userData?.can_print ? (
-														<Chip icon={<CheckCircleIcon />} label={t.common.yes} color="success" size="small" />
-													) : (
-														<Chip icon={<CancelIcon />} label={t.common.no} size="small" variant="outlined" />
-													)
-												}
-											/>
-											<Divider />
-											<InfoRow
-												icon={<CheckCircleIcon />}
 												label={t.users.canCreate}
 												value={
 													userData?.can_create ? (

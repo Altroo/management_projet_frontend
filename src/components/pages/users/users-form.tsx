@@ -469,12 +469,6 @@ const FormikContent: React.FC<FormikContentProps> = (props: FormikContentProps) 
 									/>
 									<FormControlLabel
 										control={
-											<Switch checked={formik.values.can_print} onChange={formik.handleChange} name="can_print" />
-										}
-										label={t.users.canPrint}
-									/>
-									<FormControlLabel
-										control={
 											<Switch checked={formik.values.can_create} onChange={formik.handleChange} name="can_create" />
 										}
 										label={t.users.canCreate}

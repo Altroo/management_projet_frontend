@@ -203,6 +203,11 @@ describe('UsersFormClient', () => {
 			expect(screen.getByText('Permissions')).toBeInTheDocument();
 		});
 
+		it('does not render the print permission', () => {
+			renderWithProviders(<UsersFormClient session={mockSession} />);
+			expect(screen.queryByText('Peut imprimer')).not.toBeInTheDocument();
+		});
+
 		it('renders protected wrapper', () => {
 			renderWithProviders(<UsersFormClient session={mockSession} />);
 			expect(screen.getByTestId('protected')).toBeInTheDocument();
