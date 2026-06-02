@@ -237,15 +237,17 @@ const EmptyChart: React.FC<{ message?: string }> = ({ message }) => {
 };
 
 const doughnutPalette = [
-	'rgba(201, 224, 240, 0.95)',
-	'rgba(226, 237, 247, 0.95)',
-	'rgba(205, 225, 198, 0.95)',
-	'rgba(232, 241, 225, 0.95)',
-	'rgba(232, 198, 189, 0.95)',
-	'rgba(246, 228, 220, 0.95)',
-	'rgba(210, 225, 236, 0.95)',
-	'rgba(222, 236, 218, 0.95)',
+	'#1d4ed8',
+	'#047857',
+	'#b91c1c',
+	'#c2410c',
+	'#6d28d9',
+	'#0f766e',
+	'#be123c',
+	'#4d7c0f',
 ];
+
+const ALL_PROJECTS_CODE = '__all_projects__';
 
 const compactCurrency = (value: string | number) => `${formatNumber(value)} MAD`;
 
@@ -271,8 +273,8 @@ const buildCumulativeHistoryData = (
 					expenseRunningTotal += expenseMap.get(label) ?? 0;
 					return expenseRunningTotal;
 				}),
-				borderColor: 'rgba(211, 47, 47, 0.55)',
-				backgroundColor: 'rgba(211, 47, 47, 0.12)',
+				borderColor: '#b91c1c',
+				backgroundColor: 'rgba(185, 28, 28, 0.26)',
 				fill: true,
 				pointRadius: 0,
 				tension: 0.35,
@@ -283,8 +285,8 @@ const buildCumulativeHistoryData = (
 					revenueRunningTotal += revenueMap.get(label) ?? 0;
 					return revenueRunningTotal;
 				}),
-				borderColor: 'rgba(46, 125, 50, 0.6)',
-				backgroundColor: 'rgba(46, 125, 50, 0.14)',
+				borderColor: '#047857',
+				backgroundColor: 'rgba(4, 120, 87, 0.26)',
 				fill: true,
 				pointRadius: 0,
 				tension: 0.35,
@@ -367,11 +369,18 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 
 	const projects = useMemo(() => data?.projects ?? [], [data?.projects]);
 	const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-	const projectOptions: DropDownType[] = useMemo(
-		() => projects.map((project) => ({ code: String(project.id), value: project.nom })),
-		[projects],
+	const allProjectsOption = useMemo<DropDownType>(
+		() => ({ code: ALL_PROJECTS_CODE, value: t.analytics.allProjects }),
+		[t.analytics.allProjects],
 	);
-	const selectedProjectOption = projectOptions.find((project) => Number(project.code) === selectedProjectId) ?? null;
+	const projectOptions: DropDownType[] = useMemo(
+		() => [allProjectsOption, ...projects.map((project) => ({ code: String(project.id), value: project.nom }))],
+		[allProjectsOption, projects],
+	);
+	const selectedProjectOption =
+		selectedProjectId === null
+			? allProjectsOption
+			: projectOptions.find((project) => Number(project.code) === selectedProjectId) ?? allProjectsOption;
 	const { data: internalProjectOverview, isFetching: isInternalProjectLoading } = useGetProjectDashboardQuery(
 		{ id: selectedProjectId! },
 		{ skip: !token || selectedProjectId === null || clientFacing },
@@ -380,9 +389,10 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 		{ id: selectedProjectId! },
 		{ skip: !token || selectedProjectId === null || !clientFacing },
 	);
-	const projectOverview = clientFacing ? clientProjectOverview : internalProjectOverview;
-	const isProjectOverviewLoading = clientFacing ? isClientProjectLoading : isInternalProjectLoading;
 	const isProjectFiltered = selectedProjectId !== null;
+	const fetchedProjectOverview = clientFacing ? clientProjectOverview : internalProjectOverview;
+	const projectOverview = isProjectFiltered ? fetchedProjectOverview : undefined;
+	const isProjectOverviewLoading = clientFacing ? isClientProjectLoading : isInternalProjectLoading;
 	const showInternalFinancials = !clientFacing;
 
 	const totalProjects = data?.total_projects ?? 0;
@@ -434,7 +444,7 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 	const projectRankingData = makeHorizontalData(
 		topBudgetProjects.map((project) => project.nom),
 		topBudgetProjects.map((project) => Number(project.budget_total)),
-		'rgba(201, 224, 240, 0.95)',
+		'#1d4ed8',
 	);
 
 	const topExpenseClients = data?.top_expense_clients ?? [];
@@ -445,7 +455,7 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 			{
 				label: t.analytics.expenses,
 				data: topExpenseClients.map((item) => Number(item.total)),
-				backgroundColor: 'rgba(232, 198, 189, 0.95)',
+				backgroundColor: '#b91c1c',
 				borderRadius: 4,
 			},
 		],
@@ -456,7 +466,7 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 			{
 				label: t.analytics.revenue,
 				data: topRevenueClients.map((item) => Number(item.total)),
-				backgroundColor: 'rgba(205, 225, 198, 0.95)',
+				backgroundColor: '#047857',
 				borderRadius: 4,
 			},
 		],
@@ -465,30 +475,30 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 	const projectTopCategoriesData = makeHorizontalData(
 		activeTopCategories.map((item) => item.category__name ?? t.common.category),
 		activeTopCategories.map((item) => Number(item.total)),
-		'rgba(232, 198, 189, 0.95)',
+		'#b91c1c',
 	);
 	const projectTopSubcategoriesData = makeHorizontalData(
 		activeTopSubcategories.map((item) => item.sous_categorie__name ?? t.expenses.subCategory),
 		activeTopSubcategories.map((item) => Number(item.total)),
-		'rgba(205, 225, 198, 0.95)',
+		'#047857',
 	);
 	const projectTopVendorsData = makeHorizontalData(
 		activeTopVendors.map((item) => item.fournisseur),
 		activeTopVendors.map((item) => Number(item.total)),
-		'rgba(201, 224, 240, 0.95)',
+		'#1d4ed8',
 	);
 	const projectBudgetUtilisation = budgetUtilisation;
 	const projectBudgetUsed = clampPercent(projectBudgetUtilisation);
 	const projectBudgetData = makeDoughnutData(
 		[t.analytics.usedBudget, t.analytics.remainingBudget],
 		[projectBudgetUsed, Math.max(100 - projectBudgetUsed, 0)],
-		['rgba(232, 198, 189, 0.95)', 'rgba(250, 245, 243, 0.95)'],
+		['#b91c1c', '#334155'],
 	);
 	const projectProfitMargin = clampPercent(projectOverview?.marge ?? 0);
 	const projectProfitData = makeDoughnutData(
 		[t.analytics.profitMargin, t.analytics.remainingBudget],
 		[projectProfitMargin, Math.max(100 - projectProfitMargin, 0)],
-		['rgba(205, 225, 198, 0.95)', 'rgba(240, 247, 236, 0.95)'],
+		['#047857', '#334155'],
 	);
 	const pageTitle = clientFacing ? t.analytics.clientDashboard : t.common.dashboard;
 
@@ -523,7 +533,9 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 									theme={inputTheme}
 									value={selectedProjectOption}
 									fullWidth
-									onChange={(_, newVal) => setSelectedProjectId(newVal ? Number(newVal.code) : null)}
+									onChange={(_, newVal) =>
+										setSelectedProjectId(newVal && newVal.code !== ALL_PROJECTS_CODE ? Number(newVal.code) : null)
+									}
 									startIcon={<ProjectsIcon fontSize="small" />}
 								/>
 							</Box>
@@ -668,9 +680,9 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 												sx={{
 													height: 18,
 													borderRadius: 0,
-													bgcolor: 'rgba(201, 224, 240, 0.22)',
+													bgcolor: 'rgba(29, 78, 216, 0.18)',
 													'& .MuiLinearProgress-bar': {
-														bgcolor: 'rgba(201, 224, 240, 0.95)',
+														bgcolor: '#1d4ed8',
 													},
 												}}
 											/>
@@ -680,6 +692,13 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 
 								{projectOverview ? (
 									<Stack spacing={2}>
+										<ChartCard title={t.analytics.cumulativeIncomeExpenses} subheader={projectOverview.nom} height={340}>
+											{activeHistoryData.labels.length > 0 ? (
+												<Line data={activeHistoryData} options={areaChartOptions} />
+											) : (
+												<EmptyChart />
+											)}
+										</ChartCard>
 										<Box
 											sx={{
 												display: 'grid',
@@ -776,13 +795,6 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 												)}
 											</ChartCard>
 										</Box>
-										<ChartCard title={t.analytics.cumulativeIncomeExpenses} subheader={projectOverview.nom} height={340}>
-											{activeHistoryData.labels.length > 0 ? (
-												<Line data={activeHistoryData} options={areaChartOptions} />
-											) : (
-												<EmptyChart />
-											)}
-										</ChartCard>
 									</Stack>
 								) : (
 									<>

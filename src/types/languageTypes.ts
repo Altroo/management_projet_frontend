@@ -455,6 +455,7 @@ export type TranslationDictionary = {
 		projectBreakdown: string;
 		projectOverview: string;
 		projectOverviewSelect: string;
+		allProjects: string;
 		selectProjectForOverview: string;
 		budgetVsActual: string;
 		budgetVsActualSub: string;

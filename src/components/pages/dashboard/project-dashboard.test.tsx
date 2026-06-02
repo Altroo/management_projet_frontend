@@ -47,6 +47,7 @@ jest.mock('@/utils/rawData', () => ({
 
 jest.mock('@/utils/helpers', () => ({
 	formatNumber: jest.fn((n: string | number) => Number(n).toLocaleString('fr-MA')),
+	hexToRGB: jest.fn((hex: string, alpha?: number) => (alpha === undefined ? hex : `${hex}${alpha}`)),
 }));
 
 jest.mock('chart.js', () => ({
@@ -113,6 +114,7 @@ describe('ProjectDashboardClient', () => {
 			</Provider>,
 		);
 		expect(screen.getByLabelText(/rechercher par projet/i)).toBeInTheDocument();
+		expect(screen.getByRole('combobox', { name: /rechercher par projet/i })).toHaveValue('Tous les projets');
 	});
 
 	it('renders KPI cards with data', () => {
