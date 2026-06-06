@@ -59,6 +59,7 @@ import {
 	useGetExpenseTaxonomyQuery,
 	useGetExpenseQuery,
 	useGetProjectsListQuery,
+	useGetSuppliersQuery,
 	useUpdateExpenseCategoryMutation,
 	useUpdateExpenseSubCategoryMutation,
 	useUpdateExpenseMutation,
@@ -83,6 +84,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 
 	const { data: projectsData } = useGetProjectsListQuery({}, { skip: !token });
 	const { data: expenseTaxonomy } = useGetExpenseTaxonomyQuery(undefined, { skip: !token });
+	const { data: suppliersData } = useGetSuppliersQuery({}, { skip: !token });
 
 	const projectItems: DropDownType[] = useMemo(() => {
 		const projects = Array.isArray(projectsData)
@@ -96,6 +98,10 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	const categoryItems: DropDownType[] = useMemo(() => {
 		return (expenseTaxonomy ?? []).map((category) => ({ code: String(category.id), value: category.name }));
 	}, [expenseTaxonomy]);
+
+	const supplierItems: DropDownType[] = useMemo(() => {
+		return (suppliersData ?? []).map((supplier) => ({ code: String(supplier.id), value: supplier.nom }));
+	}, [suppliersData]);
 
 	const serviceFeeTypeItems: DropDownType[] = useMemo(
 		() => [
@@ -127,6 +133,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 			frais_de_service: rawData?.frais_de_service ?? false,
 			frais_de_service_valeur: rawData?.frais_de_service_valeur ?? '',
 			frais_de_service_type: rawData?.frais_de_service_type ?? 'fixed',
+			supplier: rawData?.supplier ?? '',
 			fournisseur: rawData?.fournisseur ?? '',
 			notes: rawData?.notes ?? '',
 			globalError: '',
@@ -142,6 +149,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 				...fields,
 				frais_de_service_valeur: fields.frais_de_service ? fields.frais_de_service_valeur : null,
 				frais_de_service_type: fields.frais_de_service ? fields.frais_de_service_type : 'fixed',
+				supplier: fields.supplier === '' ? null : fields.supplier,
 			};
 			try {
 				if (isEditMode) {
@@ -163,6 +171,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 
 	const selectedProject = projectItems.find((p) => p.code === String(formik.values.project)) ?? null;
 	const selectedCategory = categoryItems.find((c) => c.code === String(formik.values.category)) ?? null;
+	const selectedSupplier = supplierItems.find((s) => s.code === String(formik.values.supplier)) ?? null;
 
 	const subCategoryItems: DropDownType[] = useMemo(() => {
 		const activeCategory = (expenseTaxonomy ?? []).find((category) => category.id === Number(formik.values.category));
@@ -516,6 +525,27 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										helperText={formik.submitCount > 0 ? (formik.errors.element ?? '') : ''}
 										fullWidth
 										startIcon={<NotesIcon fontSize="small" />}
+									/>
+									<CustomAutoCompleteSelect
+										id="supplier"
+										size="small"
+										noOptionsText={t.suppliers.noSupplierFound}
+										label={t.common.supplier}
+										items={supplierItems}
+										theme={inputTheme}
+										value={selectedSupplier}
+										fullWidth
+										onChange={(_, newVal) => {
+											const selected = suppliersData?.find((supplier) => String(supplier.id) === newVal?.code);
+											formik.setFieldValue('supplier', selected ? selected.id : '');
+											if (selected) {
+												formik.setFieldValue('fournisseur', selected.nom);
+											}
+										}}
+										onBlur={formik.handleBlur('supplier')}
+										error={formik.submitCount > 0 && Boolean(formik.errors.supplier)}
+										helperText={formik.submitCount > 0 ? ((formik.errors.supplier as string) ?? '') : ''}
+										startIcon={<PersonIcon fontSize="small" />}
 									/>
 									<CustomTextInput
 										theme={inputTheme}

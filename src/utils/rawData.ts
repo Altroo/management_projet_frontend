@@ -12,13 +12,23 @@ export const projectStatusItemsList = (t: TranslationDictionary): Array<{ code: 
 	{ code: 'En cours', value: t.rawData.projectStatuses.inProgress },
 	{ code: 'Pas commencé', value: t.rawData.projectStatuses.notStarted },
 	{ code: 'En attente', value: t.rawData.projectStatuses.onHold },
+	{ code: 'En pause', value: t.rawData.projectStatuses.paused },
+	{ code: 'Annulé', value: t.rawData.projectStatuses.cancelled },
+	{ code: 'En attente de démarrage', value: t.rawData.projectStatuses.waitingStart },
+	{ code: 'Livré', value: t.rawData.projectStatuses.delivered },
 ];
 
-export const STATUS_CHIP_COLORS: Record<string, 'success' | 'warning' | 'default' | 'info'> = {
+export type StatusChipColor = 'success' | 'warning' | 'default' | 'info' | 'error';
+
+export const STATUS_CHIP_COLORS: Record<string, StatusChipColor> = {
 	Complété: 'success',
 	'En cours': 'info',
 	'Pas commencé': 'default',
 	'En attente': 'warning',
+	'En pause': 'warning',
+	Annulé: 'error',
+	'En attente de démarrage': 'info',
+	Livré: 'success',
 };
 
 export const CHART_COLORS = {

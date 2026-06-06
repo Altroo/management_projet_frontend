@@ -55,17 +55,23 @@ import {
 	AUTH_LOGIN,
 	BACKEND_SITE_ADMIN,
 	CLIENT_DASHBOARD,
+	CLIENTS_ADD,
+	CLIENTS_LIST,
 	DASHBOARD,
 	DASHBOARD_EDIT_PROFILE,
 	DASHBOARD_NOTIFICATIONS,
 	DASHBOARD_PASSWORD,
 	EXPENSES_ADD,
 	EXPENSES_LIST,
+	PROJECT_STATUSES_ADD,
+	PROJECT_STATUSES_LIST,
 	PROJECTS_ADD,
 	PROJECTS_LIST,
 	REVENUES_ADD,
 	REVENUES_LIST,
 	SITE_ROOT,
+	SUPPLIERS_ADD,
+	SUPPLIERS_LIST,
 	USERS_ADD,
 	USERS_LIST,
 } from '@/utils/routes';
@@ -97,6 +103,24 @@ const getNavigationMenu = (isStaff: boolean, t: TranslationDictionary) => {
 			items: [
 				{ title: t.navigation.projectsList, label: t.navigation.projectsList, path: PROJECTS_LIST },
 				{ title: t.navigation.newProject, label: t.navigation.newProject, path: PROJECTS_ADD },
+				{ title: t.navigation.projectStatusesList, label: t.navigation.projectStatusesList, path: PROJECT_STATUSES_LIST },
+				{ title: t.navigation.newProjectStatus, label: t.navigation.newProjectStatus, path: PROJECT_STATUSES_ADD },
+			],
+		},
+		clients: {
+			title: t.navigation.clients,
+			icon: <PeopleIcon />,
+			items: [
+				{ title: t.navigation.clientsList, label: t.navigation.clientsList, path: CLIENTS_LIST },
+				{ title: t.navigation.newClient, label: t.navigation.newClient, path: CLIENTS_ADD },
+			],
+		},
+		fournisseurs: {
+			title: t.navigation.suppliers,
+			icon: <DomainIcon />,
+			items: [
+				{ title: t.navigation.suppliersList, label: t.navigation.suppliersList, path: SUPPLIERS_LIST },
+				{ title: t.navigation.newSupplier, label: t.navigation.newSupplier, path: SUPPLIERS_ADD },
 			],
 		},
 		revenus: {

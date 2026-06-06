@@ -25,6 +25,20 @@ export const PROJECTS_LIST = `${SITE_ROOT}dashboard/projects`;
 export const PROJECTS_ADD = `${SITE_ROOT}dashboard/projects/new`;
 export const PROJECTS_VIEW = (id: number) => `${SITE_ROOT}dashboard/projects/${id}`;
 export const PROJECTS_EDIT = (id: number) => `${SITE_ROOT}dashboard/projects/${id}/edit`;
+// Project statuses
+export const PROJECT_STATUSES_LIST = `${SITE_ROOT}dashboard/project-statuses`;
+export const PROJECT_STATUSES_ADD = `${SITE_ROOT}dashboard/project-statuses/new`;
+export const PROJECT_STATUSES_EDIT = (id: number) => `${SITE_ROOT}dashboard/project-statuses/${id}/edit`;
+// Clients
+export const CLIENTS_LIST = `${SITE_ROOT}dashboard/clients`;
+export const CLIENTS_ADD = `${SITE_ROOT}dashboard/clients/new`;
+export const CLIENTS_VIEW = (id: number) => `${SITE_ROOT}dashboard/clients/${id}`;
+export const CLIENTS_EDIT = (id: number) => `${SITE_ROOT}dashboard/clients/${id}/edit`;
+// Suppliers
+export const SUPPLIERS_LIST = `${SITE_ROOT}dashboard/suppliers`;
+export const SUPPLIERS_ADD = `${SITE_ROOT}dashboard/suppliers/new`;
+export const SUPPLIERS_VIEW = (id: number) => `${SITE_ROOT}dashboard/suppliers/${id}`;
+export const SUPPLIERS_EDIT = (id: number) => `${SITE_ROOT}dashboard/suppliers/${id}/edit`;
 // Categories
 export const CATEGORIES_LIST = `${SITE_ROOT}dashboard/categories`;
 export const CATEGORIES_ADD = `${SITE_ROOT}dashboard/categories/new`;

@@ -8,11 +8,18 @@ import { initToken } from '@/store/slices/_initSlice';
 import type { ApiErrorResponseType, PaginationResponseType } from '@/types/_initTypes';
 import type {
 	CategoryType,
+	AttachmentType,
+	ClientFormValues,
+	ClientType,
 	ExpenseCategoryTreeType,
 	SubCategoryType,
 	ProjectListType,
+	ProjectPaymentScheduleType,
 	ProjectType,
+	PaymentScheduleFormValues,
 	ProjectFormValues,
+	ProjectStatusFormValues,
+	ProjectStatusRecordType,
 	CategoryFormValues,
 	SubCategoryFormValues,
 	RevenueType,
@@ -22,6 +29,8 @@ import type {
 	ProjectDashboardType,
 	MultiProjectDashboardType,
 	ClientDashboardType,
+	SupplierFormValues,
+	SupplierType,
 } from '@/types/projectTypes';
 
 const rawBaseQuery = axiosBaseQuery((api) =>
@@ -46,10 +55,15 @@ export const projectApi = createApi({
 	reducerPath: 'projectApi',
 	tagTypes: [
 		'Project',
+		'ProjectStatus',
+		'Client',
+		'Supplier',
 		'Category',
 		'SubCategory',
 		'Revenue',
 		'Expense',
+		'Attachment',
+		'PaymentSchedule',
 		'ProjectDashboard',
 		'MultiProjectDashboard',
 		'ClientDashboard',
@@ -115,6 +129,161 @@ export const projectApi = createApi({
 				method: 'DELETE',
 			}),
 			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
+		}),
+
+		// ── Project Statuses ────────────────────────────────────────────────
+		getProjectStatuses: builder.query<ProjectStatusRecordType[], void>({
+			query: () => ({
+				url: process.env.NEXT_PUBLIC_PROJECT_STATUSES,
+				method: 'GET',
+			}),
+			providesTags: ['ProjectStatus'],
+		}),
+
+		getProjectStatus: builder.query<ProjectStatusRecordType, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_STATUSES}${id}/`,
+				method: 'GET',
+			}),
+			providesTags: ['ProjectStatus'],
+		}),
+
+		createProjectStatus: builder.mutation<
+			ProjectStatusRecordType | ApiErrorResponseType,
+			{ data: Omit<ProjectStatusFormValues, 'globalError'> }
+		>({
+			query: ({ data }) => ({
+				url: process.env.NEXT_PUBLIC_PROJECT_STATUSES,
+				method: 'POST',
+				data,
+			}),
+			invalidatesTags: ['ProjectStatus', 'Project'],
+		}),
+
+		updateProjectStatus: builder.mutation<
+			ProjectStatusRecordType | ApiErrorResponseType,
+			{ id: number; data: Omit<ProjectStatusFormValues, 'globalError'> }
+		>({
+			query: ({ id, data }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_STATUSES}${id}/`,
+				method: 'PUT',
+				data,
+			}),
+			invalidatesTags: ['ProjectStatus', 'Project'],
+		}),
+
+		deleteProjectStatus: builder.mutation<void, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_STATUSES}${id}/`,
+				method: 'DELETE',
+			}),
+			invalidatesTags: ['ProjectStatus', 'Project'],
+		}),
+
+		// ── Clients ─────────────────────────────────────────────────────────
+		getClients: builder.query<ClientType[], { search?: string }>({
+			query: ({ search } = {}) => ({
+				url: process.env.NEXT_PUBLIC_PROJECT_CLIENTS,
+				method: 'GET',
+				params: { search },
+			}),
+			providesTags: ['Client'],
+		}),
+
+		getClient: builder.query<ClientType, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_CLIENTS}${id}/`,
+				method: 'GET',
+			}),
+			providesTags: ['Client'],
+		}),
+
+		createClient: builder.mutation<ClientType | ApiErrorResponseType, { data: Omit<ClientFormValues, 'globalError'> }>({
+			query: ({ data }) => ({
+				url: process.env.NEXT_PUBLIC_PROJECT_CLIENTS,
+				method: 'POST',
+				data,
+			}),
+			invalidatesTags: ['Client', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+		}),
+
+		updateClient: builder.mutation<ClientType | ApiErrorResponseType, { id: number; data: Omit<ClientFormValues, 'globalError'> }>({
+			query: ({ id, data }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_CLIENTS}${id}/`,
+				method: 'PUT',
+				data,
+			}),
+			invalidatesTags: ['Client', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+		}),
+
+		deleteClient: builder.mutation<void, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_CLIENTS}${id}/`,
+				method: 'DELETE',
+			}),
+			invalidatesTags: ['Client', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+		}),
+
+		bulkDeleteClients: builder.mutation<void, { ids: number[] }>({
+			query: ({ ids }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_CLIENTS}bulk_delete/`,
+				method: 'DELETE',
+				data: { ids },
+			}),
+			invalidatesTags: ['Client', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+		}),
+
+		// ── Suppliers ───────────────────────────────────────────────────────
+		getSuppliers: builder.query<SupplierType[], { search?: string }>({
+			query: ({ search } = {}) => ({
+				url: process.env.NEXT_PUBLIC_PROJECT_SUPPLIERS,
+				method: 'GET',
+				params: { search },
+			}),
+			providesTags: ['Supplier'],
+		}),
+
+		getSupplier: builder.query<SupplierType, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_SUPPLIERS}${id}/`,
+				method: 'GET',
+			}),
+			providesTags: ['Supplier'],
+		}),
+
+		createSupplier: builder.mutation<SupplierType | ApiErrorResponseType, { data: Omit<SupplierFormValues, 'globalError'> }>({
+			query: ({ data }) => ({
+				url: process.env.NEXT_PUBLIC_PROJECT_SUPPLIERS,
+				method: 'POST',
+				data,
+			}),
+			invalidatesTags: ['Supplier', 'Expense', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+		}),
+
+		updateSupplier: builder.mutation<SupplierType | ApiErrorResponseType, { id: number; data: Omit<SupplierFormValues, 'globalError'> }>({
+			query: ({ id, data }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_SUPPLIERS}${id}/`,
+				method: 'PUT',
+				data,
+			}),
+			invalidatesTags: ['Supplier', 'Expense', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+		}),
+
+		deleteSupplier: builder.mutation<void, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_SUPPLIERS}${id}/`,
+				method: 'DELETE',
+			}),
+			invalidatesTags: ['Supplier', 'Expense', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+		}),
+
+		bulkDeleteSuppliers: builder.mutation<void, { ids: number[] }>({
+			query: ({ ids }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_SUPPLIERS}bulk_delete/`,
+				method: 'DELETE',
+				data: { ids },
+			}),
+			invalidatesTags: ['Supplier', 'Expense', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
 		// ── Categories ──────────────────────────────────────────────────────
@@ -261,7 +430,10 @@ export const projectApi = createApi({
 			providesTags: ['Project'],
 		}),
 
-		createProject: builder.mutation<ProjectType | ApiErrorResponseType, { data: Omit<ProjectFormValues, 'globalError'> }>({
+		createProject: builder.mutation<
+			ProjectType | ApiErrorResponseType,
+			{ data: Omit<ProjectFormValues, 'globalError' | 'client'> & { client: number | null } }
+		>({
 			query: ({ data }) => ({
 				url: process.env.NEXT_PUBLIC_PROJECT_LIST,
 				method: 'POST',
@@ -270,7 +442,10 @@ export const projectApi = createApi({
 			invalidatesTags: ['Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
-		updateProject: builder.mutation<ProjectType | ApiErrorResponseType, { id: number; data: Omit<ProjectFormValues, 'globalError'> }>({
+		updateProject: builder.mutation<
+			ProjectType | ApiErrorResponseType,
+			{ id: number; data: Omit<ProjectFormValues, 'globalError' | 'client'> & { client: number | null } }
+		>({
 			query: ({ id, data }) => ({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_LIST}${id}/`,
 				method: 'PUT',
@@ -294,6 +469,97 @@ export const projectApi = createApi({
 				data: { ids },
 			}),
 			invalidatesTags: ['Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Revenue', 'Expense'],
+		}),
+
+		getProjectAttachments: builder.query<AttachmentType[], { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_LIST}${id}/attachments/`,
+				method: 'GET',
+			}),
+			providesTags: ['Attachment'],
+		}),
+
+		uploadProjectAttachment: builder.mutation<AttachmentType | ApiErrorResponseType, { id: number; data: FormData }>({
+			query: ({ id, data }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_LIST}${id}/attachments/`,
+				method: 'POST',
+				data,
+			}),
+			invalidatesTags: ['Attachment'],
+		}),
+
+		deleteProjectAttachment: builder.mutation<void, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_LIST}attachments/${id}/`,
+				method: 'DELETE',
+			}),
+			invalidatesTags: ['Attachment'],
+		}),
+
+		getPaymentSchedules: builder.query<ProjectPaymentScheduleType[], { project?: number }>({
+			query: ({ project } = {}) => ({
+				url: process.env.NEXT_PUBLIC_PROJECT_PAYMENT_SCHEDULES,
+				method: 'GET',
+				params: { project },
+			}),
+			providesTags: ['PaymentSchedule'],
+		}),
+
+		getPaymentSchedule: builder.query<ProjectPaymentScheduleType, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_PAYMENT_SCHEDULES}${id}/`,
+				method: 'GET',
+			}),
+			providesTags: ['PaymentSchedule'],
+		}),
+
+		createPaymentSchedule: builder.mutation<
+			ProjectPaymentScheduleType | ApiErrorResponseType,
+			{ data: Omit<PaymentScheduleFormValues, 'globalError'> }
+		>({
+			query: ({ data }) => ({
+				url: process.env.NEXT_PUBLIC_PROJECT_PAYMENT_SCHEDULES,
+				method: 'POST',
+				data,
+			}),
+			invalidatesTags: ['PaymentSchedule', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+		}),
+
+		updatePaymentSchedule: builder.mutation<
+			ProjectPaymentScheduleType | ApiErrorResponseType,
+			{ id: number; data: Omit<PaymentScheduleFormValues, 'globalError'> }
+		>({
+			query: ({ id, data }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_PAYMENT_SCHEDULES}${id}/`,
+				method: 'PUT',
+				data,
+			}),
+			invalidatesTags: ['PaymentSchedule', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+		}),
+
+		deletePaymentSchedule: builder.mutation<void, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_PAYMENT_SCHEDULES}${id}/`,
+				method: 'DELETE',
+			}),
+			invalidatesTags: ['PaymentSchedule', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+		}),
+
+		bulkDeletePaymentSchedules: builder.mutation<void, { ids: number[] }>({
+			query: ({ ids }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_PAYMENT_SCHEDULES}bulk_delete/`,
+				method: 'DELETE',
+				data: { ids },
+			}),
+			invalidatesTags: ['PaymentSchedule', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+		}),
+
+		downloadProjectReport: builder.mutation<Blob, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_LIST}${id}/report.pdf`,
+				method: 'GET',
+				responseType: 'blob',
+			}),
 		}),
 
 		// ── Revenues ────────────────────────────────────────────────────────
@@ -352,6 +618,31 @@ export const projectApi = createApi({
 			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
+		getRevenueAttachments: builder.query<AttachmentType[], { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_REVENUE_LIST}${id}/attachments/`,
+				method: 'GET',
+			}),
+			providesTags: ['Attachment'],
+		}),
+
+		uploadRevenueAttachment: builder.mutation<AttachmentType | ApiErrorResponseType, { id: number; data: FormData }>({
+			query: ({ id, data }) => ({
+				url: `${process.env.NEXT_PUBLIC_REVENUE_LIST}${id}/attachments/`,
+				method: 'POST',
+				data,
+			}),
+			invalidatesTags: ['Attachment'],
+		}),
+
+		deleteRevenueAttachment: builder.mutation<void, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_REVENUE_LIST}attachments/${id}/`,
+				method: 'DELETE',
+			}),
+			invalidatesTags: ['Attachment'],
+		}),
+
 		// ── Expenses ────────────────────────────────────────────────────────
 		getExpenses: builder.query<
 			ExpenseType[],
@@ -382,7 +673,10 @@ export const projectApi = createApi({
 			providesTags: ['Expense'],
 		}),
 
-		createExpense: builder.mutation<ExpenseType | ApiErrorResponseType, { data: Omit<ExpenseFormValues, 'globalError'> }>({
+		createExpense: builder.mutation<
+			ExpenseType | ApiErrorResponseType,
+			{ data: Omit<ExpenseFormValues, 'globalError' | 'supplier'> & { supplier: number | null } }
+		>({
 			query: ({ data }) => ({
 				url: process.env.NEXT_PUBLIC_EXPENSE_LIST,
 				method: 'POST',
@@ -391,7 +685,10 @@ export const projectApi = createApi({
 			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
-		updateExpense: builder.mutation<ExpenseType | ApiErrorResponseType, { id: number; data: Omit<ExpenseFormValues, 'globalError'> }>({
+		updateExpense: builder.mutation<
+			ExpenseType | ApiErrorResponseType,
+			{ id: number; data: Omit<ExpenseFormValues, 'globalError' | 'supplier'> & { supplier: number | null } }
+		>({
 			query: ({ id, data }) => ({
 				url: `${process.env.NEXT_PUBLIC_EXPENSE_LIST}${id}/`,
 				method: 'PUT',
@@ -415,6 +712,31 @@ export const projectApi = createApi({
 				data: { ids },
 			}),
 			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+		}),
+
+		getExpenseAttachments: builder.query<AttachmentType[], { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_EXPENSE_LIST}${id}/attachments/`,
+				method: 'GET',
+			}),
+			providesTags: ['Attachment'],
+		}),
+
+		uploadExpenseAttachment: builder.mutation<AttachmentType | ApiErrorResponseType, { id: number; data: FormData }>({
+			query: ({ id, data }) => ({
+				url: `${process.env.NEXT_PUBLIC_EXPENSE_LIST}${id}/attachments/`,
+				method: 'POST',
+				data,
+			}),
+			invalidatesTags: ['Attachment'],
+		}),
+
+		deleteExpenseAttachment: builder.mutation<void, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_EXPENSE_LIST}attachments/${id}/`,
+				method: 'DELETE',
+			}),
+			invalidatesTags: ['Attachment'],
 		}),
 
 		// ── Dashboard ───────────────────────────────────────────────────────
@@ -461,6 +783,26 @@ export const {
 	useCreateExpenseSubCategoryMutation,
 	useUpdateExpenseSubCategoryMutation,
 	useDeleteExpenseSubCategoryMutation,
+	// Project Statuses
+	useGetProjectStatusesQuery,
+	useGetProjectStatusQuery,
+	useCreateProjectStatusMutation,
+	useUpdateProjectStatusMutation,
+	useDeleteProjectStatusMutation,
+	// Clients
+	useGetClientsQuery,
+	useGetClientQuery,
+	useCreateClientMutation,
+	useUpdateClientMutation,
+	useDeleteClientMutation,
+	useBulkDeleteClientsMutation,
+	// Suppliers
+	useGetSuppliersQuery,
+	useGetSupplierQuery,
+	useCreateSupplierMutation,
+	useUpdateSupplierMutation,
+	useDeleteSupplierMutation,
+	useBulkDeleteSuppliersMutation,
 	// Categories
 	useGetCategoriesQuery,
 	useGetCategoryQuery,
@@ -482,6 +824,16 @@ export const {
 	useUpdateProjectMutation,
 	useDeleteProjectMutation,
 	useBulkDeleteProjectsMutation,
+	useGetProjectAttachmentsQuery,
+	useUploadProjectAttachmentMutation,
+	useDeleteProjectAttachmentMutation,
+	useGetPaymentSchedulesQuery,
+	useGetPaymentScheduleQuery,
+	useCreatePaymentScheduleMutation,
+	useUpdatePaymentScheduleMutation,
+	useDeletePaymentScheduleMutation,
+	useBulkDeletePaymentSchedulesMutation,
+	useDownloadProjectReportMutation,
 	// Revenues
 	useGetRevenuesQuery,
 	useGetRevenueQuery,
@@ -489,6 +841,9 @@ export const {
 	useUpdateRevenueMutation,
 	useDeleteRevenueMutation,
 	useBulkDeleteRevenuesMutation,
+	useGetRevenueAttachmentsQuery,
+	useUploadRevenueAttachmentMutation,
+	useDeleteRevenueAttachmentMutation,
 	// Expenses
 	useGetExpensesQuery,
 	useGetExpenseQuery,
@@ -496,6 +851,9 @@ export const {
 	useUpdateExpenseMutation,
 	useDeleteExpenseMutation,
 	useBulkDeleteExpensesMutation,
+	useGetExpenseAttachmentsQuery,
+	useUploadExpenseAttachmentMutation,
+	useDeleteExpenseAttachmentMutation,
 	// Dashboard
 	useGetProjectDashboardQuery,
 	useGetMultiProjectDashboardQuery,

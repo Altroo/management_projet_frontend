@@ -155,6 +155,7 @@ export const projectSchema = z.object({
 	date_debut: requiredDateField(() => getT().projects.dateDebut),
 	date_fin: requiredDateField(() => getT().projects.dateFin),
 	status: requiredChoiceTextField(),
+	client: optionalNumberField(),
 	chef_de_projet: requiredTextField(2, 255),
 	nom_client: requiredTextField(2, 255),
 	telephone_client: optionalTextField(1, 50),
@@ -165,6 +166,32 @@ export const projectSchema = z.object({
 
 export const categorySchema = z.object({
 	name: requiredTextField(2, 255),
+	globalError: optionalTextField(1, 500),
+});
+
+export const projectStatusSchema = z.object({
+	name: requiredTextField(2, 60),
+	color: requiredChoiceTextField(),
+	is_active: z.boolean(),
+	ordering: optionalNumberField(),
+	globalError: optionalTextField(1, 500),
+});
+
+export const clientSchema = z.object({
+	nom: requiredTextField(2, 200),
+	telephone: optionalTextField(1, 30),
+	email: z.preprocess(
+		(val) => (val === undefined || val === null || val === '' ? undefined : val),
+		z.email({ error: MINI_INPUT_EMAIL }).optional(),
+	),
+	adresse: optionalTextField(1, 2000),
+	globalError: optionalTextField(1, 500),
+});
+
+export const supplierSchema = z.object({
+	nom: requiredTextField(2, 200),
+	contact: optionalTextField(1, 200),
+	specialite: optionalTextField(1, 200),
 	globalError: optionalTextField(1, 500),
 });
 
@@ -213,6 +240,7 @@ export const expenseSchema = z
 			z.string().optional(),
 		),
 		frais_de_service_type: z.enum(['percentage', 'fixed']),
+		supplier: optionalNumberField(),
 		fournisseur: optionalTextField(1, 255),
 		notes: optionalTextField(1, 2000),
 		globalError: optionalTextField(1, 500),
@@ -243,3 +271,18 @@ export const expenseSchema = z
 			});
 		}
 	});
+
+export const paymentScheduleSchema = z.object({
+	project: z.preprocess(
+		(val) => (val === undefined || val === null || val === '' ? '' : String(val)),
+		z.string().nonempty({ error: INPUT_REQUIRED }),
+	),
+	due_date: requiredDateField(() => getT().common.date),
+	expected_amount: z.preprocess(
+		(val) => (val === undefined || val === null ? '' : String(val)),
+		z.string().nonempty({ error: INPUT_REQUIRED }),
+	),
+	description: requiredTextField(2, 500),
+	notes: optionalTextField(1, 2000),
+	globalError: optionalTextField(1, 500),
+});

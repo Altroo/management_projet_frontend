@@ -38,6 +38,7 @@ import ActionModals from '@/components/htmlElements/modals/actionModal/actionMod
 import { Protected } from '@/components/layouts/protected/protected';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
 import { useLanguage, useToast } from '@/utils/hooks';
+import { ExpenseAttachmentsCard } from '@/components/shared/entityAttachments/entityAttachments';
 
 interface InfoRowProps {
 	icon: React.ReactNode;
@@ -339,10 +340,16 @@ const ExpenseViewClient: React.FC<Props> = ({ session, id }) => {
 											<Divider />
 											<InfoRow icon={<NotesIcon />} label={t.expenses.element} value={expense.element} />
 											<Divider />
-											<InfoRow icon={<PersonIcon />} label={t.expenses.supplier} value={expense.fournisseur} />
+											<InfoRow
+												icon={<PersonIcon />}
+												label={t.expenses.supplier}
+												value={expense.supplier_name || expense.fournisseur}
+											/>
 										</Stack>
 									</CardContent>
 								</Card>
+
+								<ExpenseAttachmentsCard id={id} />
 
 								{/* Notes */}
 								<Card elevation={2} sx={{ borderRadius: 2 }}>

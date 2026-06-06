@@ -1,4 +1,12 @@
-export type ProjectStatusType = 'Complété' | 'En cours' | 'Pas commencé' | 'En attente';
+export type ProjectStatusType =
+	| 'Complété'
+	| 'En cours'
+	| 'Pas commencé'
+	| 'En attente'
+	| 'En pause'
+	| 'Annulé'
+	| 'En attente de démarrage'
+	| 'Livré';
 export type ServiceFeeType = 'percentage' | 'fixed';
 
 export interface CategoryType {
@@ -28,12 +36,19 @@ export interface ExpenseCategoryTreeType extends CategoryType {
 export interface ProjectListType {
 	id: number;
 	nom: string;
+	description?: string | null;
 	budget_total: string;
 	date_debut: string;
 	date_fin: string;
 	status: ProjectStatusType | string;
+	status_display?: string;
+	client: number | null;
+	client_name: string | null;
 	chef_de_projet: string;
 	nom_client: string;
+	telephone_client?: string | null;
+	email_client?: string | null;
+	notes?: string | null;
 	jours_restants: number;
 	revenue_total: string;
 	depenses_totales: string;
@@ -49,6 +64,7 @@ export interface ProjectType extends ProjectListType {
 	description: string | null;
 	telephone_client: string | null;
 	email_client: string | null;
+	client_address: string | null;
 	notes: string | null;
 }
 
@@ -59,6 +75,7 @@ export interface ProjectFormValues {
 	date_debut: string;
 	date_fin: string;
 	status: string;
+	client: number | '';
 	chef_de_projet: string;
 	nom_client: string;
 	telephone_client: string;
@@ -92,6 +109,21 @@ export interface RevenueType {
 	date_updated: string;
 }
 
+export interface AttachmentType {
+	id: number;
+	project?: number;
+	expense?: number;
+	revenue?: number;
+	file: string;
+	file_url: string | null;
+	filename: string;
+	file_size: number | null;
+	label: string | null;
+	uploaded_by_user: number | null;
+	uploaded_by_user_name: string | null;
+	date_created: string;
+}
+
 export interface RevenueFormValues {
 	project: number | '';
 	date: string;
@@ -117,6 +149,8 @@ export interface ExpenseType {
 	frais_de_service_valeur: string | null;
 	frais_de_service_type: ServiceFeeType;
 	frais_de_service_montant: string;
+	supplier: number | null;
+	supplier_name: string | null;
 	fournisseur: string | null;
 	notes: string | null;
 	created_by_user: number | null;
@@ -136,7 +170,120 @@ export interface ExpenseFormValues {
 	frais_de_service: boolean;
 	frais_de_service_valeur: string | null;
 	frais_de_service_type: ServiceFeeType;
+	supplier: number | '';
 	fournisseur: string;
+	notes: string;
+	globalError: string;
+}
+
+export interface ProjectStatusRecordType {
+	id: number;
+	name: string;
+	color: 'default' | 'info' | 'success' | 'warning' | 'error' | string;
+	is_active: boolean;
+	ordering: number;
+	created_by_user: number | null;
+	created_by_user_name: string | null;
+	date_created: string;
+	date_updated: string;
+}
+
+export interface ProjectStatusFormValues {
+	name: string;
+	color: string;
+	is_active: boolean;
+	ordering: number | '';
+	globalError: string;
+}
+
+export interface ClientProjectHistoryType {
+	id: number;
+	nom: string;
+	status: string;
+	budget_total: string;
+	date_debut: string;
+	date_fin: string;
+	revenue_total: string;
+	depenses_totales: string;
+	benefice: string;
+}
+
+export interface ClientType {
+	id: number;
+	nom: string;
+	telephone: string | null;
+	email: string | null;
+	adresse: string | null;
+	total_encaisse: string;
+	projects_count: number;
+	projects: ClientProjectHistoryType[];
+	created_by_user: number | null;
+	created_by_user_name: string | null;
+	date_created: string;
+	date_updated: string;
+}
+
+export interface ClientFormValues {
+	nom: string;
+	telephone: string;
+	email: string;
+	adresse: string;
+	globalError: string;
+}
+
+export interface SupplierPaymentHistoryType {
+	id: number;
+	project: number;
+	project_name: string;
+	date: string;
+	description: string;
+	montant: string;
+}
+
+export interface SupplierType {
+	id: number;
+	nom: string;
+	contact: string | null;
+	specialite: string | null;
+	total_paid: string;
+	payments_count: number;
+	payments: SupplierPaymentHistoryType[];
+	created_by_user: number | null;
+	created_by_user_name: string | null;
+	date_created: string;
+	date_updated: string;
+}
+
+export interface SupplierFormValues {
+	nom: string;
+	contact: string;
+	specialite: string;
+	globalError: string;
+}
+
+export interface ProjectPaymentScheduleType {
+	id: number;
+	project: number;
+	project_name: string;
+	due_date: string;
+	expected_amount: string;
+	description: string;
+	notes: string | null;
+	actual_amount: string;
+	expected_cumulative: string;
+	actual_cumulative: string;
+	variance: string;
+	created_by_user: number | null;
+	created_by_user_name: string | null;
+	date_created: string;
+	date_updated: string;
+}
+
+export interface PaymentScheduleFormValues {
+	project: number | '';
+	due_date: string;
+	expected_amount: string;
+	description: string;
 	notes: string;
 	globalError: string;
 }

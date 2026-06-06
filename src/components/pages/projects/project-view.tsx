@@ -4,7 +4,7 @@ import React, { isValidElement, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ApiErrorResponseType, ResponseDataInterface, SessionProps } from '@/types/_initTypes';
 import { useInitAccessToken } from '@/contexts/InitContext';
-import { useDeleteProjectMutation, useGetProjectQuery } from '@/store/services/project';
+import { useDeleteProjectMutation, useDownloadProjectReportMutation, useGetProjectQuery } from '@/store/services/project';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import {
@@ -26,6 +26,7 @@ import {
 	AttachMoney as AttachMoneyIcon,
 	CalendarToday as CalendarTodayIcon,
 	Delete as DeleteIcon,
+	Download as DownloadIcon,
 	Edit as EditIcon,
 	Email as EmailIcon,
 	Notes as NotesIcon,
@@ -41,6 +42,8 @@ import { Protected } from '@/components/layouts/protected/protected';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
 import { useLanguage, useToast } from '@/utils/hooks';
 import { STATUS_CHIP_COLORS } from '@/utils/rawData';
+import { ProjectAttachmentsCard } from '@/components/shared/entityAttachments/entityAttachments';
+import ProjectPaymentScheduleCard from '@/components/shared/projectPaymentSchedule/projectPaymentSchedule';
 
 interface InfoRowProps {
 	icon: React.ReactNode;
@@ -123,8 +126,10 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
 	const [deleteProject] = useDeleteProjectMutation();
+	const [downloadProjectReport] = useDownloadProjectReportMutation();
 	const { onSuccess, onError } = useToast();
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const [isDownloadingReport, setIsDownloadingReport] = useState(false);
 
 	const handleDelete = async () => {
 		try {
@@ -154,6 +159,26 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 			color: '#D32F2F',
 		},
 	];
+
+	const handleDownloadReport = async () => {
+		if (!project) return;
+		setIsDownloadingReport(true);
+		try {
+			const blob = await downloadProjectReport({ id }).unwrap();
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.href = url;
+			link.download = `rapport-projet-${project.id}.pdf`;
+			document.body.appendChild(link);
+			link.click();
+			link.remove();
+			URL.revokeObjectURL(url);
+		} catch (err) {
+			onError(extractApiErrorMessage(err, t.projects.reportDownloadError));
+		} finally {
+			setIsDownloadingReport(false);
+		}
+	};
 
 	const statusColor = STATUS_CHIP_COLORS[project?.status ?? ''] ?? 'default';
 
@@ -201,6 +226,17 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 											onClick={() => router.push(PROJECTS_EDIT(id))}
 										>
 											{t.common.edit}
+										</Button>
+									</Protected>
+									<Protected permission="can_print">
+										<Button
+											variant="outlined"
+											size="small"
+											startIcon={<DownloadIcon />}
+											disabled={isDownloadingReport}
+											onClick={handleDownloadReport}
+										>
+											{t.projects.downloadReport}
 										</Button>
 									</Protected>
 									<Protected permission="can_delete">
@@ -374,9 +410,14 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 											<InfoRow icon={<PhoneIcon />} label={t.projects.clientPhone} value={project.telephone_client} />
 											<Divider />
 											<InfoRow icon={<EmailIcon />} label={t.projects.clientEmail} value={project.email_client} />
+											<Divider />
+											<InfoRow icon={<PersonIcon />} label={t.projects.clientAddress} value={project.client_address} />
 										</Stack>
 									</CardContent>
 								</Card>
+
+								<ProjectPaymentScheduleCard projectId={id} />
+								<ProjectAttachmentsCard id={id} />
 
 								{/* Notes & Details */}
 								<Card elevation={2} sx={{ borderRadius: 2 }}>

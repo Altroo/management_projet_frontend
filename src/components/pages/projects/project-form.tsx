@@ -37,7 +37,13 @@ import { projectSchema } from '@/utils/formValidationSchemas';
 import { getLabelForKey, setFormikAutoErrors } from '@/utils/helpers';
 import { PROJECTS_LIST } from '@/utils/routes';
 import { useLanguage, useToast } from '@/utils/hooks';
-import { useCreateProjectMutation, useGetProjectQuery, useUpdateProjectMutation } from '@/store/services/project';
+import {
+	useCreateProjectMutation,
+	useGetClientsQuery,
+	useGetProjectQuery,
+	useGetProjectStatusesQuery,
+	useUpdateProjectMutation,
+} from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
 import { projectStatusItemsList } from '@/utils/rawData';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
@@ -56,12 +62,20 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	const router = useRouter();
 
 	const { data: rawData } = useGetProjectQuery({ id: id! }, { skip: !token || !isEditMode });
+	const { data: statusData } = useGetProjectStatusesQuery(undefined, { skip: !token });
+	const { data: clientsData } = useGetClientsQuery({}, { skip: !token });
 
 	const [createProject, { isLoading: isCreateLoading }] = useCreateProjectMutation();
 	const [updateProject, { isLoading: isUpdateLoading }] = useUpdateProjectMutation();
 	const [isPending, setIsPending] = useState(false);
 
-	const statusItems: DropDownType[] = projectStatusItemsList(t).map((s) => ({ code: s.code, value: s.value }));
+	const statusItems: DropDownType[] =
+		statusData && statusData.length > 0
+			? statusData
+					.filter((s) => s.is_active || s.name === rawData?.status)
+					.map((s) => ({ code: s.name, value: s.name }))
+			: projectStatusItemsList(t).map((s) => ({ code: s.code, value: s.value }));
+	const clientItems: DropDownType[] = (clientsData ?? []).map((client) => ({ code: String(client.id), value: client.nom }));
 
 	const formik = useFormik<ProjectFormValues>({
 		initialValues: {
@@ -71,6 +85,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 			date_debut: rawData?.date_debut ?? '',
 			date_fin: rawData?.date_fin ?? '',
 			status: rawData?.status ?? '',
+			client: rawData?.client ?? '',
 			chef_de_projet: rawData?.chef_de_projet ?? '',
 			nom_client: rawData?.nom_client ?? '',
 			telephone_client: rawData?.telephone_client ?? '',
@@ -85,12 +100,16 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 			setIsPending(true);
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const { globalError, ...fields } = data;
+			const payload = {
+				...fields,
+				client: fields.client === '' ? null : fields.client,
+			};
 			try {
 				if (isEditMode) {
-					await updateProject({ id: id!, data: fields }).unwrap();
+					await updateProject({ id: id!, data: payload }).unwrap();
 					onSuccess(t.projects.projectUpdatedSuccess);
 				} else {
-					await createProject({ data: fields }).unwrap();
+					await createProject({ data: payload }).unwrap();
 					onSuccess(t.projects.projectAddedSuccess);
 				}
 				router.push(PROJECTS_LIST);
@@ -104,6 +123,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	});
 
 	const selectedStatus = statusItems.find((s) => s.code === formik.values.status) ?? null;
+	const selectedClient = clientItems.find((c) => c.code === String(formik.values.client)) ?? null;
 
 	const validationEntries = Object.entries(formik.errors).filter(([k]) => k !== 'globalError') as [string, string][];
 	const hasValidationErrors = validationEntries.length > 0;
@@ -337,6 +357,29 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 								</Stack>
 								<Divider sx={{ mb: 3 }} />
 								<Stack spacing={2.5}>
+									<CustomAutoCompleteSelect
+										id="client"
+										size="small"
+										noOptionsText={t.clients.noClientFound}
+										label={t.common.client}
+										items={clientItems}
+										theme={inputTheme}
+										value={selectedClient}
+										fullWidth
+										onChange={(_, newVal) => {
+											const selected = clientsData?.find((client) => String(client.id) === newVal?.code);
+											formik.setFieldValue('client', selected ? selected.id : '');
+											if (selected) {
+												formik.setFieldValue('nom_client', selected.nom);
+												formik.setFieldValue('telephone_client', selected.telephone ?? '');
+												formik.setFieldValue('email_client', selected.email ?? '');
+											}
+										}}
+										onBlur={formik.handleBlur('client')}
+										error={formik.submitCount > 0 && Boolean(formik.errors.client)}
+										helperText={formik.submitCount > 0 ? ((formik.errors.client as string) ?? '') : ''}
+										startIcon={<PersonIcon fontSize="small" />}
+									/>
 									<CustomTextInput
 										theme={inputTheme}
 										id="nom_client"
