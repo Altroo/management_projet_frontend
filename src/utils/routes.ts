@@ -25,10 +25,6 @@ export const PROJECTS_LIST = `${SITE_ROOT}dashboard/projects`;
 export const PROJECTS_ADD = `${SITE_ROOT}dashboard/projects/new`;
 export const PROJECTS_VIEW = (id: number) => `${SITE_ROOT}dashboard/projects/${id}`;
 export const PROJECTS_EDIT = (id: number) => `${SITE_ROOT}dashboard/projects/${id}/edit`;
-// Project statuses
-export const PROJECT_STATUSES_LIST = `${SITE_ROOT}dashboard/project-statuses`;
-export const PROJECT_STATUSES_ADD = `${SITE_ROOT}dashboard/project-statuses/new`;
-export const PROJECT_STATUSES_EDIT = (id: number) => `${SITE_ROOT}dashboard/project-statuses/${id}/edit`;
 // Clients
 export const CLIENTS_LIST = `${SITE_ROOT}dashboard/clients`;
 export const CLIENTS_ADD = `${SITE_ROOT}dashboard/clients/new`;

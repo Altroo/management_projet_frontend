@@ -21,7 +21,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { fr } from 'date-fns/locale';
 import { format, parseISO } from 'date-fns';
 import type { SessionProps } from '@/types/_initTypes';
-import type { RevenueFormValues } from '@/types/projectTypes';
+import type { RevenueFormValues, RevenueType } from '@/types/projectTypes';
 import type { DropDownType } from '@/types/accountTypes';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import { Protected } from '@/components/layouts/protected/protected';
@@ -29,6 +29,11 @@ import CustomTextInput from '@/components/formikElements/customTextInput/customT
 import CustomAutoCompleteSelect from '@/components/formikElements/customAutoCompleteSelect/customAutoCompleteSelect';
 import PrimaryLoadingButton from '@/components/htmlElements/buttons/primaryLoadingButton/primaryLoadingButton';
 import ApiProgress from '@/components/formikElements/apiLoading/apiProgress/apiProgress';
+import {
+	buildAttachmentFormData,
+	RevenueAttachmentsFormSection,
+	type QueuedAttachment,
+} from '@/components/shared/entityAttachments/entityAttachments';
 import { textInputTheme } from '@/utils/themes';
 import { revenueSchema } from '@/utils/formValidationSchemas';
 import { getLabelForKey, setFormikAutoErrors } from '@/utils/helpers';
@@ -38,6 +43,7 @@ import {
 	useCreateRevenueMutation,
 	useGetProjectsListQuery,
 	useGetRevenueQuery,
+	useUploadRevenueAttachmentMutation,
 	useUpdateRevenueMutation,
 } from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
@@ -71,7 +77,9 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 
 	const [createRevenue, { isLoading: isCreateLoading }] = useCreateRevenueMutation();
 	const [updateRevenue, { isLoading: isUpdateLoading }] = useUpdateRevenueMutation();
+	const [uploadRevenueAttachment] = useUploadRevenueAttachmentMutation();
 	const [isPending, setIsPending] = useState(false);
+	const [queuedAttachments, setQueuedAttachments] = useState<QueuedAttachment[]>([]);
 
 	const formik = useFormik<RevenueFormValues>({
 		initialValues: {
@@ -94,7 +102,15 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 					await updateRevenue({ id: id!, data: fields }).unwrap();
 					onSuccess(t.revenues.revenueUpdatedSuccess);
 				} else {
-					await createRevenue({ data: fields }).unwrap();
+					const createdRevenue = (await createRevenue({ data: fields }).unwrap()) as RevenueType;
+					if (queuedAttachments.length > 0) {
+						await Promise.all(
+							queuedAttachments.map((attachment) =>
+								uploadRevenueAttachment({ id: createdRevenue.id, data: buildAttachmentFormData(attachment) }).unwrap(),
+							),
+						);
+						setQueuedAttachments([]);
+					}
 					onSuccess(t.revenues.revenueAddedSuccess);
 				}
 				router.push(REVENUES_LIST);
@@ -276,6 +292,12 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 								</Stack>
 							</CardContent>
 						</Card>
+
+						<RevenueAttachmentsFormSection
+							id={id}
+							queuedAttachments={queuedAttachments}
+							setQueuedAttachments={setQueuedAttachments}
+						/>
 
 						<Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 2 }}>
 							<PrimaryLoadingButton

@@ -36,7 +36,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { fr } from 'date-fns/locale';
 import { format, parseISO } from 'date-fns';
 import type { SessionProps } from '@/types/_initTypes';
-import type { ExpenseFormValues, ServiceFeeType } from '@/types/projectTypes';
+import type { ExpenseFormValues, ExpenseType, ServiceFeeType } from '@/types/projectTypes';
 import type { DropDownType } from '@/types/accountTypes';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import { Protected } from '@/components/layouts/protected/protected';
@@ -45,6 +45,11 @@ import CustomAutoCompleteSelect from '@/components/formikElements/customAutoComp
 import PrimaryLoadingButton from '@/components/htmlElements/buttons/primaryLoadingButton/primaryLoadingButton';
 import ApiProgress from '@/components/formikElements/apiLoading/apiProgress/apiProgress';
 import EntityCrudControls from '@/components/shared/entityCrudControls/entityCrudControls';
+import {
+	buildAttachmentFormData,
+	ExpenseAttachmentsFormSection,
+	type QueuedAttachment,
+} from '@/components/shared/entityAttachments/entityAttachments';
 import { textInputTheme } from '@/utils/themes';
 import { expenseSchema } from '@/utils/formValidationSchemas';
 import { getLabelForKey, setFormikAutoErrors } from '@/utils/helpers';
@@ -62,6 +67,7 @@ import {
 	useGetSuppliersQuery,
 	useUpdateExpenseCategoryMutation,
 	useUpdateExpenseSubCategoryMutation,
+	useUploadExpenseAttachmentMutation,
 	useUpdateExpenseMutation,
 } from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
@@ -119,7 +125,9 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	const [deleteExpenseSubCategory] = useDeleteExpenseSubCategoryMutation();
 	const [createExpense, { isLoading: isCreateLoading }] = useCreateExpenseMutation();
 	const [updateExpense, { isLoading: isUpdateLoading }] = useUpdateExpenseMutation();
+	const [uploadExpenseAttachment] = useUploadExpenseAttachmentMutation();
 	const [isPending, setIsPending] = useState(false);
+	const [queuedAttachments, setQueuedAttachments] = useState<QueuedAttachment[]>([]);
 
 	const formik = useFormik<ExpenseFormValues>({
 		initialValues: {
@@ -156,7 +164,15 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 					await updateExpense({ id: id!, data: payload }).unwrap();
 					onSuccess(t.expenses.expenseUpdatedSuccess);
 				} else {
-					await createExpense({ data: payload }).unwrap();
+					const createdExpense = (await createExpense({ data: payload }).unwrap()) as ExpenseType;
+					if (queuedAttachments.length > 0) {
+						await Promise.all(
+							queuedAttachments.map((attachment) =>
+								uploadExpenseAttachment({ id: createdExpense.id, data: buildAttachmentFormData(attachment) }).unwrap(),
+							),
+						);
+						setQueuedAttachments([]);
+					}
 					onSuccess(t.expenses.expenseAddedSuccess);
 				}
 				router.push(EXPENSES_LIST);
@@ -605,6 +621,12 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 								/>
 							</CardContent>
 						</Card>
+
+						<ExpenseAttachmentsFormSection
+							id={id}
+							queuedAttachments={queuedAttachments}
+							setQueuedAttachments={setQueuedAttachments}
+						/>
 
 						<Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 2 }}>
 							<PrimaryLoadingButton

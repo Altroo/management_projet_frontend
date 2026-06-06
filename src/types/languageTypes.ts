@@ -92,16 +92,13 @@ export type TranslationDictionary = {
 		administration: string;
 		welcomeMale: string;
 		welcomeFemale: string;
-		welcomeNeutral: string;
-		projects: string;
-		projectsList: string;
-		newProject: string;
-		projectStatuses: string;
-		projectStatusesList: string;
-		newProjectStatus: string;
-		clients: string;
-		clientsList: string;
-		newClient: string;
+			welcomeNeutral: string;
+			projects: string;
+			projectsList: string;
+			newProject: string;
+			clients: string;
+			clientsList: string;
+			newClient: string;
 		suppliers: string;
 		suppliersList: string;
 		newSupplier: string;
@@ -280,19 +277,26 @@ export type TranslationDictionary = {
 			male: string;
 			female: string;
 		};
-		projectStatuses: {
-			completed: string;
-			inProgress: string;
-			notStarted: string;
-			onHold: string;
-			paused: string;
-			cancelled: string;
-			waitingStart: string;
-			delivered: string;
-		};
-		fieldLabels: {
-			project: Record<string, string>;
-			projectStatus: Record<string, string>;
+			projectStatuses: {
+				completed: string;
+				inProgress: string;
+				notStarted: string;
+				onHold: string;
+				paused: string;
+				cancelled: string;
+				waitingStart: string;
+				delivered: string;
+			};
+			statusColors: {
+				default: string;
+				info: string;
+				success: string;
+				warning: string;
+				error: string;
+			};
+			fieldLabels: {
+				project: Record<string, string>;
+				projectStatus: Record<string, string>;
 			client: Record<string, string>;
 			supplier: Record<string, string>;
 			paymentSchedule: Record<string, string>;
@@ -342,26 +346,8 @@ export type TranslationDictionary = {
 		downloadReport: string;
 		reportDownloadError: string;
 	};
-	projectStatuses: {
-		projectStatusesList: string;
-		newProjectStatus: string;
-		editProjectStatus: string;
-		projectStatusDetails: string;
-		deleteProjectStatus: string;
-		deleteProjectStatusConfirm: string;
-		projectStatusDeletedSuccess: string;
-		projectStatusDeleteError: string;
-		projectStatusAddedSuccess: string;
-		projectStatusAddError: string;
-		projectStatusUpdatedSuccess: string;
-		projectStatusUpdateError: string;
-		noProjectStatusFound: string;
-		statusColor: string;
-		ordering: string;
-		isActive: string;
-	};
-	clients: {
-		clientsList: string;
+		clients: {
+			clientsList: string;
 		newClient: string;
 		editClient: string;
 		clientDetails: string;
@@ -411,6 +397,12 @@ export type TranslationDictionary = {
 	attachments: {
 		title: string;
 		addAttachment: string;
+		chooseFiles: string;
+		dropFiles: string;
+		fileHint: string;
+		pendingUpload: string;
+		file: string;
+		files: string;
 		deleteAttachment: string;
 		deleteAttachmentConfirm: string;
 		attachmentUploadedSuccess: string;
@@ -430,6 +422,7 @@ export type TranslationDictionary = {
 		scheduleDeletedSuccess: string;
 		scheduleDeleteError: string;
 		noSchedules: string;
+		pendingSave: string;
 		expectedCumulative: string;
 		actualCumulative: string;
 	};
@@ -538,18 +531,12 @@ export type TranslationDictionary = {
 		projectsListTitle: string;
 		projectsListDescription: string;
 		newProjectTitle: string;
-		newProjectDescription: string;
-		projectDetailsTitle: string;
-		projectDetailsDescription: string;
-		editProjectTitle: string;
-		editProjectDescription: string;
-		projectStatusesListTitle: string;
-		projectStatusesListDescription: string;
-		newProjectStatusTitle: string;
-		newProjectStatusDescription: string;
-		editProjectStatusTitle: string;
-		editProjectStatusDescription: string;
-		clientsListTitle: string;
+			newProjectDescription: string;
+			projectDetailsTitle: string;
+			projectDetailsDescription: string;
+			editProjectTitle: string;
+			editProjectDescription: string;
+			clientsListTitle: string;
 		clientsListDescription: string;
 		newClientTitle: string;
 		newClientDescription: string;

@@ -18,8 +18,6 @@ import type {
 	ProjectType,
 	PaymentScheduleFormValues,
 	ProjectFormValues,
-	ProjectStatusFormValues,
-	ProjectStatusRecordType,
 	CategoryFormValues,
 	SubCategoryFormValues,
 	RevenueType,
@@ -55,7 +53,6 @@ export const projectApi = createApi({
 	reducerPath: 'projectApi',
 	tagTypes: [
 		'Project',
-		'ProjectStatus',
 		'Client',
 		'Supplier',
 		'Category',
@@ -131,56 +128,7 @@ export const projectApi = createApi({
 			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
 		}),
 
-		// ── Project Statuses ────────────────────────────────────────────────
-		getProjectStatuses: builder.query<ProjectStatusRecordType[], void>({
-			query: () => ({
-				url: process.env.NEXT_PUBLIC_PROJECT_STATUSES,
-				method: 'GET',
-			}),
-			providesTags: ['ProjectStatus'],
-		}),
-
-		getProjectStatus: builder.query<ProjectStatusRecordType, { id: number }>({
-			query: ({ id }) => ({
-				url: `${process.env.NEXT_PUBLIC_PROJECT_STATUSES}${id}/`,
-				method: 'GET',
-			}),
-			providesTags: ['ProjectStatus'],
-		}),
-
-		createProjectStatus: builder.mutation<
-			ProjectStatusRecordType | ApiErrorResponseType,
-			{ data: Omit<ProjectStatusFormValues, 'globalError'> }
-		>({
-			query: ({ data }) => ({
-				url: process.env.NEXT_PUBLIC_PROJECT_STATUSES,
-				method: 'POST',
-				data,
-			}),
-			invalidatesTags: ['ProjectStatus', 'Project'],
-		}),
-
-		updateProjectStatus: builder.mutation<
-			ProjectStatusRecordType | ApiErrorResponseType,
-			{ id: number; data: Omit<ProjectStatusFormValues, 'globalError'> }
-		>({
-			query: ({ id, data }) => ({
-				url: `${process.env.NEXT_PUBLIC_PROJECT_STATUSES}${id}/`,
-				method: 'PUT',
-				data,
-			}),
-			invalidatesTags: ['ProjectStatus', 'Project'],
-		}),
-
-		deleteProjectStatus: builder.mutation<void, { id: number }>({
-			query: ({ id }) => ({
-				url: `${process.env.NEXT_PUBLIC_PROJECT_STATUSES}${id}/`,
-				method: 'DELETE',
-			}),
-			invalidatesTags: ['ProjectStatus', 'Project'],
-		}),
-
-		// ── Clients ─────────────────────────────────────────────────────────
+			// ── Clients ─────────────────────────────────────────────────────────
 		getClients: builder.query<ClientType[], { search?: string }>({
 			query: ({ search } = {}) => ({
 				url: process.env.NEXT_PUBLIC_PROJECT_CLIENTS,
@@ -783,13 +731,7 @@ export const {
 	useCreateExpenseSubCategoryMutation,
 	useUpdateExpenseSubCategoryMutation,
 	useDeleteExpenseSubCategoryMutation,
-	// Project Statuses
-	useGetProjectStatusesQuery,
-	useGetProjectStatusQuery,
-	useCreateProjectStatusMutation,
-	useUpdateProjectStatusMutation,
-	useDeleteProjectStatusMutation,
-	// Clients
+		// Clients
 	useGetClientsQuery,
 	useGetClientQuery,
 	useCreateClientMutation,

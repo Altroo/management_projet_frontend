@@ -24,7 +24,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { fr } from 'date-fns/locale';
 import { format, parseISO } from 'date-fns';
 import type { SessionProps } from '@/types/_initTypes';
-import type { ProjectFormValues } from '@/types/projectTypes';
+import type { ProjectFormValues, ProjectType } from '@/types/projectTypes';
 import type { DropDownType } from '@/types/accountTypes';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import { Protected } from '@/components/layouts/protected/protected';
@@ -32,6 +32,11 @@ import CustomTextInput from '@/components/formikElements/customTextInput/customT
 import CustomAutoCompleteSelect from '@/components/formikElements/customAutoCompleteSelect/customAutoCompleteSelect';
 import PrimaryLoadingButton from '@/components/htmlElements/buttons/primaryLoadingButton/primaryLoadingButton';
 import ApiProgress from '@/components/formikElements/apiLoading/apiProgress/apiProgress';
+import {
+	buildAttachmentFormData,
+	ProjectAttachmentsFormSection,
+	type QueuedAttachment,
+} from '@/components/shared/entityAttachments/entityAttachments';
 import { textInputTheme } from '@/utils/themes';
 import { projectSchema } from '@/utils/formValidationSchemas';
 import { getLabelForKey, setFormikAutoErrors } from '@/utils/helpers';
@@ -41,7 +46,7 @@ import {
 	useCreateProjectMutation,
 	useGetClientsQuery,
 	useGetProjectQuery,
-	useGetProjectStatusesQuery,
+	useUploadProjectAttachmentMutation,
 	useUpdateProjectMutation,
 } from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
@@ -62,19 +67,19 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	const router = useRouter();
 
 	const { data: rawData } = useGetProjectQuery({ id: id! }, { skip: !token || !isEditMode });
-	const { data: statusData } = useGetProjectStatusesQuery(undefined, { skip: !token });
 	const { data: clientsData } = useGetClientsQuery({}, { skip: !token });
 
 	const [createProject, { isLoading: isCreateLoading }] = useCreateProjectMutation();
 	const [updateProject, { isLoading: isUpdateLoading }] = useUpdateProjectMutation();
+	const [uploadProjectAttachment] = useUploadProjectAttachmentMutation();
 	const [isPending, setIsPending] = useState(false);
+	const [queuedAttachments, setQueuedAttachments] = useState<QueuedAttachment[]>([]);
 
+	const baseStatusItems: DropDownType[] = projectStatusItemsList(t).map((s) => ({ code: s.code, value: s.value }));
 	const statusItems: DropDownType[] =
-		statusData && statusData.length > 0
-			? statusData
-					.filter((s) => s.is_active || s.name === rawData?.status)
-					.map((s) => ({ code: s.name, value: s.name }))
-			: projectStatusItemsList(t).map((s) => ({ code: s.code, value: s.value }));
+		rawData?.status && !baseStatusItems.some((s) => s.code === rawData.status)
+			? [...baseStatusItems, { code: rawData.status, value: rawData.status }]
+			: baseStatusItems;
 	const clientItems: DropDownType[] = (clientsData ?? []).map((client) => ({ code: String(client.id), value: client.nom }));
 
 	const formik = useFormik<ProjectFormValues>({
@@ -109,7 +114,15 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 					await updateProject({ id: id!, data: payload }).unwrap();
 					onSuccess(t.projects.projectUpdatedSuccess);
 				} else {
-					await createProject({ data: payload }).unwrap();
+					const createdProject = (await createProject({ data: payload }).unwrap()) as ProjectType;
+					if (queuedAttachments.length > 0) {
+						await Promise.all(
+							queuedAttachments.map((attachment) =>
+								uploadProjectAttachment({ id: createdProject.id, data: buildAttachmentFormData(attachment) }).unwrap(),
+							),
+						);
+						setQueuedAttachments([]);
+					}
 					onSuccess(t.projects.projectAddedSuccess);
 				}
 				router.push(PROJECTS_LIST);
@@ -468,6 +481,12 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 								/>
 							</CardContent>
 						</Card>
+
+						<ProjectAttachmentsFormSection
+							id={id}
+							queuedAttachments={queuedAttachments}
+							setQueuedAttachments={setQueuedAttachments}
+						/>
 
 						<Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 2 }}>
 							<PrimaryLoadingButton

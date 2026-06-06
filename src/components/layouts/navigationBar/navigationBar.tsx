@@ -63,8 +63,6 @@ import {
 	DASHBOARD_PASSWORD,
 	EXPENSES_ADD,
 	EXPENSES_LIST,
-	PROJECT_STATUSES_ADD,
-	PROJECT_STATUSES_LIST,
 	PROJECTS_ADD,
 	PROJECTS_LIST,
 	REVENUES_ADD,
@@ -100,13 +98,11 @@ const getNavigationMenu = (isStaff: boolean, t: TranslationDictionary) => {
 		projets: {
 			title: t.navigation.projects,
 			icon: <AssignmentIcon />,
-			items: [
-				{ title: t.navigation.projectsList, label: t.navigation.projectsList, path: PROJECTS_LIST },
-				{ title: t.navigation.newProject, label: t.navigation.newProject, path: PROJECTS_ADD },
-				{ title: t.navigation.projectStatusesList, label: t.navigation.projectStatusesList, path: PROJECT_STATUSES_LIST },
-				{ title: t.navigation.newProjectStatus, label: t.navigation.newProjectStatus, path: PROJECT_STATUSES_ADD },
-			],
-		},
+				items: [
+					{ title: t.navigation.projectsList, label: t.navigation.projectsList, path: PROJECTS_LIST },
+					{ title: t.navigation.newProject, label: t.navigation.newProject, path: PROJECTS_ADD },
+				],
+			},
 		clients: {
 			title: t.navigation.clients,
 			icon: <PeopleIcon />,

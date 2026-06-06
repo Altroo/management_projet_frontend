@@ -176,26 +176,6 @@ export interface ExpenseFormValues {
 	globalError: string;
 }
 
-export interface ProjectStatusRecordType {
-	id: number;
-	name: string;
-	color: 'default' | 'info' | 'success' | 'warning' | 'error' | string;
-	is_active: boolean;
-	ordering: number;
-	created_by_user: number | null;
-	created_by_user_name: string | null;
-	date_created: string;
-	date_updated: string;
-}
-
-export interface ProjectStatusFormValues {
-	name: string;
-	color: string;
-	is_active: boolean;
-	ordering: number | '';
-	globalError: string;
-}
-
 export interface ClientProjectHistoryType {
 	id: number;
 	nom: string;

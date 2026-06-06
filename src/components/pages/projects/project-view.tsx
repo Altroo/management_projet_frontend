@@ -4,7 +4,7 @@ import React, { isValidElement, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ApiErrorResponseType, ResponseDataInterface, SessionProps } from '@/types/_initTypes';
 import { useInitAccessToken } from '@/contexts/InitContext';
-import { useDeleteProjectMutation, useDownloadProjectReportMutation, useGetProjectQuery } from '@/store/services/project';
+import { useDeleteProjectMutation, useGetProjectQuery } from '@/store/services/project';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import {
@@ -40,9 +40,9 @@ import ApiAlert from '@/components/formikElements/apiLoading/apiAlert/apiAlert';
 import ActionModals from '@/components/htmlElements/modals/actionModal/actionModals';
 import { Protected } from '@/components/layouts/protected/protected';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
+import { fetchFileBlob } from '@/utils/apiHelpers';
 import { useLanguage, useToast } from '@/utils/hooks';
 import { STATUS_CHIP_COLORS } from '@/utils/rawData';
-import { ProjectAttachmentsCard } from '@/components/shared/entityAttachments/entityAttachments';
 import ProjectPaymentScheduleCard from '@/components/shared/projectPaymentSchedule/projectPaymentSchedule';
 
 interface InfoRowProps {
@@ -126,7 +126,6 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
 	const [deleteProject] = useDeleteProjectMutation();
-	const [downloadProjectReport] = useDownloadProjectReportMutation();
 	const { onSuccess, onError } = useToast();
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
 	const [isDownloadingReport, setIsDownloadingReport] = useState(false);
@@ -161,18 +160,14 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 	];
 
 	const handleDownloadReport = async () => {
-		if (!project) return;
+		if (!project || !token) return;
 		setIsDownloadingReport(true);
 		try {
-			const blob = await downloadProjectReport({ id }).unwrap();
-			const url = URL.createObjectURL(blob);
-			const link = document.createElement('a');
-			link.href = url;
-			link.download = `rapport-projet-${project.id}.pdf`;
-			document.body.appendChild(link);
-			link.click();
-			link.remove();
-			URL.revokeObjectURL(url);
+			const reportUrl = `${process.env.NEXT_PUBLIC_ROOT_API_URL}${process.env.NEXT_PUBLIC_PROJECT_LIST}${id}/report.pdf`;
+			const blob = await fetchFileBlob(reportUrl, token);
+			const blobUrl = window.URL.createObjectURL(blob);
+			window.open(blobUrl, '_blank');
+			setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60_000);
 		} catch (err) {
 			onError(extractApiErrorMessage(err, t.projects.reportDownloadError));
 		} finally {
@@ -417,7 +412,6 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 								</Card>
 
 								<ProjectPaymentScheduleCard projectId={id} />
-								<ProjectAttachmentsCard id={id} />
 
 								{/* Notes & Details */}
 								<Card elevation={2} sx={{ borderRadius: 2 }}>

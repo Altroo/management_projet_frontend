@@ -36,7 +36,6 @@ import ActionModals from '@/components/htmlElements/modals/actionModal/actionMod
 import { Protected } from '@/components/layouts/protected/protected';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
 import { useLanguage, useToast } from '@/utils/hooks';
-import { RevenueAttachmentsCard } from '@/components/shared/entityAttachments/entityAttachments';
 
 interface InfoRowProps {
 	icon: React.ReactNode;
@@ -308,7 +307,6 @@ const RevenueViewClient: React.FC<Props> = ({ session, id }) => {
 										</Stack>
 									</CardContent>
 								</Card>
-								<RevenueAttachmentsCard id={id} />
 							</Stack>
 						)}
 					</Stack>
