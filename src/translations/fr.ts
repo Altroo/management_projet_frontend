@@ -58,6 +58,7 @@ export const fr: TranslationDictionary = {
 		name: 'Nom',
 		phone: 'Téléphone',
 		email: 'Email',
+		city: 'Ville',
 		address: 'Adresse',
 		file: 'Fichier',
 		upload: 'Téléverser',
@@ -309,6 +310,7 @@ export const fr: TranslationDictionary = {
 				nom_client: 'Nom du client',
 				telephone_client: 'Téléphone du client',
 				email_client: 'Email du client',
+				ville_client: 'Ville du client',
 				notes: 'Notes',
 			},
 			projectStatus: {
@@ -321,6 +323,7 @@ export const fr: TranslationDictionary = {
 				nom: 'Nom',
 				telephone: 'Téléphone',
 				email: 'Email',
+				ville: 'Ville',
 				adresse: 'Adresse',
 			},
 			supplier: {

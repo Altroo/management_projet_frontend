@@ -9,6 +9,7 @@ import {
 	Edit as EditIcon,
 	Email as EmailIcon,
 	Home as HomeIcon,
+	LocationCity as LocationCityIcon,
 	Person as PersonIcon,
 	Phone as PhoneIcon,
 	Warning as WarningIcon,
@@ -48,6 +49,7 @@ const ClientFormContent: React.FC<{ token: string | undefined; id?: number }> = 
 			nom: rawData?.nom ?? '',
 			telephone: rawData?.telephone ?? '',
 			email: rawData?.email ?? '',
+			ville: rawData?.ville ?? '',
 			adresse: rawData?.adresse ?? '',
 			globalError: '',
 		},
@@ -151,6 +153,20 @@ const ClientFormContent: React.FC<{ token: string | undefined; id?: number }> = 
 										startIcon={<EmailIcon fontSize="small" />}
 									/>
 								</Stack>
+								<CustomTextInput
+									theme={inputTheme}
+									id="ville"
+									type="text"
+									size="small"
+									label={t.common.city}
+									value={formik.values.ville}
+									onChange={formik.handleChange('ville')}
+									onBlur={formik.handleBlur('ville')}
+									error={formik.submitCount > 0 && Boolean(formik.errors.ville)}
+									helperText={formik.submitCount > 0 ? (formik.errors.ville ?? '') : ''}
+									fullWidth
+									startIcon={<LocationCityIcon fontSize="small" />}
+								/>
 								<CustomTextInput
 									theme={inputTheme}
 									id="adresse"

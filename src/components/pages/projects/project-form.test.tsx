@@ -228,6 +228,7 @@ describe('ProjectFormClient', () => {
 			expect(screen.getByTestId('input-nom_client')).toBeInTheDocument();
 			expect(screen.getByTestId('input-telephone_client')).toBeInTheDocument();
 			expect(screen.getByTestId('input-email_client')).toBeInTheDocument();
+			expect(screen.getByTestId('input-ville_client')).toBeInTheDocument();
 		});
 
 		it('renders status autocomplete', async () => {
@@ -251,6 +252,7 @@ describe('ProjectFormClient', () => {
 					nom_client: 'Client',
 					telephone_client: '',
 					email_client: '',
+					ville_client: '',
 					notes: '',
 				},
 				isLoading: false,

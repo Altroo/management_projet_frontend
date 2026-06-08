@@ -11,6 +11,7 @@ import {
 	CalendarMonth as CalendarMonthIcon,
 	Edit as EditIcon,
 	Email as EmailIcon,
+	LocationCity as LocationCityIcon,
 	Notes as NotesIcon,
 	Person as PersonIcon,
 	Phone as PhoneIcon,
@@ -103,6 +104,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 			nom_client: rawData?.nom_client ?? '',
 			telephone_client: rawData?.telephone_client ?? '',
 			email_client: rawData?.email_client ?? '',
+			ville_client: rawData?.ville_client ?? '',
 			notes: rawData?.notes ?? '',
 			globalError: '',
 		},
@@ -426,6 +428,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 												formik.setFieldValue('nom_client', selected.nom);
 												formik.setFieldValue('telephone_client', selected.telephone ?? '');
 												formik.setFieldValue('email_client', selected.email ?? '');
+												formik.setFieldValue('ville_client', selected.ville ?? '');
 											}
 										}}
 										onBlur={formik.handleBlur('client')}
@@ -477,6 +480,20 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 											startIcon={<EmailIcon fontSize="small" />}
 										/>
 									</Stack>
+									<CustomTextInput
+										theme={inputTheme}
+										id="ville_client"
+										type="text"
+										size="small"
+										label={t.common.city}
+										value={formik.values.ville_client}
+										onChange={formik.handleChange('ville_client')}
+										onBlur={formik.handleBlur('ville_client')}
+										error={formik.submitCount > 0 && Boolean(formik.errors.ville_client)}
+										helperText={formik.submitCount > 0 ? (formik.errors.ville_client ?? '') : ''}
+										fullWidth
+										startIcon={<LocationCityIcon fontSize="small" />}
+									/>
 								</Stack>
 							</CardContent>
 						</Card>

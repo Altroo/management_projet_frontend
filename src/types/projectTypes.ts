@@ -44,10 +44,12 @@ export interface ProjectListType {
 	status_display?: string;
 	client: number | null;
 	client_name: string | null;
+	client_city?: string | null;
 	chef_de_projet: string;
 	nom_client: string;
 	telephone_client?: string | null;
 	email_client?: string | null;
+	ville_client?: string | null;
 	notes?: string | null;
 	jours_restants: number;
 	revenue_total: string;
@@ -64,6 +66,7 @@ export interface ProjectType extends ProjectListType {
 	description: string | null;
 	telephone_client: string | null;
 	email_client: string | null;
+	ville_client: string | null;
 	client_address: string | null;
 	notes: string | null;
 }
@@ -80,6 +83,7 @@ export interface ProjectFormValues {
 	nom_client: string;
 	telephone_client: string;
 	email_client: string;
+	ville_client: string;
 	notes: string;
 	globalError: string;
 }
@@ -193,6 +197,7 @@ export interface ClientType {
 	nom: string;
 	telephone: string | null;
 	email: string | null;
+	ville: string | null;
 	adresse: string | null;
 	total_encaisse: string;
 	projects_count: number;
@@ -207,6 +212,7 @@ export interface ClientFormValues {
 	nom: string;
 	telephone: string;
 	email: string;
+	ville: string;
 	adresse: string;
 	globalError: string;
 }

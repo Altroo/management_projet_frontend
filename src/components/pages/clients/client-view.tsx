@@ -26,6 +26,7 @@ import {
 	Edit as EditIcon,
 	Email as EmailIcon,
 	Home as HomeIcon,
+	LocationCity as LocationCityIcon,
 	Person as PersonIcon,
 	Phone as PhoneIcon,
 } from '@mui/icons-material';
@@ -117,6 +118,7 @@ const ClientViewClient: React.FC<SessionProps & { id: number }> = ({ session, id
 										<Stack spacing={1.5}>
 											<Typography><PhoneIcon fontSize="small" /> {client.telephone || '-'}</Typography>
 											<Typography><EmailIcon fontSize="small" /> {client.email || '-'}</Typography>
+											<Typography><LocationCityIcon fontSize="small" /> {client.ville || '-'}</Typography>
 											<Typography><HomeIcon fontSize="small" /> {client.adresse || '-'}</Typography>
 											<Typography sx={{ fontWeight: 700 }}><AttachMoneyIcon fontSize="small" /> {t.clients.totalReceived}: {money(client.total_encaisse)}</Typography>
 										</Stack>

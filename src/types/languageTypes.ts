@@ -58,6 +58,7 @@ export type TranslationDictionary = {
 		name: string;
 		phone: string;
 		email: string;
+		city: string;
 		address: string;
 		file: string;
 		upload: string;

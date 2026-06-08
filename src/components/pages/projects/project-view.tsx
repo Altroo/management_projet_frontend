@@ -29,6 +29,7 @@ import {
 	Download as DownloadIcon,
 	Edit as EditIcon,
 	Email as EmailIcon,
+	LocationCity as LocationCityIcon,
 	Notes as NotesIcon,
 	Person as PersonIcon,
 	Phone as PhoneIcon,
@@ -406,6 +407,8 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 											<InfoRow icon={<PhoneIcon />} label={t.projects.clientPhone} value={project.telephone_client} />
 											<Divider />
 											<InfoRow icon={<EmailIcon />} label={t.projects.clientEmail} value={project.email_client} />
+											<Divider />
+											<InfoRow icon={<LocationCityIcon />} label={t.common.city} value={project.ville_client || project.client_city} />
 											<Divider />
 											<InfoRow icon={<PersonIcon />} label={t.projects.clientAddress} value={project.client_address} />
 										</Stack>

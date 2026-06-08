@@ -160,6 +160,7 @@ export const projectSchema = z.object({
 	nom_client: requiredTextField(2, 255),
 	telephone_client: optionalTextField(1, 50),
 	email_client: optionalTextField(1, 255),
+	ville_client: optionalTextField(1, 120),
 	notes: optionalTextField(1, 2000),
 	globalError: optionalTextField(1, 500),
 });
@@ -184,6 +185,7 @@ export const clientSchema = z.object({
 		(val) => (val === undefined || val === null || val === '' ? undefined : val),
 		z.email({ error: MINI_INPUT_EMAIL }).optional(),
 	),
+	ville: optionalTextField(1, 120),
 	adresse: optionalTextField(1, 2000),
 	globalError: optionalTextField(1, 500),
 });

@@ -54,6 +54,7 @@ const ClientsListClient: React.FC<SessionProps> = ({ session }) => {
 				row.nom.toLowerCase().includes(term) ||
 				(row.telephone ?? '').toLowerCase().includes(term) ||
 				(row.email ?? '').toLowerCase().includes(term) ||
+				(row.ville ?? '').toLowerCase().includes(term) ||
 				(row.adresse ?? '').toLowerCase().includes(term),
 		);
 	}, [data, searchTerm]);
@@ -115,6 +116,7 @@ const ClientsListClient: React.FC<SessionProps> = ({ session }) => {
 		},
 		{ field: 'telephone', headerName: t.common.phone, flex: 0.9, minWidth: 120 },
 		{ field: 'email', headerName: t.common.email, flex: 1.2, minWidth: 180 },
+		{ field: 'ville', headerName: t.common.city, flex: 0.9, minWidth: 130 },
 		{
 			field: 'total_encaisse',
 			headerName: t.clients.totalReceived,
