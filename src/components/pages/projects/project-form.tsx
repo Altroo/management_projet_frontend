@@ -37,6 +37,10 @@ import {
 	ProjectAttachmentsFormSection,
 	type QueuedAttachment,
 } from '@/components/shared/entityAttachments/entityAttachments';
+import ProjectRealBudgetCard, {
+	buildRealBudgetEntryPayload,
+	type QueuedRealBudgetEntry,
+} from '@/components/shared/projectRealBudget/projectRealBudget';
 import { textInputTheme } from '@/utils/themes';
 import { projectSchema } from '@/utils/formValidationSchemas';
 import { getLabelForKey, setFormikAutoErrors } from '@/utils/helpers';
@@ -44,6 +48,7 @@ import { PROJECTS_LIST } from '@/utils/routes';
 import { useLanguage, useToast } from '@/utils/hooks';
 import {
 	useCreateProjectMutation,
+	useCreateRealBudgetEntryMutation,
 	useGetClientsQuery,
 	useGetProjectQuery,
 	useUploadProjectAttachmentMutation,
@@ -72,8 +77,10 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	const [createProject, { isLoading: isCreateLoading }] = useCreateProjectMutation();
 	const [updateProject, { isLoading: isUpdateLoading }] = useUpdateProjectMutation();
 	const [uploadProjectAttachment] = useUploadProjectAttachmentMutation();
+	const [createRealBudgetEntry] = useCreateRealBudgetEntryMutation();
 	const [isPending, setIsPending] = useState(false);
 	const [queuedAttachments, setQueuedAttachments] = useState<QueuedAttachment[]>([]);
+	const [queuedRealBudgetEntries, setQueuedRealBudgetEntries] = useState<QueuedRealBudgetEntry[]>([]);
 
 	const baseStatusItems: DropDownType[] = projectStatusItemsList(t).map((s) => ({ code: s.code, value: s.value }));
 	const statusItems: DropDownType[] =
@@ -122,6 +129,14 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 							),
 						);
 						setQueuedAttachments([]);
+					}
+					if (queuedRealBudgetEntries.length > 0) {
+						await Promise.all(
+							queuedRealBudgetEntries.map((entry) =>
+								createRealBudgetEntry({ data: buildRealBudgetEntryPayload(createdProject.id, entry) }).unwrap(),
+							),
+						);
+						setQueuedRealBudgetEntries([]);
 					}
 					onSuccess(t.projects.projectAddedSuccess);
 				}
@@ -486,6 +501,14 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 							id={id}
 							queuedAttachments={queuedAttachments}
 							setQueuedAttachments={setQueuedAttachments}
+						/>
+
+						<ProjectRealBudgetCard
+							projectId={id}
+							budgetInitial={formik.values.budget_total}
+							editable
+							queuedEntries={queuedRealBudgetEntries}
+							setQueuedEntries={setQueuedRealBudgetEntries}
 						/>
 
 						<Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 2 }}>

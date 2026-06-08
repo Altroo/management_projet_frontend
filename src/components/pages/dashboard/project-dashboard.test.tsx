@@ -177,7 +177,7 @@ describe('ProjectDashboardClient', () => {
 		);
 
 		expect(screen.getByText('Frais de service')).toBeInTheDocument();
-		expect(screen.getByText('Revenu réel')).toBeInTheDocument();
+		expect(screen.getAllByText('Revenu réel').length).toBeGreaterThanOrEqual(1);
 	});
 
 	it('hides service fee totals on the client dashboard', () => {

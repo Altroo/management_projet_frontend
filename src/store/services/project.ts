@@ -15,8 +15,10 @@ import type {
 	SubCategoryType,
 	ProjectListType,
 	ProjectPaymentScheduleType,
+	ProjectRealBudgetEntryType,
 	ProjectType,
 	PaymentScheduleFormValues,
+	RealBudgetEntryFormValues,
 	ProjectFormValues,
 	CategoryFormValues,
 	SubCategoryFormValues,
@@ -61,6 +63,7 @@ export const projectApi = createApi({
 		'Expense',
 		'Attachment',
 		'PaymentSchedule',
+		'RealBudget',
 		'ProjectDashboard',
 		'MultiProjectDashboard',
 		'ClientDashboard',
@@ -502,6 +505,64 @@ export const projectApi = createApi({
 			invalidatesTags: ['PaymentSchedule', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
+		getRealBudgetEntries: builder.query<ProjectRealBudgetEntryType[], { project?: number; stage?: string; search?: string }>({
+			query: ({ project, stage, search } = {}) => ({
+				url: process.env.NEXT_PUBLIC_PROJECT_REAL_BUDGET_ENTRIES,
+				method: 'GET',
+				params: { project, stage, search },
+			}),
+			providesTags: ['RealBudget'],
+		}),
+
+		getRealBudgetEntry: builder.query<ProjectRealBudgetEntryType, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_REAL_BUDGET_ENTRIES}${id}/`,
+				method: 'GET',
+			}),
+			providesTags: ['RealBudget'],
+		}),
+
+		createRealBudgetEntry: builder.mutation<
+			ProjectRealBudgetEntryType | ApiErrorResponseType,
+			{ data: Omit<RealBudgetEntryFormValues, 'globalError'> }
+		>({
+			query: ({ data }) => ({
+				url: process.env.NEXT_PUBLIC_PROJECT_REAL_BUDGET_ENTRIES,
+				method: 'POST',
+				data,
+			}),
+			invalidatesTags: ['RealBudget', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+		}),
+
+		updateRealBudgetEntry: builder.mutation<
+			ProjectRealBudgetEntryType | ApiErrorResponseType,
+			{ id: number; data: Omit<RealBudgetEntryFormValues, 'globalError'> }
+		>({
+			query: ({ id, data }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_REAL_BUDGET_ENTRIES}${id}/`,
+				method: 'PUT',
+				data,
+			}),
+			invalidatesTags: ['RealBudget', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+		}),
+
+		deleteRealBudgetEntry: builder.mutation<void, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_REAL_BUDGET_ENTRIES}${id}/`,
+				method: 'DELETE',
+			}),
+			invalidatesTags: ['RealBudget', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+		}),
+
+		bulkDeleteRealBudgetEntries: builder.mutation<void, { ids: number[] }>({
+			query: ({ ids }) => ({
+				url: `${process.env.NEXT_PUBLIC_PROJECT_REAL_BUDGET_ENTRIES}bulk_delete/`,
+				method: 'DELETE',
+				data: { ids },
+			}),
+			invalidatesTags: ['RealBudget', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+		}),
+
 		downloadProjectReport: builder.mutation<Blob, { id: number }>({
 			query: ({ id }) => ({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_LIST}${id}/report.pdf`,
@@ -775,6 +836,12 @@ export const {
 	useUpdatePaymentScheduleMutation,
 	useDeletePaymentScheduleMutation,
 	useBulkDeletePaymentSchedulesMutation,
+	useGetRealBudgetEntriesQuery,
+	useGetRealBudgetEntryQuery,
+	useCreateRealBudgetEntryMutation,
+	useUpdateRealBudgetEntryMutation,
+	useDeleteRealBudgetEntryMutation,
+	useBulkDeleteRealBudgetEntriesMutation,
 	useDownloadProjectReportMutation,
 	// Revenues
 	useGetRevenuesQuery,

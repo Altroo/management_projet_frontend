@@ -22,6 +22,12 @@ jest.mock('@/store/services/project', () => ({
 	...jest.requireActual('@/store/services/project'),
 	useGetProjectQuery: jest.fn(() => ({ data: undefined, isLoading: false, error: undefined })),
 	useDeleteProjectMutation: jest.fn(() => [jest.fn(), { isLoading: false }]),
+	useGetPaymentSchedulesQuery: jest.fn(() => ({ data: [], isLoading: false })),
+	useCreatePaymentScheduleMutation: jest.fn(() => [jest.fn(), { isLoading: false }]),
+	useDeletePaymentScheduleMutation: jest.fn(() => [jest.fn(), { isLoading: false }]),
+	useGetRealBudgetEntriesQuery: jest.fn(() => ({ data: [], isLoading: false })),
+	useCreateRealBudgetEntryMutation: jest.fn(() => [jest.fn(), { isLoading: false }]),
+	useDeleteRealBudgetEntryMutation: jest.fn(() => [jest.fn(), { isLoading: false }]),
 }));
 
 jest.mock('@/utils/routes', () => ({

@@ -259,6 +259,35 @@ export interface ProjectPaymentScheduleType {
 	date_updated: string;
 }
 
+export interface ProjectRealBudgetEntryType {
+	id: number;
+	project: number;
+	project_name: string;
+	date: string;
+	stage: string;
+	description: string | null;
+	montant_client: string;
+	montant_fournisseur: string;
+	benefice: string;
+	marge: number;
+	notes: string | null;
+	created_by_user: number | null;
+	created_by_user_name: string | null;
+	date_created: string;
+	date_updated: string;
+}
+
+export interface RealBudgetEntryFormValues {
+	project: number | '';
+	date: string;
+	stage: string;
+	description: string;
+	montant_client: string;
+	montant_fournisseur: string;
+	notes: string;
+	globalError: string;
+}
+
 export interface PaymentScheduleFormValues {
 	project: number | '';
 	due_date: string;
@@ -294,6 +323,14 @@ export interface DashboardHistoryPointType {
 	total: string;
 }
 
+export interface RealBudgetStageSummaryType {
+	stage: string;
+	total_revenue: string;
+	total_cost: string;
+	profit: string;
+	margin: number;
+}
+
 export interface ProjectDashboardType {
 	project_id: number;
 	nom: string;
@@ -305,6 +342,14 @@ export interface ProjectDashboardType {
 	budget_utilisation: number;
 	service_fees?: string;
 	revenue_reelle?: string;
+	budget_initial?: string;
+	real_budget_total_revenue?: string;
+	real_budget_total_cost?: string;
+	real_budget_profit?: string;
+	real_budget_margin?: number;
+	budget_gap?: string;
+	budget_gap_percent?: number;
+	real_budget_by_stage?: RealBudgetStageSummaryType[];
 	top_categories: DashboardCategoryTotalType[];
 	top_subcategories: DashboardSubCategoryTotalType[];
 	top_vendors: DashboardVendorTotalType[];
@@ -319,6 +364,14 @@ export interface ProjectSummaryType {
 	revenue: string;
 	expenses: string;
 	profit: string;
+	budget_initial?: string;
+	real_budget_total_revenue?: string;
+	real_budget_total_cost?: string;
+	real_budget_profit?: string;
+	real_budget_margin?: number;
+	budget_gap?: string;
+	budget_gap_percent?: number;
+	real_budget_by_stage?: RealBudgetStageSummaryType[];
 	status: ProjectStatusType | string;
 }
 
@@ -332,6 +385,14 @@ export interface MultiProjectDashboardType {
 	budget_utilisation: number;
 	total_service_fees?: string;
 	total_revenue_reelle?: string;
+	budget_initial?: string;
+	real_budget_total_revenue?: string;
+	real_budget_total_cost?: string;
+	real_budget_profit?: string;
+	real_budget_margin?: number;
+	budget_gap?: string;
+	budget_gap_percent?: number;
+	real_budget_by_stage?: RealBudgetStageSummaryType[];
 	top_expense_clients: DashboardClientTotalType[];
 	top_revenue_clients: DashboardClientTotalType[];
 	top_categories: DashboardCategoryTotalType[];

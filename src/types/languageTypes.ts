@@ -300,6 +300,7 @@ export type TranslationDictionary = {
 			client: Record<string, string>;
 			supplier: Record<string, string>;
 			paymentSchedule: Record<string, string>;
+			realBudget: Record<string, string>;
 			category: Record<string, string>;
 			revenue: Record<string, string>;
 			expense: Record<string, string>;
@@ -425,6 +426,28 @@ export type TranslationDictionary = {
 		pendingSave: string;
 		expectedCumulative: string;
 		actualCumulative: string;
+	};
+	realBudget: {
+		title: string;
+		addEntry: string;
+		entryAddedSuccess: string;
+		entryAddError: string;
+		entryDeletedSuccess: string;
+		entryDeleteError: string;
+		noEntries: string;
+		pendingSave: string;
+		initialBudget: string;
+		realBudget: string;
+		realCost: string;
+		realRevenue: string;
+		stage: string;
+		clientAmount: string;
+		supplierAmount: string;
+		operationProfit: string;
+		globalMargin: string;
+		budgetGap: string;
+		stageBreakdown: string;
+		stageBreakdownSub: string;
 	};
 	categories: {
 		categoriesList: string;
@@ -621,6 +644,14 @@ export type TranslationDictionary = {
 		serviceFees: string;
 		revenueReelleByClient: string;
 		revenueReelleByClientSub: string;
+		initialBudget: string;
+		realBudget: string;
+		realCost: string;
+		realRevenue: string;
+		realMargin: string;
+		budgetGap: string;
+		realBudgetByStage: string;
+		realBudgetByStageSub: string;
 		noDataAvailable: string;
 		budget: string;
 		revenue: string;

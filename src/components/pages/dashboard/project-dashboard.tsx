@@ -60,6 +60,7 @@ import type {
 	DashboardHistoryPointType,
 	DashboardSubCategoryTotalType,
 	DashboardVendorTotalType,
+	RealBudgetStageSummaryType,
 } from '@/types/projectTypes';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, LineElement, PointElement, Filler, Title, Tooltip, Legend);
@@ -326,6 +327,15 @@ const areaChartOptions = {
 	},
 };
 
+const groupedBarOptions = {
+	...CHART_OPTS,
+	plugins: { legend: { position: 'top' as const } },
+	scales: {
+		x: { grid: { display: false } },
+		y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.06)' } },
+	},
+};
+
 const makeDoughnutData = (labels: string[], values: number[], colors = doughnutPalette) => ({
 	labels,
 	datasets: [
@@ -346,6 +356,30 @@ const makeHorizontalData = (labels: string[], values: number[], color: string) =
 			backgroundColor: color,
 			borderRadius: 2,
 			barThickness: 28,
+		},
+	],
+});
+
+const makeRealBudgetStageData = (rows: RealBudgetStageSummaryType[], t: ReturnType<typeof useLanguage>['t']) => ({
+	labels: rows.map((item) => item.stage),
+	datasets: [
+		{
+			label: t.analytics.realRevenue,
+			data: rows.map((item) => Number(item.total_revenue)),
+			backgroundColor: '#047857',
+			borderRadius: 3,
+		},
+		{
+			label: t.analytics.realCost,
+			data: rows.map((item) => Number(item.total_cost)),
+			backgroundColor: '#b91c1c',
+			borderRadius: 3,
+		},
+		{
+			label: t.analytics.realMargin,
+			data: rows.map((item) => Number(item.profit)),
+			backgroundColor: '#1d4ed8',
+			borderRadius: 3,
 		},
 	],
 });
@@ -404,6 +438,14 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 	const budgetUtilisation = projectOverview?.budget_utilisation ?? data?.budget_utilisation ?? 0;
 	const totalServiceFees = projectOverview?.service_fees ?? data?.total_service_fees ?? '0';
 	const totalRevenueReelle = projectOverview?.revenue_reelle ?? data?.total_revenue_reelle ?? '0';
+	const realBudgetInitial = projectOverview?.budget_initial ?? data?.budget_initial ?? totalBudget;
+	const realBudgetCost = projectOverview?.real_budget_total_cost ?? data?.real_budget_total_cost ?? '0';
+	const realBudgetRevenue = projectOverview?.real_budget_total_revenue ?? data?.real_budget_total_revenue ?? '0';
+	const realBudgetProfit = projectOverview?.real_budget_profit ?? data?.real_budget_profit ?? '0';
+	const realBudgetMargin = projectOverview?.real_budget_margin ?? data?.real_budget_margin ?? 0;
+	const realBudgetGap = projectOverview?.budget_gap ?? data?.budget_gap ?? '0';
+	const realBudgetGapPercent = projectOverview?.budget_gap_percent ?? data?.budget_gap_percent ?? 0;
+	const activeRealBudgetByStage = projectOverview?.real_budget_by_stage ?? data?.real_budget_by_stage ?? [];
 
 	const activeTopCategories = projectOverview?.top_categories ?? data?.top_categories ?? [];
 	const activeTopSubcategories = projectOverview?.top_subcategories ?? data?.top_subcategories ?? [];
@@ -436,6 +478,7 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 		activeTopVendors.map((item: DashboardVendorTotalType) => item.fournisseur),
 		activeTopVendors.map((item: DashboardVendorTotalType) => Number(item.total)),
 	);
+	const realBudgetStageData = makeRealBudgetStageData(activeRealBudgetByStage, t);
 
 	const topBudgetProjects = useMemo(
 		() => [...projects].sort((a, b) => Number(b.budget_total) - Number(a.budget_total)).slice(0, 10),
@@ -663,6 +706,49 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 									</Box>
 								)}
 
+								{showInternalFinancials && (
+									<Box
+										sx={{
+											display: 'grid',
+											gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(5, 1fr)' },
+											gap: 2,
+										}}
+									>
+										<KpiCard
+											icon={<BudgetIcon fontSize="small" />}
+											label={t.analytics.initialBudget}
+											value={`${formatNumber(realBudgetInitial)} MAD`}
+											color="#ed6c02"
+										/>
+										<KpiCard
+											icon={<ExpensesIcon fontSize="small" />}
+											label={t.analytics.realCost}
+											value={`${formatNumber(realBudgetCost)} MAD`}
+											color="#d32f2f"
+										/>
+										<KpiCard
+											icon={<RevenueIcon fontSize="small" />}
+											label={t.analytics.realRevenue}
+											value={`${formatNumber(realBudgetRevenue)} MAD`}
+											color="#2e7d32"
+										/>
+										<KpiCard
+											icon={<ProfitIcon fontSize="small" />}
+											label={t.analytics.realMargin}
+											value={`${formatNumber(realBudgetProfit)} MAD`}
+											sub={`${realBudgetMargin.toFixed(1)}%`}
+											color={Number(realBudgetProfit) >= 0 ? '#2e7d32' : '#d32f2f'}
+										/>
+										<KpiCard
+											icon={<UtilisationIcon fontSize="small" />}
+											label={t.analytics.budgetGap}
+											value={`${formatNumber(realBudgetGap)} MAD`}
+											sub={`${realBudgetGapPercent.toFixed(1)}%`}
+											color={Number(realBudgetGap) >= 0 ? '#0288d1' : '#d32f2f'}
+										/>
+									</Box>
+								)}
+
 								<Card elevation={2}>
 									<CardContent>
 										<Stack spacing={1.5}>
@@ -692,6 +778,15 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 
 								{projectOverview ? (
 									<Stack spacing={2}>
+										{showInternalFinancials && (
+											<ChartCard title={t.analytics.realBudgetByStage} subheader={t.analytics.realBudgetByStageSub} height={330}>
+												{activeRealBudgetByStage.length > 0 ? (
+													<Bar data={realBudgetStageData} options={groupedBarOptions} />
+												) : (
+													<EmptyChart />
+												)}
+											</ChartCard>
+										)}
 										<ChartCard title={t.analytics.cumulativeIncomeExpenses} subheader={projectOverview.nom} height={340}>
 											{activeHistoryData.labels.length > 0 ? (
 												<Line data={activeHistoryData} options={areaChartOptions} />
@@ -798,6 +893,15 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 									</Stack>
 								) : (
 									<>
+										{showInternalFinancials && (
+											<ChartCard title={t.analytics.realBudgetByStage} subheader={t.analytics.realBudgetByStageSub} height={330}>
+												{activeRealBudgetByStage.length > 0 ? (
+													<Bar data={realBudgetStageData} options={groupedBarOptions} />
+												) : (
+													<EmptyChart />
+												)}
+											</ChartCard>
+										)}
 										<Box
 											sx={{
 												display: 'grid',

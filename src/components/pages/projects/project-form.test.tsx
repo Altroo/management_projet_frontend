@@ -45,13 +45,23 @@ jest.mock('@/contexts/InitContext', () => ({
 const mockUseGetProjectQuery = jest.fn();
 const mockCreateProject = jest.fn();
 const mockUpdateProject = jest.fn();
+const mockCreateRealBudgetEntry = jest.fn();
+const mockUploadProjectAttachment = jest.fn();
+const mockDeleteProjectAttachment = jest.fn();
 
 jest.mock('@/store/services/project', () => ({
 	__esModule: true,
 	useGetProjectQuery: (params: { id: number }, options: { skip: boolean }) =>
 		mockUseGetProjectQuery(params, options),
+	useGetClientsQuery: () => ({ data: [], isLoading: false, error: undefined }),
 	useCreateProjectMutation: () => [mockCreateProject, { isLoading: false, error: undefined }],
 	useUpdateProjectMutation: () => [mockUpdateProject, { isLoading: false, error: undefined }],
+	useUploadProjectAttachmentMutation: () => [mockUploadProjectAttachment, { isLoading: false, error: undefined }],
+	useDeleteProjectAttachmentMutation: () => [mockDeleteProjectAttachment, { isLoading: false, error: undefined }],
+	useGetProjectAttachmentsQuery: () => ({ data: [], isLoading: false, error: undefined }),
+	useCreateRealBudgetEntryMutation: () => [mockCreateRealBudgetEntry, { isLoading: false, error: undefined }],
+	useDeleteRealBudgetEntryMutation: () => [jest.fn(), { isLoading: false, error: undefined }],
+	useGetRealBudgetEntriesQuery: () => ({ data: [], isLoading: false, error: undefined }),
 }));
 
 // Mock Protected
@@ -106,6 +116,10 @@ jest.mock('@/components/formikElements/apiLoading/apiAlert/apiAlert', () => ({
 
 jest.mock('@/utils/themes', () => ({
 	textInputTheme: jest.fn(() => ({})),
+	getDefaultTheme: jest.fn(() => {
+		const { createTheme } = jest.requireActual('@mui/material/styles');
+		return createTheme();
+	}),
 }));
 
 jest.mock('@/utils/helpers', () => ({

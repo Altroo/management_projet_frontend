@@ -44,6 +44,7 @@ import { fetchFileBlob } from '@/utils/apiHelpers';
 import { useLanguage, useToast } from '@/utils/hooks';
 import { STATUS_CHIP_COLORS } from '@/utils/rawData';
 import ProjectPaymentScheduleCard from '@/components/shared/projectPaymentSchedule/projectPaymentSchedule';
+import ProjectRealBudgetCard from '@/components/shared/projectRealBudget/projectRealBudget';
 
 interface InfoRowProps {
 	icon: React.ReactNode;
@@ -412,6 +413,8 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 								</Card>
 
 								<ProjectPaymentScheduleCard projectId={id} />
+
+								<ProjectRealBudgetCard projectId={id} budgetInitial={project.budget_total} />
 
 								{/* Notes & Details */}
 								<Card elevation={2} sx={{ borderRadius: 2 }}>
