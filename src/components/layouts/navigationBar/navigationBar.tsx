@@ -98,11 +98,12 @@ const getNavigationMenu = (isStaff: boolean, t: TranslationDictionary) => {
 		projets: {
 			title: t.navigation.projects,
 			icon: <AssignmentIcon />,
-				items: [
-					{ title: t.navigation.projectsList, label: t.navigation.projectsList, path: PROJECTS_LIST },
-					{ title: t.navigation.newProject, label: t.navigation.newProject, path: PROJECTS_ADD },
-				],
-			},
+			items: [
+				{ title: t.navigation.dashboard, label: t.navigation.dashboard, path: DASHBOARD },
+				{ title: t.navigation.projectsList, label: t.navigation.projectsList, path: PROJECTS_LIST },
+				{ title: t.navigation.newProject, label: t.navigation.newProject, path: PROJECTS_ADD },
+			],
+		},
 		clients: {
 			title: t.navigation.clients,
 			icon: <PeopleIcon />,
@@ -149,7 +150,6 @@ const getNavigationMenu = (isStaff: boolean, t: TranslationDictionary) => {
 			title: t.navigation.settings,
 			icon: <SettingsIcon />,
 			items: [
-				{ title: t.navigation.dashboard, label: t.navigation.viewDashboard, path: DASHBOARD },
 				{ title: t.navigation.myProfile, label: t.navigation.myProfile, path: DASHBOARD_EDIT_PROFILE },
 				{ title: t.navigation.changePassword, label: t.navigation.changePassword, path: DASHBOARD_PASSWORD },
 				{

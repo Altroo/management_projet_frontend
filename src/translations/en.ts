@@ -113,7 +113,6 @@ export const en: TranslationDictionary = {
 		expensesList: 'Expenses list',
 		newExpense: 'New expense',
 		dashboard: 'Dashboard',
-		viewDashboard: 'View dashboard',
 		clientDashboard: 'Client dashboard',
 		notifications: 'Notifications',
 		notificationPreferences: 'Notification preferences',

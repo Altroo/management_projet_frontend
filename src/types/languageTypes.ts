@@ -113,7 +113,6 @@ export type TranslationDictionary = {
 		expensesList: string;
 		newExpense: string;
 		dashboard: string;
-		viewDashboard: string;
 		clientDashboard: string;
 		notifications: string;
 		notificationPreferences: string;

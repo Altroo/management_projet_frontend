@@ -159,7 +159,7 @@ describe('NavigationBar', () => {
 		expect(screen.queryByText('Utilisateurs')).not.toBeInTheDocument();
 	});
 
-	it('labels the main dashboard menu as the client dashboard', () => {
+	it('shows the internal dashboard under the projects menu', () => {
 		render(
 			<Provider store={store}>
 				<NavigationBar title="Dashboard">
@@ -168,8 +168,10 @@ describe('NavigationBar', () => {
 			</Provider>,
 		);
 
-		expect(screen.getByText('Tableau de bord client')).toBeInTheDocument();
-		expect(screen.getByText('Voir le tableau de bord')).toBeInTheDocument();
+		expect(screen.getAllByText('Tableau de bord client').length).toBeGreaterThan(0);
+		expect(screen.getAllByText('Projets').length).toBeGreaterThan(0);
+		expect(screen.getAllByText('Tableau de bord').length).toBeGreaterThan(0);
+		expect(screen.queryByText('Voir le tableau de bord')).not.toBeInTheDocument();
 	});
 
 	it('drawer toggle button only appears on mobile', async () => {
