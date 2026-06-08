@@ -152,6 +152,18 @@ const AttachmentRow: React.FC<AttachmentRowProps> = ({ icon, title, subtitle, ac
 	);
 };
 
+const fileInputSx = {
+	clip: 'rect(0 0 0 0)',
+	clipPath: 'inset(50%)',
+	height: 1,
+	overflow: 'hidden',
+	position: 'absolute',
+	bottom: 0,
+	left: 0,
+	whiteSpace: 'nowrap',
+	width: 1,
+} as const;
+
 const EntityAttachmentsForm: React.FC<EntityAttachmentsFormProps> = ({
 	attachments,
 	queuedAttachments,
@@ -278,13 +290,22 @@ const EntityAttachmentsForm: React.FC<EntityAttachmentsFormProps> = ({
 							fullWidth
 						/>
 						<Button
+							component="label"
 							variant="contained"
 							startIcon={<UploadFileIcon />}
 							disabled={isPending || isLoading}
-							onClick={() => inputRef.current?.click()}
 							sx={{ minWidth: { xs: '100%', md: 180 }, whiteSpace: 'nowrap' }}
 						>
 							{t.attachments.chooseFiles}
+							<Box
+								component="input"
+								ref={inputRef}
+								type="file"
+								multiple
+								disabled={isPending || isLoading}
+								onChange={handleFileChange}
+								sx={fileInputSx}
+							/>
 						</Button>
 					</Stack>
 
@@ -326,7 +347,6 @@ const EntityAttachmentsForm: React.FC<EntityAttachmentsFormProps> = ({
 							},
 						})}
 					>
-						<input ref={inputRef} type="file" hidden multiple onChange={handleFileChange} />
 						<Box
 							sx={(theme) => ({
 								width: 46,
