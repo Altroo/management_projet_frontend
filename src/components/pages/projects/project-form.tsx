@@ -79,6 +79,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	const [uploadProjectAttachment] = useUploadProjectAttachmentMutation();
 	const [createRealBudgetEntry] = useCreateRealBudgetEntryMutation();
 	const [isPending, setIsPending] = useState(false);
+	const [submitAttempted, setSubmitAttempted] = useState(false);
 	const [queuedAttachments, setQueuedAttachments] = useState<QueuedAttachment[]>([]);
 	const [queuedRealBudgetEntries, setQueuedRealBudgetEntries] = useState<QueuedRealBudgetEntry[]>([]);
 
@@ -153,11 +154,35 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	const selectedStatus = statusItems.find((s) => s.code === formik.values.status) ?? null;
 	const selectedClient = clientItems.find((c) => c.code === String(formik.values.client)) ?? null;
 
-	const validationEntries = Object.entries(formik.errors).filter(([k]) => k !== 'globalError') as [string, string][];
+	const validationAttempted = formik.submitCount > 0 || submitAttempted;
+	const hasRealBudgetValidationError = !isEditMode && queuedRealBudgetEntries.length === 0;
+	const validationEntries = [
+		...(Object.entries(formik.errors).filter(([k]) => k !== 'globalError') as [string, string][]),
+		...(hasRealBudgetValidationError ? ([['real_budget', t.validation.required]] as [string, string][]) : []),
+	];
 	const hasValidationErrors = validationEntries.length > 0;
-	const showValidationAlert = hasValidationErrors && formik.submitCount > 0;
+	const showValidationAlert = hasValidationErrors && validationAttempted;
 
 	const isLoading = isCreateLoading || isUpdateLoading || isPending;
+
+	const handleValidationFailure = () => {
+		onError(t.users.fixValidationErrors);
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	};
+
+	const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+		setSubmitAttempted(true);
+		if (hasRealBudgetValidationError) {
+			event.preventDefault();
+			void formik.validateForm();
+			handleValidationFailure();
+			return;
+		}
+		formik.handleSubmit(event);
+	};
+
+	const getValidationLabel = (key: string) =>
+		key === 'real_budget' ? t.realBudget.title : getLabelForKey(t.rawData.fieldLabels.project, key);
 
 	return (
 		<LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
@@ -192,7 +217,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 							{validationEntries.map(([key, err]) => (
 								<li key={key}>
 									<Typography variant="body2">
-										<strong>{getLabelForKey(t.rawData.fieldLabels.project, key)}</strong> : {err}
+										<strong>{getValidationLabel(key)}</strong> : {err}
 									</Typography>
 								</li>
 							))}
@@ -202,7 +227,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 
 				{isLoading && <ApiProgress backdropColor="#FFFFFF" circularColor="#0D070B" />}
 
-				<form onSubmit={formik.handleSubmit}>
+				<form onSubmit={handleFormSubmit}>
 					<Stack spacing={3}>
 						{/* Project Info */}
 						<Card elevation={2} sx={{ borderRadius: 2 }}>
@@ -507,6 +532,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 							projectId={id}
 							budgetInitial={formik.values.budget_total}
 							editable
+							validationAttempted={validationAttempted}
 							queuedEntries={queuedRealBudgetEntries}
 							setQueuedEntries={setQueuedRealBudgetEntries}
 						/>
@@ -519,11 +545,15 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 								type="submit"
 								startIcon={isEditMode ? <EditIcon /> : <AddIcon />}
 								onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-									if (!formik.isValid) {
+									setSubmitAttempted(true);
+									if (!formik.isValid || hasRealBudgetValidationError) {
 										e.preventDefault();
-										formik.handleSubmit();
-										onError(t.users.fixValidationErrors);
-										window.scrollTo({ top: 0, behavior: 'smooth' });
+										if (!formik.isValid) {
+											formik.handleSubmit();
+										} else {
+											void formik.validateForm();
+										}
+										handleValidationFailure();
 									}
 								}}
 								cssClass={Styles.submitButton}

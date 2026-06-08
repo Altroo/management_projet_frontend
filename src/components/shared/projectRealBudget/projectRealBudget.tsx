@@ -9,6 +9,7 @@ import {
 	Chip,
 	Divider,
 	IconButton,
+	InputAdornment,
 	LinearProgress,
 	Stack,
 	TextField,
@@ -19,14 +20,20 @@ import {
 import {
 	AccountBalanceWallet as BudgetIcon,
 	Add as AddIcon,
+	Assignment as AssignmentIcon,
+	AttachMoney as AttachMoneyIcon,
+	CalendarMonth as CalendarMonthIcon,
 	Delete as DeleteIcon,
+	Notes as NotesIcon,
 	Savings as ProfitIcon,
 	TrendingDown as CostIcon,
 	TrendingUp as RevenueIcon,
 } from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { DataGrid } from '@mui/x-data-grid';
 import { frFR } from '@mui/x-data-grid/locales';
+import { format, parseISO } from 'date-fns';
 import {
 	useCreateRealBudgetEntryMutation,
 	useDeleteRealBudgetEntryMutation,
@@ -34,10 +41,10 @@ import {
 } from '@/store/services/project';
 import type { RealBudgetEntryFormValues } from '@/types/projectTypes';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
-import { getDefaultTheme } from '@/utils/themes';
+import { getDefaultTheme, textInputTheme } from '@/utils/themes';
 import { useLanguage, useToast } from '@/utils/hooks';
 
-const DEFAULT_STAGES = ['Design', 'Construction', 'Électricité', 'Plomberie'];
+const inputTheme = textInputTheme();
 
 export type QueuedRealBudgetEntry = {
 	id: string;
@@ -53,6 +60,7 @@ type ProjectRealBudgetCardProps = {
 	projectId?: number;
 	budgetInitial?: string | number;
 	editable?: boolean;
+	validationAttempted?: boolean;
 	queuedEntries?: QueuedRealBudgetEntry[];
 	setQueuedEntries?: React.Dispatch<React.SetStateAction<QueuedRealBudgetEntry[]>>;
 };
@@ -68,6 +76,7 @@ type RealBudgetGridRow = {
 	benefice: string;
 	marge: string | number;
 	isQueued?: boolean;
+	isDraft?: boolean;
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -135,6 +144,7 @@ const ProjectRealBudgetCard: React.FC<ProjectRealBudgetCardProps> = ({
 	projectId,
 	budgetInitial = 0,
 	editable = false,
+	validationAttempted = false,
 	queuedEntries = [],
 	setQueuedEntries,
 }) => {
@@ -161,10 +171,18 @@ const ProjectRealBudgetCard: React.FC<ProjectRealBudgetCardProps> = ({
 		[queuedEntries],
 	);
 
-	const canSubmit = date && stage.trim() && montantClient && montantFournisseur;
-	const hasRows = sortedRows.length > 0 || sortedQueuedRows.length > 0;
+	const canSubmit = Boolean(date && stage.trim() && montantClient && montantFournisseur);
+	const draftErrors = useMemo(
+		() => ({
+			date: validationAttempted && !date,
+			stage: validationAttempted && !stage.trim(),
+			montantClient: validationAttempted && !montantClient,
+			montantFournisseur: validationAttempted && !montantFournisseur,
+		}),
+		[date, montantClient, montantFournisseur, stage, validationAttempted],
+	);
 
-	const gridRows = useMemo<RealBudgetGridRow[]>(() => {
+	const savedAndQueuedRows = useMemo<RealBudgetGridRow[]>(() => {
 		const queuedRows = sortedQueuedRows.map((row) => {
 			const benefice = toNumber(row.montant_client) - toNumber(row.montant_fournisseur);
 			const marge = toNumber(row.montant_client) ? (benefice / toNumber(row.montant_client)) * 100 : 0;
@@ -194,14 +212,37 @@ const ProjectRealBudgetCard: React.FC<ProjectRealBudgetCardProps> = ({
 		return [...queuedRows, ...savedRows];
 	}, [sortedQueuedRows, sortedRows]);
 
+	const gridRows = useMemo<RealBudgetGridRow[]>(() => {
+		if (!editable) return savedAndQueuedRows;
+
+		const draftBenefice = toNumber(montantClient) - toNumber(montantFournisseur);
+		const draftMarge = toNumber(montantClient) ? (draftBenefice / toNumber(montantClient)) * 100 : 0;
+		return [
+			{
+				id: 'draft-real-budget-entry',
+				date,
+				stage,
+				description,
+				montant_client: montantClient,
+				montant_fournisseur: montantFournisseur,
+				benefice: String(draftBenefice),
+				marge: draftMarge,
+				isDraft: true,
+			},
+			...savedAndQueuedRows,
+		];
+	}, [date, description, editable, montantClient, montantFournisseur, savedAndQueuedRows, stage]);
+
+	const hasRows = gridRows.length > 0;
+
 	const summary = useMemo(() => {
-		const totalRevenue = gridRows.reduce((sum, row) => sum + toNumber(row.montant_client), 0);
-		const totalCost = gridRows.reduce((sum, row) => sum + toNumber(row.montant_fournisseur), 0);
+		const totalRevenue = savedAndQueuedRows.reduce((sum, row) => sum + toNumber(row.montant_client), 0);
+		const totalCost = savedAndQueuedRows.reduce((sum, row) => sum + toNumber(row.montant_fournisseur), 0);
 		const profit = totalRevenue - totalCost;
 		const margin = totalRevenue ? (profit / totalRevenue) * 100 : 0;
 		const gap = toNumber(budgetInitial) - totalCost;
 		return { totalRevenue, totalCost, profit, margin, gap };
-	}, [budgetInitial, gridRows]);
+	}, [budgetInitial, savedAndQueuedRows]);
 
 	const resetFields = () => {
 		setDate(today());
@@ -259,126 +300,313 @@ const ProjectRealBudgetCard: React.FC<ProjectRealBudgetCardProps> = ({
 		setQueuedEntries?.((current) => current.filter((row) => row.id !== id));
 	}, [setQueuedEntries]);
 
-	const amountInput = (setter: React.Dispatch<React.SetStateAction<string>>) => (event: React.ChangeEvent<HTMLInputElement>) => {
+	const amountInput = useCallback((setter: React.Dispatch<React.SetStateAction<string>>) => (event: React.ChangeEvent<HTMLInputElement>) => {
 		if (/^(0|[1-9]\d*)?([.,]\d*)?$/.test(event.target.value)) setter(event.target.value);
-	};
+	}, []);
 
 	const columns = useMemo<GridColDef<RealBudgetGridRow>[]>(
-		() => [
-			{
-				field: 'date',
-				headerName: t.common.date,
-				minWidth: 130,
-				flex: 0.75,
-				renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) => formatDate(params.value ?? null),
-			},
-			{
-				field: 'stage',
-				headerName: t.realBudget.stage,
-				minWidth: 160,
-				flex: 0.9,
-				renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) => (
-					<Stack direction="row" spacing={1} sx={{ alignItems: 'center', minWidth: 0 }}>
-						<Typography variant="body2" noWrap>
-							{params.value}
-						</Typography>
-						{params.row.isQueued ? (
-							<Chip size="small" color="warning" variant="outlined" label={t.realBudget.pendingSave} />
-						) : null}
-					</Stack>
-				),
-			},
-			{
-				field: 'description',
-				headerName: t.common.description,
-				minWidth: 220,
-				flex: 1.2,
-				renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) => (
-					<Typography variant="body2" noWrap>
-						{params.value || '-'}
-					</Typography>
-				),
-			},
-			{
-				field: 'montant_client',
-				headerName: t.realBudget.clientAmount,
-				minWidth: 160,
-				flex: 0.9,
-				align: 'right',
-				headerAlign: 'right',
-				renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) => formatMoney(params.value),
-			},
-			{
-				field: 'montant_fournisseur',
-				headerName: t.realBudget.supplierAmount,
-				minWidth: 170,
-				flex: 0.95,
-				align: 'right',
-				headerAlign: 'right',
-				renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) => formatMoney(params.value),
-			},
-			{
-				field: 'benefice',
-				headerName: t.realBudget.operationProfit,
-				minWidth: 145,
-				flex: 0.85,
-				align: 'right',
-				headerAlign: 'right',
-				renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) => (
-					<Typography
-						component="span"
-						variant="body2"
-						color={toNumber(params.value) < 0 ? 'error.main' : 'success.main'}
-						sx={{ fontWeight: 700 }}
-					>
-						{formatMoney(params.value)}
-					</Typography>
-				),
-			},
-			{
-				field: 'marge',
-				headerName: t.projects.margin,
-				minWidth: 105,
-				flex: 0.6,
-				align: 'right',
-				headerAlign: 'right',
-				renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string | number>) => formatPercent(params.value),
-			},
-			...(editable
-				? [
-						{
-							field: 'actions',
-							headerName: t.common.actions,
-							minWidth: 90,
-							sortable: false,
-							filterable: false,
-							align: 'right' as const,
-							headerAlign: 'right' as const,
-							renderCell: (params: GridRenderCellParams<RealBudgetGridRow>) => (
-								<Tooltip title={t.common.delete}>
-									<IconButton
-										size="small"
-										color="error"
-										disabled={isPending}
-										onClick={() => {
-											if (params.row.isQueued) {
-												handleRemoveQueued(String(params.row.id).replace('queued-', ''));
-												return;
-											}
-											if (params.row.savedId) {
-												handleDelete(params.row.savedId);
-											}
-										}}
-									>
-										<DeleteIcon fontSize="small" />
-									</IconButton>
-								</Tooltip>
+		() => {
+			const gridPlainInputSx = {
+				'& .MuiInputBase-root': {
+					fontFamily: 'Poppins',
+					fontSize: '14px',
+				},
+				'& .MuiInputBase-input': {
+					py: 0,
+				},
+				'& .MuiInputBase-input::placeholder': {
+					opacity: 0.7,
+				},
+			};
+
+			const stopGridClick = (event: React.MouseEvent) => event.stopPropagation();
+
+			const draftTextInput = ({
+				value,
+				onChange,
+				placeholder,
+				icon,
+				inputMode,
+				align = 'left',
+				error = false,
+			}: {
+				value: string;
+				onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+				placeholder: string;
+				icon: React.ReactNode;
+				inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+				align?: 'left' | 'right';
+				error?: boolean;
+			}) => (
+				<TextField
+					variant="standard"
+					value={value}
+					onChange={onChange}
+					placeholder={placeholder}
+					error={error}
+					disabled={isPending || isLoading}
+					slotProps={{
+						input: {
+							disableUnderline: true,
+							startAdornment: (
+								<InputAdornment position="start" sx={{ color: error ? 'error.main' : 'text.secondary' }}>
+									{icon}
+								</InputAdornment>
 							),
 						},
-					]
-				: []),
+						htmlInput: { inputMode, style: { textAlign: align } },
+					}}
+					fullWidth
+					onClick={stopGridClick}
+					sx={{
+						...gridPlainInputSx,
+						'& .MuiInputBase-input': {
+							py: 0,
+							color: error ? 'error.main' : 'text.primary',
+						},
+						'& .MuiInputBase-input::placeholder': {
+							color: error ? 'error.main' : 'text.secondary',
+							opacity: error ? 0.65 : 0.7,
+						},
+					}}
+				/>
+			);
+
+			return [
+				{
+					field: 'date',
+					headerName: t.common.date,
+					minWidth: 150,
+					flex: 0.8,
+					sortable: false,
+					filterable: false,
+					renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
+						params.row.isDraft ? (
+							<Box sx={{ width: '100%' }} onClick={stopGridClick}>
+								<ThemeProvider theme={inputTheme}>
+									<DatePicker
+										label={`${t.common.date} *`}
+										value={date ? parseISO(date) : null}
+										onChange={(nextDate) => setDate(nextDate ? format(nextDate, 'yyyy-MM-dd') : '')}
+										disabled={isPending || isLoading}
+										slotProps={{
+											textField: {
+												variant: 'standard',
+												fullWidth: true,
+												error: draftErrors.date,
+												slotProps: {
+													input: {
+														disableUnderline: true,
+														startAdornment: (
+															<InputAdornment position="start" sx={{ color: draftErrors.date ? 'error.main' : 'text.secondary' }}>
+																<CalendarMonthIcon fontSize="small" />
+															</InputAdornment>
+														),
+													},
+												},
+												sx: {
+													...gridPlainInputSx,
+													'& .MuiFormLabel-root': {
+														color: draftErrors.date ? 'error.main' : 'text.secondary',
+													},
+													'& .MuiInputBase-input': {
+														py: 0,
+														color: draftErrors.date ? 'error.main' : 'text.primary',
+													},
+												},
+											},
+										}}
+									/>
+								</ThemeProvider>
+							</Box>
+						) : (
+							formatDate(params.value ?? null)
+						),
+				},
+				{
+					field: 'stage',
+					headerName: t.realBudget.stage,
+					minWidth: 180,
+					flex: 0.95,
+					sortable: false,
+					filterable: false,
+					renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
+						params.row.isDraft ? (
+							draftTextInput({
+								value: stage,
+								onChange: (event) => setStage(event.target.value),
+								placeholder: `${t.realBudget.stage} *`,
+								icon: <AssignmentIcon fontSize="small" />,
+								error: draftErrors.stage,
+							})
+						) : (
+							<Stack direction="row" spacing={1} sx={{ alignItems: 'center', minWidth: 0 }}>
+								<Typography variant="body2" noWrap>
+									{params.value}
+								</Typography>
+								{params.row.isQueued ? (
+									<Chip size="small" color="warning" variant="outlined" label={t.realBudget.pendingSave} />
+								) : null}
+							</Stack>
+						),
+				},
+				{
+					field: 'description',
+					headerName: t.common.description,
+					minWidth: 220,
+					flex: 1.2,
+					sortable: false,
+					filterable: false,
+					renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
+						params.row.isDraft ? (
+							draftTextInput({
+								value: description,
+								onChange: (event) => setDescription(event.target.value),
+								placeholder: t.common.description,
+								icon: <NotesIcon fontSize="small" />,
+							})
+						) : (
+							<Typography variant="body2" noWrap>
+								{params.value || '-'}
+							</Typography>
+						),
+				},
+				{
+					field: 'montant_client',
+					headerName: t.realBudget.clientAmount,
+					minWidth: 170,
+					flex: 0.9,
+					align: 'right',
+					headerAlign: 'right',
+					sortable: false,
+					filterable: false,
+					renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
+						params.row.isDraft
+							? draftTextInput({
+									value: montantClient,
+									onChange: amountInput(setMontantClient),
+									placeholder: `${t.realBudget.clientAmount} *`,
+									icon: <AttachMoneyIcon fontSize="small" />,
+									inputMode: 'decimal',
+									align: 'right',
+									error: draftErrors.montantClient,
+								})
+							: formatMoney(params.value),
+				},
+				{
+					field: 'montant_fournisseur',
+					headerName: t.realBudget.supplierAmount,
+					minWidth: 180,
+					flex: 0.95,
+					align: 'right',
+					headerAlign: 'right',
+					sortable: false,
+					filterable: false,
+					renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
+						params.row.isDraft
+							? draftTextInput({
+									value: montantFournisseur,
+									onChange: amountInput(setMontantFournisseur),
+									placeholder: `${t.realBudget.supplierAmount} *`,
+									icon: <AttachMoneyIcon fontSize="small" />,
+									inputMode: 'decimal',
+									align: 'right',
+									error: draftErrors.montantFournisseur,
+								})
+							: formatMoney(params.value),
+				},
+				{
+					field: 'benefice',
+					headerName: t.realBudget.operationProfit,
+					minWidth: 145,
+					flex: 0.85,
+					align: 'right',
+					headerAlign: 'right',
+					sortable: false,
+					filterable: false,
+					renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
+						params.row.isDraft && (!montantClient || !montantFournisseur) ? (
+							<Typography variant="body2" color="text.secondary">
+								-
+							</Typography>
+						) : (
+							<Typography
+								component="span"
+								variant="body2"
+								color={toNumber(params.value) < 0 ? 'error.main' : 'success.main'}
+								sx={{ fontWeight: 700 }}
+							>
+								{formatMoney(params.value)}
+							</Typography>
+						),
+				},
+				{
+					field: 'marge',
+					headerName: t.projects.margin,
+					minWidth: 105,
+					flex: 0.6,
+					align: 'right',
+					headerAlign: 'right',
+					sortable: false,
+					filterable: false,
+					renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string | number>) =>
+						params.row.isDraft && (!montantClient || !montantFournisseur) ? '-' : formatPercent(params.value),
+				},
+				...(editable
+					? [
+							{
+								field: 'actions',
+								headerName: t.common.actions,
+								minWidth: 90,
+								sortable: false,
+								filterable: false,
+								disableColumnMenu: true,
+								align: 'right' as const,
+								headerAlign: 'right' as const,
+								renderCell: (params: GridRenderCellParams<RealBudgetGridRow>) => (
+									<Tooltip title={t.common.delete}>
+										<IconButton
+											size="small"
+											color="error"
+											disabled={isPending}
+											onClick={() => {
+												if (params.row.isDraft) {
+													resetFields();
+													return;
+												}
+												if (params.row.isQueued) {
+													handleRemoveQueued(String(params.row.id).replace('queued-', ''));
+													return;
+												}
+												if (params.row.savedId) {
+													handleDelete(params.row.savedId);
+												}
+											}}
+										>
+											<DeleteIcon fontSize="small" />
+										</IconButton>
+									</Tooltip>
+								),
+							},
+						]
+					: []),
+			];
+		},
+		[
+			amountInput,
+			date,
+			description,
+			draftErrors,
+			editable,
+			handleDelete,
+			handleRemoveQueued,
+			isLoading,
+			isPending,
+			montantClient,
+			montantFournisseur,
+			stage,
+			t,
 		],
-		[editable, handleDelete, handleRemoveQueued, isPending, t],
 	);
 
 	return (
@@ -395,8 +623,21 @@ const ProjectRealBudgetCard: React.FC<ProjectRealBudgetCardProps> = ({
 							{t.realBudget.title}
 						</Typography>
 					</Stack>
-					{editable && sortedQueuedRows.length > 0 ? (
-						<Chip size="small" color="warning" variant="outlined" label={`${sortedQueuedRows.length} ${t.realBudget.pendingSave}`} />
+					{editable ? (
+						<Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+							{sortedQueuedRows.length > 0 ? (
+								<Chip size="small" color="warning" variant="outlined" label={`${sortedQueuedRows.length} ${t.realBudget.pendingSave}`} />
+							) : null}
+							<Button
+								variant="outlined"
+								size="small"
+								startIcon={<AddIcon />}
+								disabled={!canSubmit || isPending || isLoading}
+								onClick={handleAdd}
+							>
+								{t.common.add}
+							</Button>
+						</Stack>
 					) : null}
 				</Stack>
 				<Divider sx={{ mb: 3 }} />
@@ -416,68 +657,6 @@ const ProjectRealBudgetCard: React.FC<ProjectRealBudgetCardProps> = ({
 					<SummaryBox icon={<BudgetIcon fontSize="small" />} label={t.realBudget.budgetGap} value={formatMoney(summary.gap)} tone={summary.gap >= 0 ? '#0288d1' : '#d32f2f'} />
 				</Box>
 
-				{editable ? (
-					<Stack spacing={1.5} sx={{ mb: 2 }}>
-						<Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
-							<TextField
-								size="small"
-								type="date"
-								label={t.common.date}
-								value={date}
-								onChange={(event) => setDate(event.target.value)}
-								slotProps={{ inputLabel: { shrink: true } }}
-								fullWidth
-							/>
-							<TextField
-								size="small"
-								label={t.realBudget.stage}
-								value={stage}
-								onChange={(event) => setStage(event.target.value)}
-								fullWidth
-							/>
-							<TextField
-								size="small"
-								label={t.common.description}
-								value={description}
-								onChange={(event) => setDescription(event.target.value)}
-								fullWidth
-							/>
-						</Stack>
-						<Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
-							<TextField
-								size="small"
-								label={t.realBudget.clientAmount}
-								value={montantClient}
-								onChange={amountInput(setMontantClient)}
-								slotProps={{ htmlInput: { inputMode: 'decimal' } }}
-								fullWidth
-							/>
-							<TextField
-								size="small"
-								label={t.realBudget.supplierAmount}
-								value={montantFournisseur}
-								onChange={amountInput(setMontantFournisseur)}
-								slotProps={{ htmlInput: { inputMode: 'decimal' } }}
-								fullWidth
-							/>
-							<Button
-								variant="contained"
-								startIcon={<AddIcon />}
-								disabled={!canSubmit || isPending || isLoading}
-								onClick={handleAdd}
-								sx={{ whiteSpace: 'nowrap', minWidth: { xs: '100%', md: 190 } }}
-							>
-								{t.realBudget.addEntry}
-							</Button>
-						</Stack>
-						<Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-							{DEFAULT_STAGES.map((item) => (
-								<Chip key={item} size="small" label={item} variant="outlined" onClick={() => setStage(item)} />
-							))}
-						</Stack>
-					</Stack>
-				) : null}
-
 				{isPending || isLoading ? <LinearProgress sx={{ mb: 2 }} /> : null}
 
 				<ThemeProvider theme={getDefaultTheme()}>
@@ -493,6 +672,13 @@ const ProjectRealBudgetCard: React.FC<ProjectRealBudgetCardProps> = ({
 							localeText={frFR.components.MuiDataGrid.defaultProps.localeText}
 							disableRowSelectionOnClick
 							showToolbar
+							slotProps={{
+								toolbar: {
+									showQuickFilter: true,
+									quickFilterProps: { debounceMs: 500 },
+								},
+							}}
+							getRowHeight={() => 64}
 							slots={{
 								noRowsOverlay: () => (
 									<Stack sx={{ height: '100%', alignItems: 'center', justifyContent: 'center' }}>
@@ -501,8 +687,11 @@ const ProjectRealBudgetCard: React.FC<ProjectRealBudgetCardProps> = ({
 								),
 							}}
 							sx={{
-								borderColor: 'divider',
+								border: 'none',
+								'& .MuiDataGrid-columnHeaderTitle': { fontWeight: 700 },
 								'& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center' },
+								'& .MuiDataGrid-cell:focus, & .MuiDataGrid-columnHeader:focus': { outline: 'none' },
+								'& .MuiDataGrid-toolbarContainer': { px: 0, pt: 0, pb: 1 },
 								'& .MuiDataGrid-row:hover': { cursor: editable ? 'default' : 'inherit' },
 							}}
 						/>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, cleanup } from '@testing-library/react';
+import { act, render, screen, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
@@ -115,7 +115,10 @@ jest.mock('@/components/formikElements/apiLoading/apiAlert/apiAlert', () => ({
 }));
 
 jest.mock('@/utils/themes', () => ({
-	textInputTheme: jest.fn(() => ({})),
+	textInputTheme: jest.fn(() => {
+		const { createTheme } = jest.requireActual('@mui/material/styles');
+		return createTheme();
+	}),
 	getDefaultTheme: jest.fn(() => {
 		const { createTheme } = jest.requireActual('@mui/material/styles');
 		return createTheme();
@@ -166,8 +169,13 @@ const mockSession: AppSession = {
 	},
 };
 
-const renderWithProviders = (ui: React.ReactElement) => {
-	return render(<Provider store={mockStore}>{ui}</Provider>);
+const renderWithProviders = async (ui: React.ReactElement) => {
+	let result: ReturnType<typeof render>;
+	await act(async () => {
+		result = render(<Provider store={mockStore}>{ui}</Provider>);
+		await Promise.resolve();
+	});
+	return result!;
 };
 
 describe('ProjectFormClient', () => {
@@ -185,51 +193,51 @@ describe('ProjectFormClient', () => {
 	});
 
 	describe('Add Mode (no id)', () => {
-		it('renders form fields', () => {
-			renderWithProviders(<ProjectFormClient session={mockSession} />);
+		it('renders form fields', async () => {
+			await renderWithProviders(<ProjectFormClient session={mockSession} />);
 			expect(screen.getByTestId('input-nom')).toBeInTheDocument();
 			expect(screen.getByTestId('input-description')).toBeInTheDocument();
 			expect(screen.getByTestId('input-budget_total')).toBeInTheDocument();
 			expect(screen.getByTestId('input-chef_de_projet')).toBeInTheDocument();
 		});
 
-		it('renders submit button with add text', () => {
-			renderWithProviders(<ProjectFormClient session={mockSession} />);
+		it('renders submit button with add text', async () => {
+			await renderWithProviders(<ProjectFormClient session={mockSession} />);
 			expect(screen.getByTestId('submit-button')).toHaveTextContent('Nouveau projet');
 		});
 
-		it('renders back button text', () => {
-			renderWithProviders(<ProjectFormClient session={mockSession} />);
+		it('renders back button text', async () => {
+			await renderWithProviders(<ProjectFormClient session={mockSession} />);
 			expect(screen.getByText('Liste des projets')).toBeInTheDocument();
 		});
 
-		it('renders section headers', () => {
-			renderWithProviders(<ProjectFormClient session={mockSession} />);
+		it('renders section headers', async () => {
+			await renderWithProviders(<ProjectFormClient session={mockSession} />);
 			expect(screen.getByText('Informations du projet')).toBeInTheDocument();
 			expect(screen.getByText('Informations du client')).toBeInTheDocument();
 			expect(screen.getAllByText('Notes').length).toBeGreaterThanOrEqual(1);
 		});
 
-		it('renders protected wrapper', () => {
-			renderWithProviders(<ProjectFormClient session={mockSession} />);
+		it('renders protected wrapper', async () => {
+			await renderWithProviders(<ProjectFormClient session={mockSession} />);
 			expect(screen.getByTestId('protected')).toBeInTheDocument();
 		});
 
-		it('renders client fields', () => {
-			renderWithProviders(<ProjectFormClient session={mockSession} />);
+		it('renders client fields', async () => {
+			await renderWithProviders(<ProjectFormClient session={mockSession} />);
 			expect(screen.getByTestId('input-nom_client')).toBeInTheDocument();
 			expect(screen.getByTestId('input-telephone_client')).toBeInTheDocument();
 			expect(screen.getByTestId('input-email_client')).toBeInTheDocument();
 		});
 
-		it('renders status autocomplete', () => {
-			renderWithProviders(<ProjectFormClient session={mockSession} />);
+		it('renders status autocomplete', async () => {
+			await renderWithProviders(<ProjectFormClient session={mockSession} />);
 			expect(screen.getByTestId('autocomplete-status')).toBeInTheDocument();
 		});
 	});
 
 	describe('Edit Mode (with id)', () => {
-		it('renders submit button with update text', () => {
+		it('renders submit button with update text', async () => {
 			mockUseGetProjectQuery.mockReturnValue({
 				data: {
 					id: 10,
@@ -249,25 +257,25 @@ describe('ProjectFormClient', () => {
 				error: undefined,
 			});
 
-			renderWithProviders(<ProjectFormClient session={mockSession} id={10} />);
+			await renderWithProviders(<ProjectFormClient session={mockSession} id={10} />);
 			expect(screen.getByTestId('submit-button')).toHaveTextContent('Mettre à jour');
 		});
 
-		it('still renders back button in edit mode', () => {
+		it('still renders back button in edit mode', async () => {
 			mockUseGetProjectQuery.mockReturnValue({
 				data: { id: 10, nom: 'Test', budget_total: '1000', status: 'en_cours' },
 				isLoading: false,
 				error: undefined,
 			});
 
-			renderWithProviders(<ProjectFormClient session={mockSession} id={10} />);
+			await renderWithProviders(<ProjectFormClient session={mockSession} id={10} />);
 			expect(screen.getByText('Liste des projets')).toBeInTheDocument();
 		});
 	});
 
 	describe('Hook calls', () => {
-		it('calls useGetProjectQuery when in edit mode', () => {
-			renderWithProviders(<ProjectFormClient session={mockSession} id={456} />);
+		it('calls useGetProjectQuery when in edit mode', async () => {
+			await renderWithProviders(<ProjectFormClient session={mockSession} id={456} />);
 			expect(mockUseGetProjectQuery).toHaveBeenCalledWith({ id: 456 }, expect.any(Object));
 		});
 	});

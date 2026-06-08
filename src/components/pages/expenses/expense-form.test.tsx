@@ -43,6 +43,9 @@ const mockCreateExpense = jest.fn();
 const mockUpdateExpense = jest.fn();
 const mockUseGetProjectsListQuery = jest.fn(() => ({ data: [], isLoading: false }));
 const mockUseGetExpenseTaxonomyQuery = jest.fn(() => ({ data: [], isLoading: false }));
+const mockUseGetSuppliersQuery = jest.fn(() => ({ data: [], isLoading: false }));
+const mockUploadExpenseAttachment = jest.fn();
+const mockDeleteExpenseAttachment = jest.fn();
 
 jest.mock('@/store/services/project', () => ({
 	__esModule: true,
@@ -52,6 +55,10 @@ jest.mock('@/store/services/project', () => ({
 	useUpdateExpenseMutation: () => [mockUpdateExpense, { isLoading: false, error: undefined }],
 	useGetProjectsListQuery: () => mockUseGetProjectsListQuery(),
 	useGetExpenseTaxonomyQuery: () => mockUseGetExpenseTaxonomyQuery(),
+	useGetSuppliersQuery: () => mockUseGetSuppliersQuery(),
+	useGetExpenseAttachmentsQuery: () => ({ data: [], isLoading: false, error: undefined }),
+	useUploadExpenseAttachmentMutation: () => [mockUploadExpenseAttachment, { isLoading: false }],
+	useDeleteExpenseAttachmentMutation: () => [mockDeleteExpenseAttachment, { isLoading: false }],
 	useCreateExpenseCategoryMutation: () => [jest.fn(), { isLoading: false }],
 	useUpdateExpenseCategoryMutation: () => [jest.fn(), { isLoading: false }],
 	useDeleteExpenseCategoryMutation: () => [jest.fn(), { isLoading: false }],
@@ -195,7 +202,8 @@ describe('ExpenseFormClient', () => {
 			expect(screen.getByTestId('autocomplete-category')).toBeInTheDocument();
 			expect(screen.getByTestId('autocomplete-sous_categorie')).toBeInTheDocument();
 			expect(screen.getByTestId('input-element')).toBeInTheDocument();
-			expect(screen.getByTestId('input-fournisseur')).toBeInTheDocument();
+			expect(screen.getByTestId('autocomplete-supplier')).toBeInTheDocument();
+			expect(screen.queryByTestId('input-fournisseur')).not.toBeInTheDocument();
 			expect(screen.getByTestId('input-notes')).toBeInTheDocument();
 		});
 

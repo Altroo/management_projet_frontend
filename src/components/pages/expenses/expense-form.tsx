@@ -554,27 +554,11 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										onChange={(_, newVal) => {
 											const selected = suppliersData?.find((supplier) => String(supplier.id) === newVal?.code);
 											formik.setFieldValue('supplier', selected ? selected.id : '');
-											if (selected) {
-												formik.setFieldValue('fournisseur', selected.nom);
-											}
+											formik.setFieldValue('fournisseur', selected ? selected.nom : '');
 										}}
 										onBlur={formik.handleBlur('supplier')}
 										error={formik.submitCount > 0 && Boolean(formik.errors.supplier)}
 										helperText={formik.submitCount > 0 ? ((formik.errors.supplier as string) ?? '') : ''}
-										startIcon={<PersonIcon fontSize="small" />}
-									/>
-									<CustomTextInput
-										theme={inputTheme}
-										id="fournisseur"
-										type="text"
-										size="small"
-										label={t.expenses.supplier}
-										value={formik.values.fournisseur}
-										onChange={formik.handleChange('fournisseur')}
-										onBlur={formik.handleBlur('fournisseur')}
-										error={formik.submitCount > 0 && Boolean(formik.errors.fournisseur)}
-										helperText={formik.submitCount > 0 ? (formik.errors.fournisseur ?? '') : ''}
-										fullWidth
 										startIcon={<PersonIcon fontSize="small" />}
 									/>
 								</Stack>
