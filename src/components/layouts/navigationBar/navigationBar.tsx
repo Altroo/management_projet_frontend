@@ -408,7 +408,7 @@ const NavigationBar = (props: Props) => {
 										<Desktop>
 											{' '}
 											<IconButton color="inherit" onClick={handleNotifOpen} aria-label={t.navigation.notifications}>
-												<Badge badgeContent={unreadCount > 0 ? unreadCount : undefined} color="error" max={99}>
+												<Badge badgeContent={unreadCount > 0 ? unreadCount : undefined} color="primary" max={99}>
 													<NotificationsIcon />
 												</Badge>
 											</IconButton>
@@ -431,7 +431,7 @@ const NavigationBar = (props: Props) => {
 										</Desktop>
 										<TabletAndMobile>
 											<IconButton color="inherit" onClick={handleNotifOpen} aria-label={t.navigation.notifications}>
-												<Badge badgeContent={unreadCount > 0 ? unreadCount : undefined} color="error" max={99}>
+												<Badge badgeContent={unreadCount > 0 ? unreadCount : undefined} color="primary" max={99}>
 													<NotificationsIcon />
 												</Badge>
 											</IconButton>
