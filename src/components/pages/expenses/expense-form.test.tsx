@@ -10,8 +10,7 @@ const mockStore = configureStore({
 		_init: () => ({}),
 		project: () => ({}),
 	},
-	middleware: (getDefaultMiddleware) =>
-		getDefaultMiddleware({ serializableCheck: false }),
+	middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }),
 });
 
 const mockPush = jest.fn();
@@ -49,8 +48,7 @@ const mockDeleteExpenseAttachment = jest.fn();
 
 jest.mock('@/store/services/project', () => ({
 	__esModule: true,
-	useGetExpenseQuery: (params: { id: number }, options: { skip: boolean }) =>
-		mockUseGetExpenseQuery(params, options),
+	useGetExpenseQuery: (params: { id: number }, options: { skip: boolean }) => mockUseGetExpenseQuery(params, options),
 	useCreateExpenseMutation: () => [mockCreateExpense, { isLoading: false, error: undefined }],
 	useUpdateExpenseMutation: () => [mockUpdateExpense, { isLoading: false, error: undefined }],
 	useGetProjectsListQuery: () => mockUseGetProjectsListQuery(),
@@ -241,7 +239,8 @@ describe('ExpenseFormClient', () => {
 					element: 'Paint',
 					description: 'Expense test',
 					montant: '3000',
-					fournisseur: 'Supplier A',
+					supplier: 1,
+					supplier_name: 'Supplier A',
 					notes: '',
 				},
 				isLoading: false,

@@ -79,7 +79,10 @@ export const projectApi = createApi({
 			providesTags: ['Category', 'SubCategory'],
 		}),
 
-		createExpenseCategory: builder.mutation<CategoryType | ApiErrorResponseType, { data: Omit<CategoryFormValues, 'globalError'> }>({
+		createExpenseCategory: builder.mutation<
+			CategoryType | ApiErrorResponseType,
+			{ data: Omit<CategoryFormValues, 'globalError'> }
+		>({
 			query: ({ data }) => ({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_EXPENSE_TAXONOMY}categories/`,
 				method: 'POST',
@@ -88,7 +91,10 @@ export const projectApi = createApi({
 			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
 		}),
 
-		updateExpenseCategory: builder.mutation<CategoryType | ApiErrorResponseType, { id: number; data: Omit<CategoryFormValues, 'globalError'> }>({
+		updateExpenseCategory: builder.mutation<
+			CategoryType | ApiErrorResponseType,
+			{ id: number; data: Omit<CategoryFormValues, 'globalError'> }
+		>({
 			query: ({ id, data }) => ({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_EXPENSE_TAXONOMY}categories/${id}/`,
 				method: 'PUT',
@@ -105,7 +111,10 @@ export const projectApi = createApi({
 			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
 		}),
 
-		createExpenseSubCategory: builder.mutation<SubCategoryType | ApiErrorResponseType, { data: Omit<SubCategoryFormValues, 'globalError'> }>({
+		createExpenseSubCategory: builder.mutation<
+			SubCategoryType | ApiErrorResponseType,
+			{ data: Omit<SubCategoryFormValues, 'globalError'> }
+		>({
 			query: ({ data }) => ({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_EXPENSE_TAXONOMY}subcategories/`,
 				method: 'POST',
@@ -114,7 +123,10 @@ export const projectApi = createApi({
 			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
 		}),
 
-		updateExpenseSubCategory: builder.mutation<SubCategoryType | ApiErrorResponseType, { id: number; data: Omit<SubCategoryFormValues, 'globalError'> }>({
+		updateExpenseSubCategory: builder.mutation<
+			SubCategoryType | ApiErrorResponseType,
+			{ id: number; data: Omit<SubCategoryFormValues, 'globalError'> }
+		>({
 			query: ({ id, data }) => ({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_EXPENSE_TAXONOMY}subcategories/${id}/`,
 				method: 'PUT',
@@ -131,7 +143,7 @@ export const projectApi = createApi({
 			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
 		}),
 
-			// ── Clients ─────────────────────────────────────────────────────────
+		// ── Clients ─────────────────────────────────────────────────────────
 		getClients: builder.query<ClientType[], { search?: string }>({
 			query: ({ search } = {}) => ({
 				url: process.env.NEXT_PUBLIC_PROJECT_CLIENTS,
@@ -158,7 +170,10 @@ export const projectApi = createApi({
 			invalidatesTags: ['Client', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
-		updateClient: builder.mutation<ClientType | ApiErrorResponseType, { id: number; data: Omit<ClientFormValues, 'globalError'> }>({
+		updateClient: builder.mutation<
+			ClientType | ApiErrorResponseType,
+			{ id: number; data: Omit<ClientFormValues, 'globalError'> }
+		>({
 			query: ({ id, data }) => ({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_CLIENTS}${id}/`,
 				method: 'PUT',
@@ -202,7 +217,10 @@ export const projectApi = createApi({
 			providesTags: ['Supplier'],
 		}),
 
-		createSupplier: builder.mutation<SupplierType | ApiErrorResponseType, { data: Omit<SupplierFormValues, 'globalError'> }>({
+		createSupplier: builder.mutation<
+			SupplierType | ApiErrorResponseType,
+			{ data: Omit<SupplierFormValues, 'globalError'> }
+		>({
 			query: ({ data }) => ({
 				url: process.env.NEXT_PUBLIC_PROJECT_SUPPLIERS,
 				method: 'POST',
@@ -211,7 +229,10 @@ export const projectApi = createApi({
 			invalidatesTags: ['Supplier', 'Expense', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
-		updateSupplier: builder.mutation<SupplierType | ApiErrorResponseType, { id: number; data: Omit<SupplierFormValues, 'globalError'> }>({
+		updateSupplier: builder.mutation<
+			SupplierType | ApiErrorResponseType,
+			{ id: number; data: Omit<SupplierFormValues, 'globalError'> }
+		>({
 			query: ({ id, data }) => ({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_SUPPLIERS}${id}/`,
 				method: 'PUT',
@@ -254,7 +275,10 @@ export const projectApi = createApi({
 			providesTags: ['Category'],
 		}),
 
-		createCategory: builder.mutation<CategoryType | ApiErrorResponseType, { data: Omit<CategoryFormValues, 'globalError'> }>({
+		createCategory: builder.mutation<
+			CategoryType | ApiErrorResponseType,
+			{ data: Omit<CategoryFormValues, 'globalError'> }
+		>({
 			query: ({ data }) => ({
 				url: process.env.NEXT_PUBLIC_PROJECT_CATEGORIES,
 				method: 'POST',
@@ -263,7 +287,10 @@ export const projectApi = createApi({
 			invalidatesTags: ['Category'],
 		}),
 
-		updateCategory: builder.mutation<CategoryType | ApiErrorResponseType, { id: number; data: Omit<CategoryFormValues, 'globalError'> }>({
+		updateCategory: builder.mutation<
+			CategoryType | ApiErrorResponseType,
+			{ id: number; data: Omit<CategoryFormValues, 'globalError'> }
+		>({
 			query: ({ id, data }) => ({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_CATEGORIES}${id}/`,
 				method: 'PUT',
@@ -307,7 +334,10 @@ export const projectApi = createApi({
 			providesTags: ['SubCategory'],
 		}),
 
-		createSubCategory: builder.mutation<SubCategoryType | ApiErrorResponseType, { data: Omit<SubCategoryFormValues, 'globalError'> }>({
+		createSubCategory: builder.mutation<
+			SubCategoryType | ApiErrorResponseType,
+			{ data: Omit<SubCategoryFormValues, 'globalError'> }
+		>({
 			query: ({ data }) => ({
 				url: process.env.NEXT_PUBLIC_PROJECT_SUBCATEGORIES,
 				method: 'POST',
@@ -316,7 +346,10 @@ export const projectApi = createApi({
 			invalidatesTags: ['SubCategory'],
 		}),
 
-		updateSubCategory: builder.mutation<SubCategoryType | ApiErrorResponseType, { id: number; data: Omit<SubCategoryFormValues, 'globalError'> }>({
+		updateSubCategory: builder.mutation<
+			SubCategoryType | ApiErrorResponseType,
+			{ id: number; data: Omit<SubCategoryFormValues, 'globalError'> }
+		>({
 			query: ({ id, data }) => ({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_SUBCATEGORIES}${id}/`,
 				method: 'PUT',
@@ -410,7 +443,14 @@ export const projectApi = createApi({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_LIST}${id}/`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: ['Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Revenue', 'Expense'],
+			invalidatesTags: [
+				'Project',
+				'ProjectDashboard',
+				'MultiProjectDashboard',
+				'ClientDashboard',
+				'Revenue',
+				'Expense',
+			],
 		}),
 
 		bulkDeleteProjects: builder.mutation<void, { ids: number[] }>({
@@ -419,7 +459,14 @@ export const projectApi = createApi({
 				method: 'DELETE',
 				data: { ids },
 			}),
-			invalidatesTags: ['Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Revenue', 'Expense'],
+			invalidatesTags: [
+				'Project',
+				'ProjectDashboard',
+				'MultiProjectDashboard',
+				'ClientDashboard',
+				'Revenue',
+				'Expense',
+			],
 		}),
 
 		getProjectAttachments: builder.query<AttachmentType[], { id: number }>({
@@ -505,7 +552,10 @@ export const projectApi = createApi({
 			invalidatesTags: ['PaymentSchedule', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
-		getRealBudgetEntries: builder.query<ProjectRealBudgetEntryType[], { project?: number; stage?: string; search?: string }>({
+		getRealBudgetEntries: builder.query<
+			ProjectRealBudgetEntryType[],
+			{ project?: number; stage?: string; search?: string }
+		>({
 			query: ({ project, stage, search } = {}) => ({
 				url: process.env.NEXT_PUBLIC_PROJECT_REAL_BUDGET_ENTRIES,
 				method: 'GET',
@@ -574,7 +624,13 @@ export const projectApi = createApi({
 		// ── Revenues ────────────────────────────────────────────────────────
 		getRevenues: builder.query<
 			RevenueType[],
-			{ project?: number; search?: string; date_after?: string; date_before?: string; [key: string]: string | number | undefined }
+			{
+				project?: number;
+				search?: string;
+				date_after?: string;
+				date_before?: string;
+				[key: string]: string | number | undefined;
+			}
 		>({
 			query: ({ project, search, ...rest }) => ({
 				url: process.env.NEXT_PUBLIC_REVENUE_LIST,
@@ -592,7 +648,10 @@ export const projectApi = createApi({
 			providesTags: ['Revenue'],
 		}),
 
-		createRevenue: builder.mutation<RevenueType | ApiErrorResponseType, { data: Omit<RevenueFormValues, 'globalError'> }>({
+		createRevenue: builder.mutation<
+			RevenueType | ApiErrorResponseType,
+			{ data: Omit<RevenueFormValues, 'globalError'> }
+		>({
 			query: ({ data }) => ({
 				url: process.env.NEXT_PUBLIC_REVENUE_LIST,
 				method: 'POST',
@@ -601,7 +660,10 @@ export const projectApi = createApi({
 			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
 		}),
 
-		updateRevenue: builder.mutation<RevenueType | ApiErrorResponseType, { id: number; data: Omit<RevenueFormValues, 'globalError'> }>({
+		updateRevenue: builder.mutation<
+			RevenueType | ApiErrorResponseType,
+			{ id: number; data: Omit<RevenueFormValues, 'globalError'> }
+		>({
 			query: ({ id, data }) => ({
 				url: `${process.env.NEXT_PUBLIC_REVENUE_LIST}${id}/`,
 				method: 'PUT',
@@ -660,16 +722,16 @@ export const projectApi = createApi({
 				category?: number;
 				sous_categorie?: number;
 				search?: string;
-				fournisseur?: string;
+				supplier?: number;
 				date_after?: string;
 				date_before?: string;
 				[key: string]: string | number | undefined;
 			}
 		>({
-			query: ({ project, category, sous_categorie, search, fournisseur, ...rest }) => ({
+			query: ({ project, category, sous_categorie, search, supplier, ...rest }) => ({
 				url: process.env.NEXT_PUBLIC_EXPENSE_LIST,
 				method: 'GET',
-				params: { project, category, sous_categorie, search, fournisseur, ...rest },
+				params: { project, category, sous_categorie, search, supplier, ...rest },
 			}),
 			providesTags: ['Expense'],
 		}),
@@ -792,7 +854,7 @@ export const {
 	useCreateExpenseSubCategoryMutation,
 	useUpdateExpenseSubCategoryMutation,
 	useDeleteExpenseSubCategoryMutation,
-		// Clients
+	// Clients
 	useGetClientsQuery,
 	useGetClientQuery,
 	useCreateClientMutation,

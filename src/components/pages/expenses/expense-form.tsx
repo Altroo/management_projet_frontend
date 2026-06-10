@@ -142,7 +142,6 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 			frais_de_service_valeur: rawData?.frais_de_service_valeur ?? '',
 			frais_de_service_type: rawData?.frais_de_service_type ?? 'fixed',
 			supplier: rawData?.supplier ?? '',
-			fournisseur: rawData?.fournisseur ?? '',
 			notes: rawData?.notes ?? '',
 			globalError: '',
 		},
@@ -546,7 +545,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										id="supplier"
 										size="small"
 										noOptionsText={t.suppliers.noSupplierFound}
-										label={t.common.supplier}
+										label={t.rawData.fieldLabels.expense.supplier}
 										items={supplierItems}
 										theme={inputTheme}
 										value={selectedSupplier}
@@ -554,7 +553,6 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										onChange={(_, newVal) => {
 											const selected = suppliersData?.find((supplier) => String(supplier.id) === newVal?.code);
 											formik.setFieldValue('supplier', selected ? selected.id : '');
-											formik.setFieldValue('fournisseur', selected ? selected.nom : '');
 										}}
 										onBlur={formik.handleBlur('supplier')}
 										error={formik.submitCount > 0 && Boolean(formik.errors.supplier)}

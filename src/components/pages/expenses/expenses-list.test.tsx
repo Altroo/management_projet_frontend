@@ -156,7 +156,7 @@ describe('ExpensesListClient', () => {
 		expect(screen.getByTestId('col-Catégorie')).toBeInTheDocument();
 		expect(screen.getByTestId('col-Montant')).toBeInTheDocument();
 		expect(screen.getByTestId('col-Date')).toBeInTheDocument();
-		expect(screen.getByTestId('col-Fournisseur')).toBeInTheDocument();
+		expect(screen.getByTestId('col-Fournisseur référencé')).toBeInTheDocument();
 		expect(screen.getByTestId('col-Créé par')).toBeInTheDocument();
 		expect(screen.getByTestId('col-Actions')).toBeInTheDocument();
 	});

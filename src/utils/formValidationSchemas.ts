@@ -9,7 +9,6 @@ import {
 } from '@/utils/formValidationErrorMessages';
 import { getT } from '@/utils/helpers';
 
-
 const base64ImageField = z.url().or(z.string().startsWith('data:image/')).nullable().optional();
 
 const passwordField = z.preprocess(
@@ -56,17 +55,14 @@ const requiredDateField = (getLabel: () => string) =>
 	);
 
 const optionalNumberField = () =>
-	z.preprocess(
-		(val) => {
-			if (val === undefined || val === null || val === '') return undefined;
-			if (typeof val === 'string') {
-				const parsed = Number(val);
-				return Number.isNaN(parsed) ? val : parsed;
-			}
-			return val;
-		},
-		z.number().optional(),
-	);
+	z.preprocess((val) => {
+		if (val === undefined || val === null || val === '') return undefined;
+		if (typeof val === 'string') {
+			const parsed = Number(val);
+			return Number.isNaN(parsed) ? val : parsed;
+		}
+		return val;
+	}, z.number().optional());
 
 const singleDigit = z
 	.string()
@@ -130,8 +126,14 @@ export const profilSchema = z.object({
 
 export const changePasswordSchema = z
 	.object({
-		old_password: z.string().min(1, { error: INPUT_REQUIRED }).min(8, { error: () => INPUT_PASSWORD_MIN(8) }),
-		new_password: z.string().min(1, { error: INPUT_REQUIRED }).min(8, { error: () => INPUT_PASSWORD_MIN(8) }),
+		old_password: z
+			.string()
+			.min(1, { error: INPUT_REQUIRED })
+			.min(8, { error: () => INPUT_PASSWORD_MIN(8) }),
+		new_password: z
+			.string()
+			.min(1, { error: INPUT_REQUIRED })
+			.min(8, { error: () => INPUT_PASSWORD_MIN(8) }),
 		new_password2: z.string().min(1, { error: INPUT_REQUIRED }),
 		globalError: z.string().optional(),
 	})
@@ -243,7 +245,6 @@ export const expenseSchema = z
 		),
 		frais_de_service_type: z.enum(['percentage', 'fixed']),
 		supplier: optionalNumberField(),
-		fournisseur: optionalTextField(1, 255),
 		notes: optionalTextField(1, 2000),
 		globalError: optionalTextField(1, 500),
 	})

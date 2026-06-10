@@ -342,8 +342,8 @@ const ExpenseViewClient: React.FC<Props> = ({ session, id }) => {
 											<Divider />
 											<InfoRow
 												icon={<PersonIcon />}
-												label={t.expenses.supplier}
-												value={expense.supplier_name || expense.fournisseur}
+												label={t.rawData.fieldLabels.expense.supplier}
+												value={expense.supplier_name}
 											/>
 										</Stack>
 									</CardContent>

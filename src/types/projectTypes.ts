@@ -155,7 +155,6 @@ export interface ExpenseType {
 	frais_de_service_montant: string;
 	supplier: number | null;
 	supplier_name: string | null;
-	fournisseur: string | null;
 	notes: string | null;
 	created_by_user: number | null;
 	created_by_user_name: string | null;
@@ -175,7 +174,6 @@ export interface ExpenseFormValues {
 	frais_de_service_valeur: string | null;
 	frais_de_service_type: ServiceFeeType;
 	supplier: number | '';
-	fournisseur: string;
 	notes: string;
 	globalError: string;
 }

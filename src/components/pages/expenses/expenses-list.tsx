@@ -36,6 +36,7 @@ import {
 	useGetCategoriesQuery,
 	useGetExpensesQuery,
 	useGetProjectsListQuery,
+	useGetSuppliersQuery,
 } from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
 
@@ -57,6 +58,7 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 	const { data: expenses, isLoading } = useGetExpensesQuery({}, { skip: !token });
 	const { data: projectsData } = useGetProjectsListQuery({}, { skip: !token });
 	const { data: categoriesData } = useGetCategoriesQuery(undefined, { skip: !token });
+	const { data: suppliersData } = useGetSuppliersQuery({}, { skip: !token });
 
 	const projects = useMemo(
 		() =>
@@ -73,6 +75,10 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 	const projectChipOptions = useMemo(() => projects.map((p) => ({ id: p.id, nom: p.nom })), [projects]);
 
 	const categoryChipOptions = useMemo(() => categories.map((c) => ({ id: c.id, nom: c.name })), [categories]);
+	const supplierChipOptions = useMemo(
+		() => (suppliersData ?? []).map((supplier) => ({ id: supplier.id, nom: supplier.nom })),
+		[suppliersData],
+	);
 
 	const chipFilters = useMemo<ChipFilterConfig[]>(
 		() => [
@@ -88,8 +94,14 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 				paramName: 'category',
 				options: categoryChipOptions,
 			},
+			{
+				key: 'supplier',
+				label: t.rawData.fieldLabels.expense.supplier,
+				paramName: 'supplier',
+				options: supplierChipOptions,
+			},
 		],
-		[t, projectChipOptions, categoryChipOptions],
+		[t, projectChipOptions, categoryChipOptions, supplierChipOptions],
 	);
 
 	const filteredExpenses = useMemo(() => {
@@ -102,6 +114,10 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 			const ids = chipFilterParams.category.split(',');
 			data = data.filter((e) => ids.includes(String(e.category)));
 		}
+		if (chipFilterParams.supplier) {
+			const ids = chipFilterParams.supplier.split(',');
+			data = data.filter((e) => e.supplier !== null && ids.includes(String(e.supplier)));
+		}
 		if (searchTerm.trim()) {
 			const term = searchTerm.toLowerCase();
 			data = data.filter(
@@ -110,7 +126,7 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 					e.project_name?.toLowerCase().includes(term) ||
 					e.category_name?.toLowerCase().includes(term) ||
 					e.element?.toLowerCase().includes(term) ||
-					e.fournisseur?.toLowerCase().includes(term),
+					e.supplier_name?.toLowerCase().includes(term),
 			);
 		}
 
@@ -315,8 +331,8 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 			),
 		},
 		{
-			field: 'fournisseur',
-			headerName: t.expenses.supplier,
+			field: 'supplier_name',
+			headerName: t.rawData.fieldLabels.expense.supplier,
 			flex: 1,
 			minWidth: 130,
 			renderCell: (params: GridRenderCellParams<ExpenseType>) => (
