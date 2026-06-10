@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Alert, Box, Button, Card, CardContent, Divider, InputAdornment, Stack, Typography } from '@mui/material';
 import {
@@ -40,6 +40,7 @@ import {
 } from '@/components/shared/entityAttachments/entityAttachments';
 import ProjectRealBudgetCard, {
 	buildRealBudgetEntryPayload,
+	type ProjectRealBudgetCardHandle,
 	type QueuedRealBudgetEntry,
 } from '@/components/shared/projectRealBudget/projectRealBudget';
 import { textInputTheme } from '@/utils/themes';
@@ -83,13 +84,26 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	const [submitAttempted, setSubmitAttempted] = useState(false);
 	const [queuedAttachments, setQueuedAttachments] = useState<QueuedAttachment[]>([]);
 	const [queuedRealBudgetEntries, setQueuedRealBudgetEntries] = useState<QueuedRealBudgetEntry[]>([]);
+	const [realBudgetDraftState, setRealBudgetDraftState] = useState({ hasInput: false, isComplete: false });
+	const realBudgetCardRef = useRef<ProjectRealBudgetCardHandle>(null);
+
+	const handleRealBudgetDraftStateChange = useCallback((nextState: { hasInput: boolean; isComplete: boolean }) => {
+		setRealBudgetDraftState((currentState) =>
+			currentState.hasInput === nextState.hasInput && currentState.isComplete === nextState.isComplete
+				? currentState
+				: nextState,
+		);
+	}, []);
 
 	const baseStatusItems: DropDownType[] = projectStatusItemsList(t).map((s) => ({ code: s.code, value: s.value }));
 	const statusItems: DropDownType[] =
 		rawData?.status && !baseStatusItems.some((s) => s.code === rawData.status)
 			? [...baseStatusItems, { code: rawData.status, value: rawData.status }]
 			: baseStatusItems;
-	const clientItems: DropDownType[] = (clientsData ?? []).map((client) => ({ code: String(client.id), value: client.nom }));
+	const clientItems: DropDownType[] = (clientsData ?? []).map((client) => ({
+		code: String(client.id),
+		value: client.nom,
+	}));
 
 	const formik = useFormik<ProjectFormValues>({
 		initialValues: {
@@ -120,6 +134,19 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 				client: fields.client === '' ? null : fields.client,
 			};
 			try {
+				const realBudgetDraftResult = await realBudgetCardRef.current?.submitDraft();
+				if (realBudgetDraftResult?.status === 'invalid') {
+					onError(t.users.fixValidationErrors);
+					return;
+				}
+				if (realBudgetDraftResult?.status === 'failed') {
+					return;
+				}
+				const realBudgetEntriesToCreate =
+					realBudgetDraftResult?.status === 'queued'
+						? [...queuedRealBudgetEntries, realBudgetDraftResult.entry]
+						: queuedRealBudgetEntries;
+
 				if (isEditMode) {
 					await updateProject({ id: id!, data: payload }).unwrap();
 					onSuccess(t.projects.projectUpdatedSuccess);
@@ -133,9 +160,9 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 						);
 						setQueuedAttachments([]);
 					}
-					if (queuedRealBudgetEntries.length > 0) {
+					if (realBudgetEntriesToCreate.length > 0) {
 						await Promise.all(
-							queuedRealBudgetEntries.map((entry) =>
+							realBudgetEntriesToCreate.map((entry) =>
 								createRealBudgetEntry({ data: buildRealBudgetEntryPayload(createdProject.id, entry) }).unwrap(),
 							),
 						);
@@ -157,7 +184,8 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	const selectedClient = clientItems.find((c) => c.code === String(formik.values.client)) ?? null;
 
 	const validationAttempted = formik.submitCount > 0 || submitAttempted;
-	const hasRealBudgetValidationError = !isEditMode && queuedRealBudgetEntries.length === 0;
+	const hasRealBudgetValidationError =
+		!isEditMode && queuedRealBudgetEntries.length === 0 && !realBudgetDraftState.isComplete;
 	const validationEntries = [
 		...(Object.entries(formik.errors).filter(([k]) => k !== 'globalError') as [string, string][]),
 		...(hasRealBudgetValidationError ? ([['real_budget', t.validation.required]] as [string, string][]) : []),
@@ -546,12 +574,14 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 						/>
 
 						<ProjectRealBudgetCard
+							ref={realBudgetCardRef}
 							projectId={id}
 							budgetInitial={formik.values.budget_total}
 							editable
 							validationAttempted={validationAttempted}
 							queuedEntries={queuedRealBudgetEntries}
 							setQueuedEntries={setQueuedRealBudgetEntries}
+							onDraftStateChange={handleRealBudgetDraftStateChange}
 						/>
 
 						<Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 2 }}>

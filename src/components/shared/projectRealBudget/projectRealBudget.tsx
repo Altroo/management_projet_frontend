@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import {
 	Box,
 	Button,
@@ -63,6 +63,18 @@ type ProjectRealBudgetCardProps = {
 	validationAttempted?: boolean;
 	queuedEntries?: QueuedRealBudgetEntry[];
 	setQueuedEntries?: React.Dispatch<React.SetStateAction<QueuedRealBudgetEntry[]>>;
+	onDraftStateChange?: (state: { hasInput: boolean; isComplete: boolean }) => void;
+};
+
+export type ProjectRealBudgetDraftSubmitResult =
+	| { status: 'empty' }
+	| { status: 'invalid' }
+	| { status: 'failed' }
+	| { status: 'queued'; entry: QueuedRealBudgetEntry }
+	| { status: 'saved' };
+
+export type ProjectRealBudgetCardHandle = {
+	submitDraft: () => Promise<ProjectRealBudgetDraftSubmitResult>;
 };
 
 type RealBudgetGridRow = {
@@ -103,7 +115,10 @@ const formatPercent = (value: string | number | null | undefined) => `${toNumber
 
 export const buildRealBudgetEntryPayload = (
 	projectId: number,
-	entry: Pick<QueuedRealBudgetEntry, 'date' | 'stage' | 'description' | 'montant_client' | 'montant_fournisseur' | 'notes'>,
+	entry: Pick<
+		QueuedRealBudgetEntry,
+		'date' | 'stage' | 'description' | 'montant_client' | 'montant_fournisseur' | 'notes'
+	>,
 ): Omit<RealBudgetEntryFormValues, 'globalError'> => ({
 	project: projectId,
 	date: entry.date,
@@ -114,7 +129,12 @@ export const buildRealBudgetEntryPayload = (
 	notes: entry.notes ?? '',
 });
 
-const SummaryBox: React.FC<{ icon: React.ReactNode; label: string; value: string; tone: string }> = ({ icon, label, value, tone }) => (
+const SummaryBox: React.FC<{ icon: React.ReactNode; label: string; value: string; tone: string }> = ({
+	icon,
+	label,
+	value,
+	tone,
+}) => (
 	<Box
 		sx={{
 			border: '1px solid',
@@ -140,179 +160,242 @@ const SummaryBox: React.FC<{ icon: React.ReactNode; label: string; value: string
 	</Box>
 );
 
-const ProjectRealBudgetCard: React.FC<ProjectRealBudgetCardProps> = ({
-	projectId,
-	budgetInitial = 0,
-	editable = false,
-	validationAttempted = false,
-	queuedEntries = [],
-	setQueuedEntries,
-}) => {
-	const { t } = useLanguage();
-	const { onSuccess, onError } = useToast();
-	const { data = [], isLoading, refetch } = useGetRealBudgetEntriesQuery(
-		{ project: projectId },
-		{ skip: !projectId, refetchOnMountOrArgChange: true },
-	);
-	const [createEntry] = useCreateRealBudgetEntryMutation();
-	const [deleteEntry] = useDeleteRealBudgetEntryMutation();
-	const [date, setDate] = useState(today());
-	const [stage, setStage] = useState('');
-	const [description, setDescription] = useState('');
-	const [montantClient, setMontantClient] = useState('');
-	const [montantFournisseur, setMontantFournisseur] = useState('');
-	const [isPending, setIsPending] = useState(false);
-	const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 5 });
+const ProjectRealBudgetCard = React.forwardRef<ProjectRealBudgetCardHandle, ProjectRealBudgetCardProps>(
+	(
+		{
+			projectId,
+			budgetInitial = 0,
+			editable = false,
+			validationAttempted = false,
+			queuedEntries = [],
+			setQueuedEntries,
+			onDraftStateChange,
+		},
+		ref,
+	) => {
+		const { t } = useLanguage();
+		const { onSuccess, onError } = useToast();
+		const {
+			data = [],
+			isLoading,
+			refetch,
+		} = useGetRealBudgetEntriesQuery({ project: projectId }, { skip: !projectId, refetchOnMountOrArgChange: true });
+		const [createEntry] = useCreateRealBudgetEntryMutation();
+		const [deleteEntry] = useDeleteRealBudgetEntryMutation();
+		const [date, setDate] = useState(today());
+		const [stage, setStage] = useState('');
+		const [description, setDescription] = useState('');
+		const [montantClient, setMontantClient] = useState('');
+		const [montantFournisseur, setMontantFournisseur] = useState('');
+		const [isPending, setIsPending] = useState(false);
+		const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 5 });
+		const [draftValidationAttempted, setDraftValidationAttempted] = useState(false);
 
-	const sortedRows = useMemo(
-		() => [...data].sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id),
-		[data],
-	);
+		const sortedRows = useMemo(() => [...data].sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id), [data]);
 
-	const sortedQueuedRows = useMemo(
-		() => [...queuedEntries].sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id)),
-		[queuedEntries],
-	);
+		const sortedQueuedRows = useMemo(
+			() => [...queuedEntries].sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id)),
+			[queuedEntries],
+		);
 
-	const canSubmit = Boolean(date && stage.trim() && montantClient && montantFournisseur);
-	const draftErrors = useMemo(
-		() => ({
-			date: validationAttempted && !date,
-			stage: validationAttempted && !stage.trim(),
-			montantClient: validationAttempted && !montantClient,
-			montantFournisseur: validationAttempted && !montantFournisseur,
-		}),
-		[date, montantClient, montantFournisseur, stage, validationAttempted],
-	);
+		const hasDraftInput = Boolean(stage.trim() || description.trim() || montantClient || montantFournisseur);
+		const canSubmit = Boolean(date && stage.trim() && montantClient && montantFournisseur);
+		const shouldShowDraftErrors = validationAttempted || draftValidationAttempted;
+		const draftErrors = useMemo(
+			() => ({
+				date: shouldShowDraftErrors && !date,
+				stage: shouldShowDraftErrors && !stage.trim(),
+				montantClient: shouldShowDraftErrors && !montantClient,
+				montantFournisseur: shouldShowDraftErrors && !montantFournisseur,
+			}),
+			[date, montantClient, montantFournisseur, shouldShowDraftErrors, stage],
+		);
 
-	const savedAndQueuedRows = useMemo<RealBudgetGridRow[]>(() => {
-		const queuedRows = sortedQueuedRows.map((row) => {
-			const benefice = toNumber(row.montant_client) - toNumber(row.montant_fournisseur);
-			const marge = toNumber(row.montant_client) ? (benefice / toNumber(row.montant_client)) * 100 : 0;
-			return {
-				id: `queued-${row.id}`,
+		const savedAndQueuedRows = useMemo<RealBudgetGridRow[]>(() => {
+			const queuedRows = sortedQueuedRows.map((row) => {
+				const benefice = toNumber(row.montant_client) - toNumber(row.montant_fournisseur);
+				const marge = toNumber(row.montant_client) ? (benefice / toNumber(row.montant_client)) * 100 : 0;
+				return {
+					id: `queued-${row.id}`,
+					date: row.date,
+					stage: row.stage,
+					description: row.description,
+					montant_client: row.montant_client,
+					montant_fournisseur: row.montant_fournisseur,
+					benefice: String(benefice),
+					marge,
+					isQueued: true,
+				};
+			});
+			const savedRows = sortedRows.map((row) => ({
+				id: row.id,
+				savedId: row.id,
 				date: row.date,
 				stage: row.stage,
-				description: row.description,
+				description: row.description ?? '',
 				montant_client: row.montant_client,
 				montant_fournisseur: row.montant_fournisseur,
-				benefice: String(benefice),
-				marge,
-				isQueued: true,
-			};
-		});
-		const savedRows = sortedRows.map((row) => ({
-			id: row.id,
-			savedId: row.id,
-			date: row.date,
-			stage: row.stage,
-			description: row.description ?? '',
-			montant_client: row.montant_client,
-			montant_fournisseur: row.montant_fournisseur,
-			benefice: row.benefice,
-			marge: row.marge,
-		}));
-		return [...queuedRows, ...savedRows];
-	}, [sortedQueuedRows, sortedRows]);
+				benefice: row.benefice,
+				marge: row.marge,
+			}));
+			return [...queuedRows, ...savedRows];
+		}, [sortedQueuedRows, sortedRows]);
 
-	const gridRows = useMemo<RealBudgetGridRow[]>(() => {
-		if (!editable) return savedAndQueuedRows;
+		const gridRows = useMemo<RealBudgetGridRow[]>(() => {
+			if (!editable) return savedAndQueuedRows;
 
-		const draftBenefice = toNumber(montantClient) - toNumber(montantFournisseur);
-		const draftMarge = toNumber(montantClient) ? (draftBenefice / toNumber(montantClient)) * 100 : 0;
-		return [
-			{
-				id: 'draft-real-budget-entry',
-				date,
-				stage,
-				description,
-				montant_client: montantClient,
-				montant_fournisseur: montantFournisseur,
-				benefice: String(draftBenefice),
-				marge: draftMarge,
-				isDraft: true,
-			},
-			...savedAndQueuedRows,
-		];
-	}, [date, description, editable, montantClient, montantFournisseur, savedAndQueuedRows, stage]);
+			const draftBenefice = toNumber(montantClient) - toNumber(montantFournisseur);
+			const draftMarge = toNumber(montantClient) ? (draftBenefice / toNumber(montantClient)) * 100 : 0;
+			return [
+				{
+					id: 'draft-real-budget-entry',
+					date,
+					stage,
+					description,
+					montant_client: montantClient,
+					montant_fournisseur: montantFournisseur,
+					benefice: String(draftBenefice),
+					marge: draftMarge,
+					isDraft: true,
+				},
+				...savedAndQueuedRows,
+			];
+		}, [date, description, editable, montantClient, montantFournisseur, savedAndQueuedRows, stage]);
 
-	const hasRows = gridRows.length > 0;
+		const hasRows = gridRows.length > 0;
 
-	const summary = useMemo(() => {
-		const totalRevenue = savedAndQueuedRows.reduce((sum, row) => sum + toNumber(row.montant_client), 0);
-		const totalCost = savedAndQueuedRows.reduce((sum, row) => sum + toNumber(row.montant_fournisseur), 0);
-		const profit = totalRevenue - totalCost;
-		const margin = totalRevenue ? (profit / totalRevenue) * 100 : 0;
-		const gap = toNumber(budgetInitial) - totalCost;
-		return { totalRevenue, totalCost, profit, margin, gap };
-	}, [budgetInitial, savedAndQueuedRows]);
+		const summary = useMemo(() => {
+			const totalRevenue = savedAndQueuedRows.reduce((sum, row) => sum + toNumber(row.montant_client), 0);
+			const totalCost = savedAndQueuedRows.reduce((sum, row) => sum + toNumber(row.montant_fournisseur), 0);
+			const profit = totalRevenue - totalCost;
+			const margin = totalRevenue ? (profit / totalRevenue) * 100 : 0;
+			const gap = toNumber(budgetInitial) - totalCost;
+			return { totalRevenue, totalCost, profit, margin, gap };
+		}, [budgetInitial, savedAndQueuedRows]);
 
-	const resetFields = () => {
-		setDate(today());
-		setStage('');
-		setDescription('');
-		setMontantClient('');
-		setMontantFournisseur('');
-	};
-
-	const handleAdd = async () => {
-		if (!canSubmit || !editable) return;
-
-		const entry = {
-			id: makeQueuedEntryId(),
-			date,
-			stage: stage.trim(),
-			description: description.trim(),
-			montant_client: montantClient,
-			montant_fournisseur: montantFournisseur,
-			notes: '',
+		const resetFields = () => {
+			setDate(today());
+			setStage('');
+			setDescription('');
+			setMontantClient('');
+			setMontantFournisseur('');
 		};
 
-		if (!projectId) {
-			setQueuedEntries?.((current) => [...current, entry]);
-			setPaginationModel((current) => ({ ...current, page: 0 }));
-			resetFields();
-			return;
-		}
+		const buildDraftEntry = useCallback(
+			(): QueuedRealBudgetEntry => ({
+				id: makeQueuedEntryId(),
+				date,
+				stage: stage.trim(),
+				description: description.trim(),
+				montant_client: montantClient,
+				montant_fournisseur: montantFournisseur,
+				notes: '',
+			}),
+			[date, description, montantClient, montantFournisseur, stage],
+		);
 
-		setIsPending(true);
-		try {
-			await createEntry({ data: buildRealBudgetEntryPayload(projectId, entry) }).unwrap();
-			await refetch();
-			setPaginationModel((current) => ({ ...current, page: 0 }));
-			resetFields();
-			onSuccess(t.realBudget.entryAddedSuccess);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.realBudget.entryAddError));
-		} finally {
-			setIsPending(false);
-		}
-	};
+		const handleAdd = useCallback(
+			async (options: { silent?: boolean } = {}): Promise<ProjectRealBudgetDraftSubmitResult> => {
+				setDraftValidationAttempted(true);
+				if (!editable || !hasDraftInput) return { status: 'empty' };
+				if (!canSubmit) return { status: 'invalid' };
 
-	const handleDelete = useCallback(async (id: number) => {
-		if (!editable) return;
-		setIsPending(true);
-		try {
-			await deleteEntry({ id }).unwrap();
-			await refetch();
-			onSuccess(t.realBudget.entryDeletedSuccess);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.realBudget.entryDeleteError));
-		} finally {
-			setIsPending(false);
-		}
-	}, [deleteEntry, editable, onError, onSuccess, refetch, t.realBudget.entryDeleteError, t.realBudget.entryDeletedSuccess]);
+				const entry = buildDraftEntry();
 
-	const handleRemoveQueued = useCallback((id: string) => {
-		setQueuedEntries?.((current) => current.filter((row) => row.id !== id));
-	}, [setQueuedEntries]);
+				if (!projectId) {
+					setQueuedEntries?.((current) => [...current, entry]);
+					setPaginationModel((current) => ({ ...current, page: 0 }));
+					resetFields();
+					setDraftValidationAttempted(false);
+					return { status: 'queued', entry };
+				}
 
-	const amountInput = useCallback((setter: React.Dispatch<React.SetStateAction<string>>) => (event: React.ChangeEvent<HTMLInputElement>) => {
-		if (/^(0|[1-9]\d*)?([.,]\d*)?$/.test(event.target.value)) setter(event.target.value);
-	}, []);
+				setIsPending(true);
+				try {
+					await createEntry({ data: buildRealBudgetEntryPayload(projectId, entry) }).unwrap();
+					await refetch();
+					setPaginationModel((current) => ({ ...current, page: 0 }));
+					resetFields();
+					setDraftValidationAttempted(false);
+					if (!options.silent) {
+						onSuccess(t.realBudget.entryAddedSuccess);
+					}
+					return { status: 'saved' };
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.realBudget.entryAddError));
+					return { status: 'failed' };
+				} finally {
+					setIsPending(false);
+				}
+			},
+			[
+				buildDraftEntry,
+				canSubmit,
+				createEntry,
+				editable,
+				hasDraftInput,
+				onError,
+				onSuccess,
+				projectId,
+				refetch,
+				setQueuedEntries,
+				t.realBudget.entryAddError,
+				t.realBudget.entryAddedSuccess,
+			],
+		);
 
-	const columns = useMemo<GridColDef<RealBudgetGridRow>[]>(
-		() => {
+		useImperativeHandle(
+			ref,
+			() => ({
+				submitDraft: () => handleAdd({ silent: true }),
+			}),
+			[handleAdd],
+		);
+
+		useEffect(() => {
+			onDraftStateChange?.({ hasInput: hasDraftInput, isComplete: canSubmit });
+		}, [canSubmit, hasDraftInput, onDraftStateChange]);
+
+		const handleDelete = useCallback(
+			async (id: number) => {
+				if (!editable) return;
+				setIsPending(true);
+				try {
+					await deleteEntry({ id }).unwrap();
+					await refetch();
+					onSuccess(t.realBudget.entryDeletedSuccess);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.realBudget.entryDeleteError));
+				} finally {
+					setIsPending(false);
+				}
+			},
+			[
+				deleteEntry,
+				editable,
+				onError,
+				onSuccess,
+				refetch,
+				t.realBudget.entryDeleteError,
+				t.realBudget.entryDeletedSuccess,
+			],
+		);
+
+		const handleRemoveQueued = useCallback(
+			(id: string) => {
+				setQueuedEntries?.((current) => current.filter((row) => row.id !== id));
+			},
+			[setQueuedEntries],
+		);
+
+		const amountInput = useCallback(
+			(setter: React.Dispatch<React.SetStateAction<string>>) => (event: React.ChangeEvent<HTMLInputElement>) => {
+				if (/^(0|[1-9]\d*)?([.,]\d*)?$/.test(event.target.value)) setter(event.target.value);
+			},
+			[],
+		);
+
+		const columns = useMemo<GridColDef<RealBudgetGridRow>[]>(() => {
 			const gridPlainInputSx = {
 				'& .MuiInputBase-root': {
 					fontFamily: 'Poppins',
@@ -405,7 +488,10 @@ const ProjectRealBudgetCard: React.FC<ProjectRealBudgetCardProps> = ({
 													input: {
 														disableUnderline: true,
 														startAdornment: (
-															<InputAdornment position="start" sx={{ color: draftErrors.date ? 'error.main' : 'text.secondary' }}>
+															<InputAdornment
+																position="start"
+																sx={{ color: draftErrors.date ? 'error.main' : 'text.secondary' }}
+															>
 																<CalendarMonthIcon fontSize="small" />
 															</InputAdornment>
 														),
@@ -598,8 +684,7 @@ const ProjectRealBudgetCard: React.FC<ProjectRealBudgetCardProps> = ({
 						]
 					: []),
 			];
-		},
-		[
+		}, [
 			amountInput,
 			date,
 			description,
@@ -613,100 +698,134 @@ const ProjectRealBudgetCard: React.FC<ProjectRealBudgetCardProps> = ({
 			montantFournisseur,
 			stage,
 			t,
-		],
-	);
+		]);
 
-	return (
-		<Card elevation={2} sx={{ borderRadius: 2 }}>
-			<CardContent sx={{ p: 3 }}>
-				<Stack
-					direction={{ xs: 'column', sm: 'row' }}
-					spacing={1.5}
-					sx={{ alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', mb: 2 }}
-				>
-					<Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-						<BudgetIcon color="primary" />
-						<Typography variant="h6" sx={{ fontWeight: 700 }}>
-							{t.realBudget.title}
-						</Typography>
-					</Stack>
-					{editable ? (
-						<Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-							{sortedQueuedRows.length > 0 ? (
-								<Chip size="small" color="warning" variant="outlined" label={`${sortedQueuedRows.length} ${t.realBudget.pendingSave}`} />
-							) : null}
-							<Button
-								variant="outlined"
-								size="small"
-								startIcon={<AddIcon />}
-								disabled={!canSubmit || isPending || isLoading}
-								onClick={handleAdd}
-							>
-								{t.common.add}
-							</Button>
+		return (
+			<Card elevation={2} sx={{ borderRadius: 2 }}>
+				<CardContent sx={{ p: 3 }}>
+					<Stack
+						direction={{ xs: 'column', sm: 'row' }}
+						spacing={1.5}
+						sx={{ alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', mb: 2 }}
+					>
+						<Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+							<BudgetIcon color="primary" />
+							<Typography variant="h6" sx={{ fontWeight: 700 }}>
+								{t.realBudget.title}
+							</Typography>
 						</Stack>
-					) : null}
-				</Stack>
-				<Divider sx={{ mb: 3 }} />
+						{editable ? (
+							<Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+								{sortedQueuedRows.length > 0 ? (
+									<Chip
+										size="small"
+										color="warning"
+										variant="outlined"
+										label={`${sortedQueuedRows.length} ${t.realBudget.pendingSave}`}
+									/>
+								) : null}
+								<Button
+									variant="outlined"
+									size="small"
+									startIcon={<AddIcon />}
+									disabled={!canSubmit || isPending || isLoading}
+									onClick={() => {
+										void handleAdd();
+									}}
+								>
+									{t.common.add}
+								</Button>
+							</Stack>
+						) : null}
+					</Stack>
+					<Divider sx={{ mb: 3 }} />
 
-				<Box
-					sx={{
-						display: 'grid',
-						gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(5, 1fr)' },
-						gap: 1.5,
-						mb: 2.5,
-					}}
-				>
-					<SummaryBox icon={<BudgetIcon fontSize="small" />} label={t.realBudget.initialBudget} value={formatMoney(budgetInitial)} tone="#ed6c02" />
-					<SummaryBox icon={<CostIcon fontSize="small" />} label={t.realBudget.realCost} value={formatMoney(summary.totalCost)} tone="#d32f2f" />
-					<SummaryBox icon={<RevenueIcon fontSize="small" />} label={t.realBudget.realRevenue} value={formatMoney(summary.totalRevenue)} tone="#2e7d32" />
-					<SummaryBox icon={<ProfitIcon fontSize="small" />} label={t.realBudget.globalMargin} value={`${formatMoney(summary.profit)} (${formatPercent(summary.margin)})`} tone={summary.profit >= 0 ? '#2e7d32' : '#d32f2f'} />
-					<SummaryBox icon={<BudgetIcon fontSize="small" />} label={t.realBudget.budgetGap} value={formatMoney(summary.gap)} tone={summary.gap >= 0 ? '#0288d1' : '#d32f2f'} />
-				</Box>
-
-				{isPending || isLoading ? <LinearProgress sx={{ mb: 2 }} /> : null}
-
-				<ThemeProvider theme={getDefaultTheme()}>
-					<Box sx={{ width: '100%', height: hasRows ? 430 : 320 }}>
-						<DataGrid
-							rows={gridRows}
-							columns={columns}
-							loading={isLoading}
-							pagination
-							paginationModel={paginationModel}
-							onPaginationModelChange={setPaginationModel}
-							pageSizeOptions={[5, 10, 25]}
-							localeText={frFR.components.MuiDataGrid.defaultProps.localeText}
-							disableRowSelectionOnClick
-							showToolbar
-							slotProps={{
-								toolbar: {
-									showQuickFilter: true,
-									quickFilterProps: { debounceMs: 500 },
-								},
-							}}
-							getRowHeight={() => 64}
-							slots={{
-								noRowsOverlay: () => (
-									<Stack sx={{ height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-										<Typography color="text.secondary">{t.realBudget.noEntries}</Typography>
-									</Stack>
-								),
-							}}
-							sx={{
-								border: 'none',
-								'& .MuiDataGrid-columnHeaderTitle': { fontWeight: 700 },
-								'& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center' },
-								'& .MuiDataGrid-cell:focus, & .MuiDataGrid-columnHeader:focus': { outline: 'none' },
-								'& .MuiDataGrid-toolbarContainer': { px: 0, pt: 0, pb: 1 },
-								'& .MuiDataGrid-row:hover': { cursor: editable ? 'default' : 'inherit' },
-							}}
+					<Box
+						sx={{
+							display: 'grid',
+							gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(5, 1fr)' },
+							gap: 1.5,
+							mb: 2.5,
+						}}
+					>
+						<SummaryBox
+							icon={<BudgetIcon fontSize="small" />}
+							label={t.realBudget.initialBudget}
+							value={formatMoney(budgetInitial)}
+							tone="#ed6c02"
+						/>
+						<SummaryBox
+							icon={<CostIcon fontSize="small" />}
+							label={t.realBudget.realCost}
+							value={formatMoney(summary.totalCost)}
+							tone="#d32f2f"
+						/>
+						<SummaryBox
+							icon={<RevenueIcon fontSize="small" />}
+							label={t.realBudget.realRevenue}
+							value={formatMoney(summary.totalRevenue)}
+							tone="#2e7d32"
+						/>
+						<SummaryBox
+							icon={<ProfitIcon fontSize="small" />}
+							label={t.realBudget.globalMargin}
+							value={`${formatMoney(summary.profit)} (${formatPercent(summary.margin)})`}
+							tone={summary.profit >= 0 ? '#2e7d32' : '#d32f2f'}
+						/>
+						<SummaryBox
+							icon={<BudgetIcon fontSize="small" />}
+							label={t.realBudget.budgetGap}
+							value={formatMoney(summary.gap)}
+							tone={summary.gap >= 0 ? '#0288d1' : '#d32f2f'}
 						/>
 					</Box>
-				</ThemeProvider>
-			</CardContent>
-		</Card>
-	);
-};
+
+					{isPending || isLoading ? <LinearProgress sx={{ mb: 2 }} /> : null}
+
+					<ThemeProvider theme={getDefaultTheme()}>
+						<Box sx={{ width: '100%', height: hasRows ? 430 : 320 }}>
+							<DataGrid
+								rows={gridRows}
+								columns={columns}
+								loading={isLoading}
+								pagination
+								paginationModel={paginationModel}
+								onPaginationModelChange={setPaginationModel}
+								pageSizeOptions={[5, 10, 25]}
+								localeText={frFR.components.MuiDataGrid.defaultProps.localeText}
+								disableRowSelectionOnClick
+								showToolbar
+								slotProps={{
+									toolbar: {
+										showQuickFilter: true,
+										quickFilterProps: { debounceMs: 500 },
+									},
+								}}
+								getRowHeight={() => 64}
+								slots={{
+									noRowsOverlay: () => (
+										<Stack sx={{ height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+											<Typography color="text.secondary">{t.realBudget.noEntries}</Typography>
+										</Stack>
+									),
+								}}
+								sx={{
+									border: 'none',
+									'& .MuiDataGrid-columnHeaderTitle': { fontWeight: 700 },
+									'& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center' },
+									'& .MuiDataGrid-cell:focus, & .MuiDataGrid-columnHeader:focus': { outline: 'none' },
+									'& .MuiDataGrid-toolbarContainer': { px: 0, pt: 0, pb: 1 },
+									'& .MuiDataGrid-row:hover': { cursor: editable ? 'default' : 'inherit' },
+								}}
+							/>
+						</Box>
+					</ThemeProvider>
+				</CardContent>
+			</Card>
+		);
+	},
+);
+
+ProjectRealBudgetCard.displayName = 'ProjectRealBudgetCard';
 
 export default ProjectRealBudgetCard;
