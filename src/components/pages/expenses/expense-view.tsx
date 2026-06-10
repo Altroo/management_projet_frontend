@@ -38,6 +38,7 @@ import ActionModals from '@/components/htmlElements/modals/actionModal/actionMod
 import { Protected } from '@/components/layouts/protected/protected';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
 import { useLanguage, useToast } from '@/utils/hooks';
+import { ExpenseAttachmentsViewSection } from '@/components/shared/entityAttachments/entityAttachments';
 
 interface InfoRowProps {
 	icon: React.ReactNode;
@@ -383,6 +384,8 @@ const ExpenseViewClient: React.FC<Props> = ({ session, id }) => {
 										</Stack>
 									</CardContent>
 								</Card>
+
+								<ExpenseAttachmentsViewSection id={id} />
 							</Stack>
 						)}
 					</Stack>

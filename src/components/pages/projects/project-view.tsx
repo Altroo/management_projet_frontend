@@ -46,6 +46,7 @@ import { useLanguage, useToast } from '@/utils/hooks';
 import { STATUS_CHIP_COLORS } from '@/utils/rawData';
 import ProjectPaymentScheduleCard from '@/components/shared/projectPaymentSchedule/projectPaymentSchedule';
 import ProjectRealBudgetCard from '@/components/shared/projectRealBudget/projectRealBudget';
+import { ProjectAttachmentsViewSection } from '@/components/shared/entityAttachments/entityAttachments';
 
 interface InfoRowProps {
 	icon: React.ReactNode;
@@ -418,6 +419,8 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 								<ProjectPaymentScheduleCard projectId={id} />
 
 								<ProjectRealBudgetCard projectId={id} budgetInitial={project.budget_total} />
+
+								<ProjectAttachmentsViewSection id={id} />
 
 								{/* Notes & Details */}
 								<Card elevation={2} sx={{ borderRadius: 2 }}>

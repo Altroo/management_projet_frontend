@@ -57,6 +57,11 @@ type EntityAttachmentsFormProps = {
 	onDelete?: (id: number) => Promise<unknown>;
 };
 
+type EntityAttachmentsViewProps = {
+	attachments: AttachmentType[];
+	isLoading: boolean;
+};
+
 type AttachmentRowProps = {
 	icon: React.ReactNode;
 	title: string;
@@ -462,10 +467,104 @@ const EntityAttachmentsForm: React.FC<EntityAttachmentsFormProps> = ({
 	);
 };
 
+const EntityAttachmentsView: React.FC<EntityAttachmentsViewProps> = ({ attachments, isLoading }) => {
+	const { t } = useLanguage();
+	const countLabel = `${attachments.length} ${attachments.length > 1 ? t.attachments.files : t.attachments.file}`;
+
+	return (
+		<Card elevation={2} sx={{ borderRadius: 2, overflow: 'hidden' }}>
+			<CardContent sx={{ p: 0 }}>
+				<Stack
+					direction={{ xs: 'column', sm: 'row' }}
+					spacing={1.5}
+					sx={{
+						alignItems: { xs: 'flex-start', sm: 'center' },
+						justifyContent: 'space-between',
+						p: 3,
+						pb: 2,
+					}}
+				>
+					<Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+						<Box
+							sx={(theme) => ({
+								width: 40,
+								height: 40,
+								borderRadius: 1.5,
+								display: 'grid',
+								placeItems: 'center',
+								color: 'primary.main',
+								bgcolor: alpha(theme.palette.primary.main, 0.1),
+							})}
+						>
+							<AttachFileIcon />
+						</Box>
+						<Box>
+							<Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+								{t.attachments.title}
+							</Typography>
+							<Typography variant="body2" color="text.secondary">
+								{countLabel}
+							</Typography>
+						</Box>
+					</Stack>
+				</Stack>
+				<Divider />
+
+				<Stack spacing={2} sx={{ p: 3 }}>
+					{isLoading ? <LinearProgress /> : null}
+
+					{!isLoading && attachments.length === 0 ? (
+						<Box sx={{ py: 0.5 }}>
+							<Typography color="text.secondary">{t.attachments.noAttachments}</Typography>
+						</Box>
+					) : (
+						<Stack spacing={1}>
+							{attachments.map((attachment) => (
+								<AttachmentRow
+									key={attachment.id}
+									icon={getFileIcon(attachment.filename)}
+									title={attachment.label || attachment.filename}
+									subtitle={[
+										attachment.label ? attachment.filename : null,
+										formatFileSize(attachment.file_size),
+										formatDate(attachment.date_created),
+									]
+										.filter(Boolean)
+										.join(' · ')}
+									actions={
+										attachment.file_url ? (
+											<Tooltip title={t.common.download}>
+												<IconButton
+													aria-label={t.common.download}
+													size="small"
+													component="a"
+													href={attachment.file_url}
+													target="_blank"
+													rel="noreferrer"
+												>
+													<DownloadIcon fontSize="small" />
+												</IconButton>
+											</Tooltip>
+										) : null
+									}
+								/>
+							))}
+						</Stack>
+					)}
+				</Stack>
+			</CardContent>
+		</Card>
+	);
+};
+
 type FormSectionProps = {
 	id?: number;
 	queuedAttachments: QueuedAttachment[];
 	setQueuedAttachments: React.Dispatch<React.SetStateAction<QueuedAttachment[]>>;
+};
+
+type ViewSectionProps = {
+	id: number;
 };
 
 export const ProjectAttachmentsFormSection: React.FC<FormSectionProps> = ({ id, queuedAttachments, setQueuedAttachments }) => {
@@ -526,4 +625,22 @@ export const RevenueAttachmentsFormSection: React.FC<FormSectionProps> = ({ id, 
 			onDelete={id ? (attachmentId) => deleteAttachment({ id: attachmentId }).unwrap() : undefined}
 		/>
 	);
+};
+
+export const ProjectAttachmentsViewSection: React.FC<ViewSectionProps> = ({ id }) => {
+	const { data = [], isLoading } = useGetProjectAttachmentsQuery({ id }, { skip: !id });
+
+	return <EntityAttachmentsView attachments={data} isLoading={isLoading} />;
+};
+
+export const ExpenseAttachmentsViewSection: React.FC<ViewSectionProps> = ({ id }) => {
+	const { data = [], isLoading } = useGetExpenseAttachmentsQuery({ id }, { skip: !id });
+
+	return <EntityAttachmentsView attachments={data} isLoading={isLoading} />;
+};
+
+export const RevenueAttachmentsViewSection: React.FC<ViewSectionProps> = ({ id }) => {
+	const { data = [], isLoading } = useGetRevenueAttachmentsQuery({ id }, { skip: !id });
+
+	return <EntityAttachmentsView attachments={data} isLoading={isLoading} />;
 };
