@@ -150,7 +150,10 @@ const ProjectRealBudgetCard: React.FC<ProjectRealBudgetCardProps> = ({
 }) => {
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
-	const { data = [], isLoading } = useGetRealBudgetEntriesQuery({ project: projectId }, { skip: !projectId });
+	const { data = [], isLoading, refetch } = useGetRealBudgetEntriesQuery(
+		{ project: projectId },
+		{ skip: !projectId, refetchOnMountOrArgChange: true },
+	);
 	const [createEntry] = useCreateRealBudgetEntryMutation();
 	const [deleteEntry] = useDeleteRealBudgetEntryMutation();
 	const [date, setDate] = useState(today());
@@ -267,6 +270,7 @@ const ProjectRealBudgetCard: React.FC<ProjectRealBudgetCardProps> = ({
 
 		if (!projectId) {
 			setQueuedEntries?.((current) => [...current, entry]);
+			setPaginationModel((current) => ({ ...current, page: 0 }));
 			resetFields();
 			return;
 		}
@@ -274,6 +278,8 @@ const ProjectRealBudgetCard: React.FC<ProjectRealBudgetCardProps> = ({
 		setIsPending(true);
 		try {
 			await createEntry({ data: buildRealBudgetEntryPayload(projectId, entry) }).unwrap();
+			await refetch();
+			setPaginationModel((current) => ({ ...current, page: 0 }));
 			resetFields();
 			onSuccess(t.realBudget.entryAddedSuccess);
 		} catch (err) {
@@ -288,13 +294,14 @@ const ProjectRealBudgetCard: React.FC<ProjectRealBudgetCardProps> = ({
 		setIsPending(true);
 		try {
 			await deleteEntry({ id }).unwrap();
+			await refetch();
 			onSuccess(t.realBudget.entryDeletedSuccess);
 		} catch (err) {
 			onError(extractApiErrorMessage(err, t.realBudget.entryDeleteError));
 		} finally {
 			setIsPending(false);
 		}
-	}, [deleteEntry, editable, onError, onSuccess, t.realBudget.entryDeleteError, t.realBudget.entryDeletedSuccess]);
+	}, [deleteEntry, editable, onError, onSuccess, refetch, t.realBudget.entryDeleteError, t.realBudget.entryDeletedSuccess]);
 
 	const handleRemoveQueued = useCallback((id: string) => {
 		setQueuedEntries?.((current) => current.filter((row) => row.id !== id));
