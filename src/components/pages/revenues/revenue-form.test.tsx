@@ -41,6 +41,7 @@ jest.mock('@/contexts/InitContext', () => ({
 const mockUseGetRevenueQuery = jest.fn();
 const mockCreateRevenue = jest.fn();
 const mockUpdateRevenue = jest.fn();
+const mockUploadRevenueAttachment = jest.fn();
 
 jest.mock('@/store/services/project', () => ({
 	__esModule: true,
@@ -48,6 +49,7 @@ jest.mock('@/store/services/project', () => ({
 		mockUseGetRevenueQuery(params, options),
 	useCreateRevenueMutation: () => [mockCreateRevenue, { isLoading: false, error: undefined }],
 	useUpdateRevenueMutation: () => [mockUpdateRevenue, { isLoading: false, error: undefined }],
+	useUploadRevenueAttachmentMutation: () => [mockUploadRevenueAttachment, { isLoading: false, error: undefined }],
 	useGetProjectsListQuery: () => ({ data: [], isLoading: false }),
 }));
 
@@ -91,6 +93,12 @@ jest.mock('@/components/htmlElements/buttons/primaryLoadingButton/primaryLoading
 jest.mock('@/components/formikElements/apiLoading/apiProgress/apiProgress', () => ({
 	__esModule: true,
 	default: () => <div data-testid="api-loader">Loading...</div>,
+}));
+
+jest.mock('@/components/shared/entityAttachments/entityAttachments', () => ({
+	__esModule: true,
+	buildAttachmentFormData: jest.fn(() => new FormData()),
+	RevenueAttachmentsFormSection: () => <div data-testid="revenue-attachments" />,
 }));
 
 jest.mock('@/utils/themes', () => ({
