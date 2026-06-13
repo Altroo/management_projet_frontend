@@ -42,6 +42,12 @@ bun run lint
 bun run build
 ```
 
-## Screenshot
+## Screenshots
+
+Sanitized product workspace:
+
+![Management Projet product workspace](docs/screenshots/management-projet-showcase.png)
+
+Authentication screen:
 
 ![Management Projet login](docs/screenshots/management-projet-login.png)
