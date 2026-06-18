@@ -59,7 +59,7 @@ const CustomTextInput = forwardRef<HTMLInputElement, Props>((props: Props, ref: 
 				disabled={props.disabled}
 				required={props.required}
 				autoComplete={props.autoComplete}
-				multiline={multiline}
+				multiline={props.type === 'textarea' || multiline}
 				rows={rows}
 				slotProps={{
 					...props.slotProps,
