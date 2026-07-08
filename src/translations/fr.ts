@@ -707,7 +707,7 @@ export const fr: TranslationDictionary = {
 		overBudget: 'Budget dépassé',
 		clientDashboard: 'Tableau de bord client',
 		revenueReelle: 'Revenu réel',
-		serviceFees: 'Frais de service',
+		serviceFees: 'Bénifice Réel',
 		revenueReelleByClient: 'Revenu réel par client',
 		revenueReelleByClientSub: 'Revenu enregistré plus frais de service calculés',
 		initialBudget: 'Budget initial',

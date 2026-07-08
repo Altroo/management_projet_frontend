@@ -152,7 +152,7 @@ describe('ProjectDashboardClient', () => {
 		expect(screen.getByText('5')).toBeInTheDocument();
 	});
 
-	it('shows service fee totals on the internal dashboard', () => {
+	it('shows real profit label on the internal dashboard service-fee card', () => {
 		const { useGetMultiProjectDashboardQuery } = jest.requireMock('@/store/services/project');
 		(useGetMultiProjectDashboardQuery as jest.Mock).mockReturnValue({
 			data: {
@@ -176,7 +176,7 @@ describe('ProjectDashboardClient', () => {
 			</Provider>,
 		);
 
-		expect(screen.getByText('Frais de service')).toBeInTheDocument();
+		expect(screen.getByText('Bénifice Réel')).toBeInTheDocument();
 		expect(screen.getAllByText('Revenu réel').length).toBeGreaterThanOrEqual(1);
 	});
 
@@ -202,7 +202,7 @@ describe('ProjectDashboardClient', () => {
 			</Provider>,
 		);
 
-		expect(screen.queryByText('Frais de service')).not.toBeInTheDocument();
+		expect(screen.queryByText('Bénifice Réel')).not.toBeInTheDocument();
 		expect(screen.queryByText('Revenu réel')).not.toBeInTheDocument();
 	});
 
