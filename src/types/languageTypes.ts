@@ -377,6 +377,7 @@ export type TranslationDictionary = {
 		email: string;
 		website: string;
 		commercialRegister: string;
+		bankAccount: string;
 		fiscalId: string;
 		saveSuccess: string;
 		saveError: string;

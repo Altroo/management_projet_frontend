@@ -1,27 +1,34 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import {
-	Alert,
-	Box,
-	Button,
-	Card,
-	CardContent,
-	CircularProgress,
-	Divider,
-	Stack,
-	TextField,
-	Typography,
-} from '@mui/material';
-import { Business as BusinessIcon, Delete as DeleteIcon, Upload as UploadIcon } from '@mui/icons-material';
+	AccountBalance as AccountBalanceIcon,
+	Badge as BadgeIcon,
+	Business as BusinessIcon,
+	ContactMail as ContactMailIcon,
+	Email as EmailIcon,
+	Language as LanguageIcon,
+	LocationOn as LocationOnIcon,
+	Numbers as NumbersIcon,
+	Phone as PhoneIcon,
+	Save as SaveIcon,
+} from '@mui/icons-material';
+import { Alert, Box, Card, CardContent, CircularProgress, Divider, Stack, Typography } from '@mui/material';
 import type { SessionProps } from '@/types/_initTypes';
 import type { CompanyProfileType } from '@/types/reportTypes';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import { Protected } from '@/components/layouts/protected/protected';
+import CustomSquareImageUploading from '@/components/formikElements/customSquareImageUploading/customSquareImageUploading';
+import CustomTextInput from '@/components/formikElements/customTextInput/customTextInput';
+import PrimaryLoadingButton from '@/components/htmlElements/buttons/primaryLoadingButton/primaryLoadingButton';
 import { useInitAccessToken } from '@/contexts/InitContext';
 import { useGetCompanyProfileQuery, useUpdateCompanyProfileMutation } from '@/store/services/project';
 import { extractApiErrorMessage } from '@/utils/helpers';
 import { useLanguage, useToast } from '@/utils/hooks';
+import { textInputTheme } from '@/utils/themes';
+import Styles from '@/styles/dashboard/dashboard.module.sass';
+
+const inputTheme = textInputTheme();
 
 const profileFields = (profile: CompanyProfileType) => ({
 	raison_sociale: profile.raison_sociale ?? '',
@@ -31,43 +38,44 @@ const profileFields = (profile: CompanyProfileType) => ({
 	site_web: profile.site_web ?? '',
 	ICE: profile.ICE ?? '',
 	registre_de_commerce: profile.registre_de_commerce ?? '',
+	numero_du_compte: profile.numero_du_compte ?? '',
 	identifiant_fiscal: profile.identifiant_fiscal ?? '',
 	CNSS: profile.CNSS ?? '',
 });
 
 type CompanyFields = ReturnType<typeof profileFields>;
+type CompanyFieldName = keyof CompanyFields;
+
+const isNewImage = (value: string | ArrayBuffer | null): value is string =>
+	typeof value === 'string' && value.startsWith('data:image/');
+
+const imageFileFromDataUrl = async (dataUrl: string, filename: string): Promise<File> => {
+	const blob = await (await fetch(dataUrl)).blob();
+	return new File([blob], filename, { type: blob.type || 'image/png' });
+};
 
 const CompanyProfileForm: React.FC<{ profile: CompanyProfileType }> = ({ profile }) => {
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
 	const [updateCompanyProfile, { isLoading: isSaving }] = useUpdateCompanyProfileMutation();
 	const [fields, setFields] = useState<CompanyFields>(() => profileFields(profile));
-	const [logoFile, setLogoFile] = useState<File | null>(null);
-	const [removeLogo, setRemoveLogo] = useState(false);
-	const localLogoUrl = useMemo(
-		() => (logoFile && typeof window !== 'undefined' ? window.URL.createObjectURL(logoFile) : null),
-		[logoFile],
-	);
+	const [logo, setLogo] = useState<string | ArrayBuffer | null>(profile.logo_url);
+	const [croppedLogo, setCroppedLogo] = useState<string | ArrayBuffer | null>(profile.logo_cropped_url);
 
-	useEffect(
-		() => () => {
-			if (localLogoUrl && typeof window !== 'undefined') window.URL.revokeObjectURL(localLogoUrl);
-		},
-		[localLogoUrl],
-	);
-
-	const visibleLogo = removeLogo ? null : (localLogoUrl ?? profile.logo_url ?? null);
-	const setField = (name: keyof CompanyFields) => (event: React.ChangeEvent<HTMLInputElement>) => {
+	const setField = (name: CompanyFieldName) => (event: React.ChangeEvent<HTMLInputElement>) => {
 		setFields((current) => ({ ...current, [name]: event.target.value }));
 	};
 
-	const handleSubmit = async (event: React.FormEvent) => {
+	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		const formData = new FormData();
 		Object.entries(fields).forEach(([key, value]) => formData.append(key, value));
-		if (logoFile) formData.append('logo', logoFile);
-		if (removeLogo) formData.append('remove_logo', 'true');
 		try {
+			if (isNewImage(logo)) formData.append('logo', await imageFileFromDataUrl(logo, 'company-logo.png'));
+			if (isNewImage(croppedLogo)) {
+				formData.append('logo_cropped', await imageFileFromDataUrl(croppedLogo, 'company-logo-cropped.png'));
+			}
+			if (!logo && (profile.logo_url || profile.logo_cropped_url)) formData.append('remove_logo', 'true');
 			await updateCompanyProfile(formData).unwrap();
 			onSuccess(t.companyProfile.saveSuccess);
 		} catch (updateError) {
@@ -75,51 +83,101 @@ const CompanyProfileForm: React.FC<{ profile: CompanyProfileType }> = ({ profile
 		}
 	};
 
+	const field = (
+		name: CompanyFieldName,
+		label: string,
+		icon: React.ReactNode,
+		options: { type?: React.HTMLInputTypeAttribute; required?: boolean; multiline?: boolean } = {},
+	) => (
+		<CustomTextInput
+			theme={inputTheme}
+			id={name}
+			type={options.multiline ? 'textarea' : (options.type ?? 'text')}
+			size="small"
+			label={label}
+			value={fields[name]}
+			onChange={setField(name)}
+			fullWidth
+			required={options.required}
+			multiline={options.multiline}
+			rows={options.multiline ? 3 : undefined}
+			startIcon={icon}
+		/>
+	);
+
+	const sectionTitle = (icon: React.ReactNode, title: string) => (
+		<>
+			<Stack direction="row" spacing={2} sx={{ alignItems: 'center', mb: 2 }}>
+				{icon}
+				<Typography variant="h6" sx={{ fontWeight: 700 }}>{title}</Typography>
+			</Stack>
+			<Divider sx={{ mb: 3 }} />
+		</>
+	);
+
+	const cropReady = !isNewImage(logo) || isNewImage(croppedLogo);
+
 	return (
-		<Card elevation={2} component="form" onSubmit={handleSubmit}>
-			<CardContent>
-				<Stack spacing={3}>
-					<Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-						<BusinessIcon color="primary" />
-						<Typography variant="h6">{t.companyProfile.identity}</Typography>
-					</Stack>
-					<TextField required fullWidth label={t.companyProfile.name} value={fields.raison_sociale} onChange={setField('raison_sociale')} />
-					<Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' } }}>
-						<Box sx={{ width: 150, height: 90, border: '1px dashed', borderColor: 'divider', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', bgcolor: 'grey.50' }}>
-							{visibleLogo ? <Box component="img" src={visibleLogo} alt={t.companyProfile.logo} sx={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <Typography color="primary" sx={{ fontWeight: 700 }}>EBH</Typography>}
-						</Box>
-						<Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-							<Button component="label" variant="outlined" startIcon={<UploadIcon />}>
-								{t.companyProfile.chooseLogo}
-								<input hidden type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0] ?? null; setLogoFile(file); if (file) setRemoveLogo(false); }} />
-							</Button>
-							{visibleLogo && <Button variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={() => { setLogoFile(null); setRemoveLogo(true); }}>{t.companyProfile.removeLogo}</Button>}
+		<form onSubmit={handleSubmit}>
+			<Stack spacing={3}>
+				<Card elevation={2} sx={{ borderRadius: 2 }}>
+					<CardContent sx={{ p: 3 }}>
+						{sectionTitle(<BusinessIcon color="primary" />, t.companyProfile.identity)}
+						<Stack spacing={3}>
+							{field('raison_sociale', `${t.companyProfile.name} *`, <BusinessIcon fontSize="small" />, { required: true })}
+							<CustomSquareImageUploading
+								image={logo}
+								croppedImage={croppedLogo}
+								onChange={setLogo}
+								onCrop={setCroppedLogo}
+							/>
 						</Stack>
-					</Stack>
-					<Divider />
-					<Typography variant="h6">{t.companyProfile.contact}</Typography>
-					<Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-						<TextField fullWidth label={t.companyProfile.phone} value={fields.telephone} onChange={setField('telephone')} />
-						<TextField fullWidth type="email" label={t.companyProfile.email} value={fields.email} onChange={setField('email')} />
-					</Stack>
-					<TextField fullWidth multiline minRows={2} label={t.companyProfile.address} value={fields.adresse} onChange={setField('adresse')} />
-					<TextField fullWidth type="url" label={t.companyProfile.website} value={fields.site_web} onChange={setField('site_web')} />
-					<Divider />
-					<Typography variant="h6">{t.companyProfile.legal}</Typography>
-					<Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-						<TextField fullWidth label="ICE" value={fields.ICE} onChange={setField('ICE')} />
-						<TextField fullWidth label={t.companyProfile.commercialRegister} value={fields.registre_de_commerce} onChange={setField('registre_de_commerce')} />
-					</Stack>
-					<Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-						<TextField fullWidth label={t.companyProfile.fiscalId} value={fields.identifiant_fiscal} onChange={setField('identifiant_fiscal')} />
-						<TextField fullWidth label="CNSS" value={fields.CNSS} onChange={setField('CNSS')} />
-					</Stack>
-					<Button type="submit" variant="contained" disabled={isSaving || !fields.raison_sociale.trim()} sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}>
-						{isSaving ? <CircularProgress size={22} color="inherit" /> : t.common.save}
-					</Button>
-				</Stack>
-			</CardContent>
-		</Card>
+					</CardContent>
+				</Card>
+
+				<Card elevation={2} sx={{ borderRadius: 2 }}>
+					<CardContent sx={{ p: 3 }}>
+						{sectionTitle(<ContactMailIcon color="primary" />, t.companyProfile.contact)}
+						<Stack spacing={2.5}>
+							<Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+								{field('telephone', t.companyProfile.phone, <PhoneIcon fontSize="small" />)}
+								{field('email', t.companyProfile.email, <EmailIcon fontSize="small" />, { type: 'email' })}
+							</Stack>
+							{field('adresse', t.companyProfile.address, <LocationOnIcon fontSize="small" />, { multiline: true })}
+							{field('site_web', t.companyProfile.website, <LanguageIcon fontSize="small" />, { type: 'url' })}
+						</Stack>
+					</CardContent>
+				</Card>
+
+				<Card elevation={2} sx={{ borderRadius: 2 }}>
+					<CardContent sx={{ p: 3 }}>
+						{sectionTitle(<AccountBalanceIcon color="primary" />, t.companyProfile.legal)}
+						<Stack spacing={2.5}>
+							<Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+								{field('ICE', 'ICE', <BadgeIcon fontSize="small" />)}
+								{field('registre_de_commerce', t.companyProfile.commercialRegister, <NumbersIcon fontSize="small" />)}
+							</Stack>
+							{field('numero_du_compte', t.companyProfile.bankAccount, <AccountBalanceIcon fontSize="small" />)}
+							<Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+								{field('identifiant_fiscal', t.companyProfile.fiscalId, <BadgeIcon fontSize="small" />)}
+								{field('CNSS', 'CNSS', <NumbersIcon fontSize="small" />)}
+							</Stack>
+						</Stack>
+					</CardContent>
+				</Card>
+
+				<Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 2 }}>
+					<PrimaryLoadingButton
+						buttonText={t.common.save}
+						loading={isSaving}
+						active={!isSaving && Boolean(fields.raison_sociale.trim()) && cropReady}
+						type="submit"
+						startIcon={<SaveIcon />}
+						cssClass={Styles.submitButton}
+					/>
+				</Box>
+			</Stack>
+		</form>
 	);
 };
 
@@ -129,17 +187,21 @@ const CompanyProfileClient: React.FC<SessionProps> = ({ session }) => {
 	const { data, isLoading, error } = useGetCompanyProfileQuery(undefined, { skip: !token });
 
 	return (
-		<NavigationBar title={t.companyProfile.title}>
-			<Protected permission="is_staff">
-				<Stack spacing={3} sx={{ p: { xs: 2, md: 3 }, mt: 2, maxWidth: 1000 }}>
-					<Stack spacing={0.5}>
-						<Typography variant="h5" sx={{ fontWeight: 700 }}>{t.companyProfile.title}</Typography>
-						<Typography color="text.secondary">{t.companyProfile.description}</Typography>
+		<Stack direction="column" spacing={2} className={Styles.flexRootStack} sx={{ mt: '48px' }}>
+			<NavigationBar title={t.companyProfile.title}>
+				<Protected permission="is_staff">
+					<Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
+						{isLoading ? (
+							<CircularProgress />
+						) : error || !data ? (
+							<Alert severity="error">{t.companyProfile.saveError}</Alert>
+						) : (
+							<CompanyProfileForm key={data.date_updated} profile={data} />
+						)}
 					</Stack>
-					{isLoading ? <CircularProgress /> : error || !data ? <Alert severity="error">{t.companyProfile.saveError}</Alert> : <CompanyProfileForm key={data.date_updated} profile={data} />}
-				</Stack>
-			</Protected>
-		</NavigationBar>
+				</Protected>
+			</NavigationBar>
+		</Stack>
 	);
 };
 

@@ -443,6 +443,7 @@ export const fr: TranslationDictionary = {
 		email: 'Email',
 		website: 'Site web',
 		commercialRegister: 'Registre de commerce',
+		bankAccount: 'RIB Compte',
 		fiscalId: 'Identifiant fiscal',
 		saveSuccess: 'Le profil société a été mis à jour.',
 		saveError: 'Erreur lors de la mise à jour du profil société',

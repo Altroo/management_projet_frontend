@@ -443,6 +443,7 @@ export const en: TranslationDictionary = {
 		email: 'Email',
 		website: 'Website',
 		commercialRegister: 'Commercial register',
+		bankAccount: 'Bank account (RIB)',
 		fiscalId: 'Fiscal identifier',
 		saveSuccess: 'The company profile was updated.',
 		saveError: 'Error updating the company profile',

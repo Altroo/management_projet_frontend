@@ -9,15 +9,22 @@ const mockCompanyData = {
 	id: 1,
 	raison_sociale: 'E.B.H Gestion Projet',
 	logo_url: null,
+	logo_cropped_url: null,
 	adresse: 'Casablanca',
 	telephone: null,
 	email: null,
 	site_web: null,
 	ICE: null,
 	registre_de_commerce: null,
+	numero_du_compte: null,
 	identifiant_fiscal: null,
 	CNSS: null,
 };
+
+jest.mock('@/components/formikElements/customSquareImageUploading/customSquareImageUploading', () => ({
+	__esModule: true,
+	default: () => <div data-testid="company-logo-cropper" />,
+}));
 
 jest.mock('@/components/layouts/navigationBar/navigationBar', () => ({
 	__esModule: true,
@@ -44,7 +51,7 @@ jest.mock('@/utils/hooks', () => ({
 				title: 'Profil société', description: 'Description', identity: 'Identité visuelle', contact: 'Coordonnées',
 				legal: 'Informations légales', name: 'Raison sociale', logo: 'Logo', chooseLogo: 'Choisir un logo',
 				removeLogo: 'Supprimer le logo', address: 'Adresse', phone: 'Téléphone', email: 'Email', website: 'Site web',
-				commercialRegister: 'Registre de commerce', fiscalId: 'Identifiant fiscal', saveSuccess: 'Profil enregistré', saveError: 'Erreur',
+				commercialRegister: 'Registre de commerce', bankAccount: 'RIB Compte', fiscalId: 'Identifiant fiscal', saveSuccess: 'Profil enregistré', saveError: 'Erreur',
 			},
 		},
 	}),
@@ -59,6 +66,7 @@ describe('CompanyProfileClient', () => {
 
 	it('loads and submits the staff-managed report identity', async () => {
 		render(<CompanyProfileClient />);
+		expect(screen.getByTestId('company-logo-cropper')).toBeInTheDocument();
 		expect(screen.getByDisplayValue('E.B.H Gestion Projet')).toBeInTheDocument();
 		fireEvent.change(screen.getByRole('textbox', { name: /Raison sociale/ }), { target: { value: 'Nouvelle Société' } });
 		fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
