@@ -35,10 +35,11 @@ import {
 	Phone as PhoneIcon,
 	Schedule as ScheduleIcon,
 } from '@mui/icons-material';
-import { PROJECTS_EDIT, PROJECTS_LIST } from '@/utils/routes';
+import { PROJECTS_EDIT, PROJECTS_LIST, REPORTS_PDF, type PdfLanguage } from '@/utils/routes';
 import ApiProgress from '@/components/formikElements/apiLoading/apiProgress/apiProgress';
 import ApiAlert from '@/components/formikElements/apiLoading/apiAlert/apiAlert';
 import ActionModals from '@/components/htmlElements/modals/actionModal/actionModals';
+import PdfLanguageModal from '@/components/shared/pdfLanguageModal/pdfLanguageModal';
 import { Protected } from '@/components/layouts/protected/protected';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
 import { fetchFileBlob } from '@/utils/apiHelpers';
@@ -131,6 +132,7 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 	const [deleteProject] = useDeleteProjectMutation();
 	const { onSuccess, onError } = useToast();
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const [showLanguageModal, setShowLanguageModal] = useState(false);
 	const [isDownloadingReport, setIsDownloadingReport] = useState(false);
 
 	const handleDelete = async () => {
@@ -162,11 +164,12 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 		},
 	];
 
-	const handleDownloadReport = async () => {
+	const handleDownloadReport = async (language: PdfLanguage) => {
 		if (!project || !token) return;
+		setShowLanguageModal(false);
 		setIsDownloadingReport(true);
 		try {
-			const reportUrl = `${process.env.NEXT_PUBLIC_ROOT_API_URL}${process.env.NEXT_PUBLIC_PROJECT_LIST}${id}/report.pdf`;
+			const reportUrl = REPORTS_PDF(language, { projectId: id });
 			const blob = await fetchFileBlob(reportUrl, token);
 			const blobUrl = window.URL.createObjectURL(blob);
 			window.open(blobUrl, '_blank');
@@ -232,7 +235,7 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 											size="small"
 											startIcon={<DownloadIcon />}
 											disabled={isDownloadingReport}
-											onClick={handleDownloadReport}
+											onClick={() => setShowLanguageModal(true)}
 										>
 											{t.projects.downloadReport}
 										</Button>
@@ -469,6 +472,12 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 					actions={deleteModalActions}
 					titleIcon={<DeleteIcon />}
 					titleIconColor="#D32F2F"
+				/>
+			)}
+			{showLanguageModal && (
+				<PdfLanguageModal
+					onSelectLanguage={handleDownloadReport}
+					onClose={() => setShowLanguageModal(false)}
 				/>
 			)}
 		</Stack>

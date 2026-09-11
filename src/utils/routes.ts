@@ -15,6 +15,21 @@ export const CLIENT_DASHBOARD = `${SITE_ROOT}dashboard/client-dashboard`;
 export const DASHBOARD_EDIT_PROFILE = `${SITE_ROOT}dashboard/settings/edit-profile`;
 export const DASHBOARD_PASSWORD = `${SITE_ROOT}dashboard/settings/password`;
 export const DASHBOARD_NOTIFICATIONS = `${SITE_ROOT}dashboard/settings/notifications`;
+export const DASHBOARD_COMPANY = `${SITE_ROOT}dashboard/settings/company`;
+// Reports
+export const REPORTS = `${SITE_ROOT}dashboard/reports`;
+export type PdfLanguage = 'fr' | 'en';
+export const REPORTS_PDF = (
+	language: PdfLanguage,
+	filters: { dateFrom?: string; dateTo?: string; projectId?: number } = {},
+) => {
+	const params = new URLSearchParams();
+	if (filters.dateFrom) params.set('date_from', filters.dateFrom);
+	if (filters.dateTo) params.set('date_to', filters.dateTo);
+	if (filters.projectId) params.set('project_id', String(filters.projectId));
+	const query = params.toString();
+	return `${process.env.NEXT_PUBLIC_ROOT_API_URL}/project/reports/pdf/${language}/${query ? `?${query}` : ''}`;
+};
 // Users (staff only)
 export const USERS_LIST = `${SITE_ROOT}dashboard/users`;
 export const USERS_ADD = `${SITE_ROOT}dashboard/users/new`;

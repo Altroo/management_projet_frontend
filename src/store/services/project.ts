@@ -32,6 +32,7 @@ import type {
 	SupplierFormValues,
 	SupplierType,
 } from '@/types/projectTypes';
+import type { CompanyProfileType } from '@/types/reportTypes';
 
 const rawBaseQuery = axiosBaseQuery((api) =>
 	isAuthenticatedInstance(
@@ -67,6 +68,7 @@ export const projectApi = createApi({
 		'ProjectDashboard',
 		'MultiProjectDashboard',
 		'ClientDashboard',
+		'CompanyProfile',
 	],
 	baseQuery: baseQueryWithRetry,
 	endpoints: (builder) => ({
@@ -842,6 +844,23 @@ export const projectApi = createApi({
 			}),
 			providesTags: ['ClientDashboard'],
 		}),
+
+		getCompanyProfile: builder.query<CompanyProfileType, void>({
+			query: () => ({
+				url: process.env.NEXT_PUBLIC_COMPANY_PROFILE ?? '/company/profile/',
+				method: 'GET',
+			}),
+			providesTags: ['CompanyProfile'],
+		}),
+
+		updateCompanyProfile: builder.mutation<CompanyProfileType | ApiErrorResponseType, FormData>({
+			query: (data) => ({
+				url: process.env.NEXT_PUBLIC_COMPANY_PROFILE ?? '/company/profile/',
+				method: 'PATCH',
+				data,
+			}),
+			invalidatesTags: ['CompanyProfile'],
+		}),
 	}),
 });
 
@@ -930,4 +949,6 @@ export const {
 	useGetMultiProjectDashboardQuery,
 	useGetClientDashboardQuery,
 	useGetClientProjectDashboardQuery,
+	useGetCompanyProfileQuery,
+	useUpdateCompanyProfileMutation,
 } = projectApi;

@@ -119,6 +119,8 @@ export type TranslationDictionary = {
 		markAllRead: string;
 		noNotifications: string;
 		loadMore: string;
+		reports: string;
+		companyProfile: string;
 	};
 	users: {
 		firstName: string;
@@ -347,8 +349,39 @@ export type TranslationDictionary = {
 		downloadReport: string;
 		reportDownloadError: string;
 	};
-		clients: {
-			clientsList: string;
+	reports: {
+		title: string;
+		description: string;
+		periodHelp: string;
+		startDate: string;
+		endDate: string;
+		scope: string;
+		allProjects: string;
+		generate: string;
+		invalidPeriod: string;
+		generationError: string;
+	};
+	companyProfile: {
+		title: string;
+		description: string;
+		identity: string;
+		contact: string;
+		legal: string;
+		name: string;
+		logo: string;
+		chooseLogo: string;
+		removeLogo: string;
+		address: string;
+		phone: string;
+		email: string;
+		website: string;
+		commercialRegister: string;
+		fiscalId: string;
+		saveSuccess: string;
+		saveError: string;
+	};
+	clients: {
+		clientsList: string;
 		newClient: string;
 		editClient: string;
 		clientDetails: string;

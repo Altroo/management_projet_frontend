@@ -24,6 +24,18 @@ describe('routes', () => {
 		expect(routes.DASHBOARD).toBe('https://app.example.com/dashboard');
 		expect(routes.DASHBOARD_EDIT_PROFILE).toBe('https://app.example.com/dashboard/settings/edit-profile');
 		expect(routes.DASHBOARD_PASSWORD).toBe('https://app.example.com/dashboard/settings/password');
+		expect(routes.DASHBOARD_COMPANY).toBe('https://app.example.com/dashboard/settings/company');
+		expect(routes.REPORTS).toBe('https://app.example.com/dashboard/reports');
+	});
+
+	it('builds localized financial report URLs', () => {
+		process.env.NEXT_PUBLIC_ROOT_API_URL = 'https://api.example.com/api';
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		const routes = require('./routes');
+
+		expect(routes.REPORTS_PDF('fr', { dateFrom: '2026-01-01', dateTo: '2026-12-31', projectId: 4 })).toBe(
+			'https://api.example.com/api/project/reports/pdf/fr/?date_from=2026-01-01&date_to=2026-12-31&project_id=4',
+		);
 	});
 
 	it('builds USERS routes with a prefix', () => {

@@ -44,6 +44,7 @@ import {
 	MoreVert as MoreVertIcon,
 	Notifications as NotificationsIcon,
 	People as PeopleIcon,
+	PictureAsPdf as PictureAsPdfIcon,
 	Settings as SettingsIcon,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector, useLanguage } from '@/utils/hooks';
@@ -59,12 +60,14 @@ import {
 	CLIENTS_LIST,
 	DASHBOARD,
 	DASHBOARD_EDIT_PROFILE,
+	DASHBOARD_COMPANY,
 	DASHBOARD_NOTIFICATIONS,
 	DASHBOARD_PASSWORD,
 	EXPENSES_ADD,
 	EXPENSES_LIST,
 	PROJECTS_ADD,
 	PROJECTS_LIST,
+	REPORTS,
 	REVENUES_ADD,
 	REVENUES_LIST,
 	SITE_ROOT,
@@ -88,7 +91,7 @@ import {
 } from '@/store/services/notification';
 import type { NotificationType } from '@/types/managementNotificationTypes';
 
-const getNavigationMenu = (isStaff: boolean, t: TranslationDictionary) => {
+const getNavigationMenu = (isStaff: boolean, canPrint: boolean, t: TranslationDictionary) => {
 	return {
 		dashboard: {
 			title: t.navigation.clientDashboard,
@@ -136,6 +139,13 @@ const getNavigationMenu = (isStaff: boolean, t: TranslationDictionary) => {
 				{ title: t.navigation.newExpense, label: t.navigation.newExpense, path: EXPENSES_ADD },
 			],
 		},
+		...((isStaff || canPrint) && {
+			rapports: {
+				title: t.navigation.reports,
+				icon: <PictureAsPdfIcon />,
+				items: [{ title: t.navigation.reports, label: t.navigation.reports, path: REPORTS }],
+			},
+		}),
 		...(isStaff && {
 			utilisateurs: {
 				title: t.navigation.users,
@@ -151,6 +161,9 @@ const getNavigationMenu = (isStaff: boolean, t: TranslationDictionary) => {
 			icon: <SettingsIcon />,
 			items: [
 				{ title: t.navigation.myProfile, label: t.navigation.myProfile, path: DASHBOARD_EDIT_PROFILE },
+				...(isStaff
+					? [{ title: t.navigation.companyProfile, label: t.navigation.companyProfile, path: DASHBOARD_COMPANY }]
+					: []),
 				{ title: t.navigation.changePassword, label: t.navigation.changePassword, path: DASHBOARD_PASSWORD },
 				{
 					title: t.navigation.notifications,
@@ -222,9 +235,9 @@ const NavigationBar = (props: Props) => {
 	const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 	const [open, setOpen] = useState(!isMobile);
 	const { data: session, status } = useSession();
-	const { avatar_cropped, first_name, last_name, gender, is_staff } = useAppSelector(getProfilState);
+	const { avatar_cropped, first_name, last_name, gender, is_staff, can_print } = useAppSelector(getProfilState);
 	const { t, language, setLanguage } = useLanguage();
-	const navigationMenu = useMemo(() => getNavigationMenu(is_staff, t), [is_staff, t]);
+	const navigationMenu = useMemo(() => getNavigationMenu(is_staff, can_print, t), [is_staff, can_print, t]);
 	const moreVertRef = useRef<HTMLButtonElement>(null);
 	const [mobileMenuAnchor, setMobileMenuAnchor] = useState<HTMLElement | null>(null);
 	const dispatch = useAppDispatch();
