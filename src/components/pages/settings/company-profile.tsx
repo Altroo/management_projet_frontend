@@ -49,9 +49,12 @@ type CompanyFieldName = keyof CompanyFields;
 const isNewImage = (value: string | ArrayBuffer | null): value is string =>
 	typeof value === 'string' && value.startsWith('data:image/');
 
-const imageFileFromDataUrl = async (dataUrl: string, filename: string): Promise<File> => {
-	const blob = await (await fetch(dataUrl)).blob();
-	return new File([blob], filename, { type: blob.type || 'image/png' });
+const imageFileFromDataUrl = (dataUrl: string, filename: string): File => {
+	const [metadata, encodedData = ''] = dataUrl.split(',', 2);
+	const mimeType = /^data:(image\/[a-z0-9.+-]+);base64$/i.exec(metadata)?.[1] ?? 'image/png';
+	const binary = window.atob(encodedData);
+	const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+	return new File([bytes], filename, { type: mimeType });
 };
 
 const CompanyProfileForm: React.FC<{ profile: CompanyProfileType }> = ({ profile }) => {
@@ -71,9 +74,9 @@ const CompanyProfileForm: React.FC<{ profile: CompanyProfileType }> = ({ profile
 		const formData = new FormData();
 		Object.entries(fields).forEach(([key, value]) => formData.append(key, value));
 		try {
-			if (isNewImage(logo)) formData.append('logo', await imageFileFromDataUrl(logo, 'company-logo.png'));
+			if (isNewImage(logo)) formData.append('logo', imageFileFromDataUrl(logo, 'company-logo.png'));
 			if (isNewImage(croppedLogo)) {
-				formData.append('logo_cropped', await imageFileFromDataUrl(croppedLogo, 'company-logo-cropped.png'));
+				formData.append('logo_cropped', imageFileFromDataUrl(croppedLogo, 'company-logo-cropped.png'));
 			}
 			if (!logo && (profile.logo_url || profile.logo_cropped_url)) formData.append('remove_logo', 'true');
 			await updateCompanyProfile(formData).unwrap();
