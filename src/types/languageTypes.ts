@@ -352,6 +352,7 @@ export type TranslationDictionary = {
 	reports: {
 		title: string;
 		description: string;
+		configuration: string;
 		periodHelp: string;
 		startDate: string;
 		endDate: string;

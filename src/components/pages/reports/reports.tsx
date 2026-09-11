@@ -3,29 +3,37 @@
 import React, { useMemo, useState } from 'react';
 import {
 	Alert,
-	Button,
+	Box,
 	Card,
 	CardContent,
-	CircularProgress,
-	FormControl,
-	InputLabel,
-	MenuItem,
-	Select,
+	Divider,
+	InputAdornment,
 	Stack,
-	TextField,
 	Typography,
 } from '@mui/material';
-import { PictureAsPdf as PictureAsPdfIcon } from '@mui/icons-material';
+import { CalendarMonth as CalendarMonthIcon, PictureAsPdf as PictureAsPdfIcon } from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { format, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import type { SessionProps } from '@/types/_initTypes';
+import type { DropDownType } from '@/types/accountTypes';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import { Protected } from '@/components/layouts/protected/protected';
 import PdfLanguageModal from '@/components/shared/pdfLanguageModal/pdfLanguageModal';
+import CustomAutoCompleteSelect from '@/components/formikElements/customAutoCompleteSelect/customAutoCompleteSelect';
+import PrimaryLoadingButton from '@/components/htmlElements/buttons/primaryLoadingButton/primaryLoadingButton';
 import { useInitAccessToken } from '@/contexts/InitContext';
 import { useGetProjectsListQuery } from '@/store/services/project';
 import { fetchFileBlob } from '@/utils/apiHelpers';
 import { extractApiErrorMessage } from '@/utils/helpers';
 import { useLanguage, useToast } from '@/utils/hooks';
 import { REPORTS_PDF, type PdfLanguage } from '@/utils/routes';
+import { textInputTheme } from '@/utils/themes';
+import Styles from '@/styles/dashboard/dashboard.module.sass';
+
+const inputTheme = textInputTheme();
 
 const currentYearPeriod = () => {
 	const year = new Date().getFullYear();
@@ -46,7 +54,14 @@ const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 		{ with_pagination: false },
 		{ skip: !token },
 	);
-	const projects = Array.isArray(projectsData) ? projectsData : (projectsData?.results ?? []);
+	const projectItems = useMemo<DropDownType[]>(() => {
+		const projects = Array.isArray(projectsData) ? projectsData : (projectsData?.results ?? []);
+		return [
+			{ code: '', value: t.reports.allProjects },
+			...projects.map((project) => ({ code: String(project.id), value: project.nom })),
+		];
+	}, [projectsData, t.reports.allProjects]);
+	const selectedProject = projectItems.find((project) => project.code === String(projectId)) ?? projectItems[0];
 	const periodIsValid = Boolean(dateFrom && dateTo && dateFrom <= dateTo);
 
 	const generateReport = async (language: PdfLanguage) => {
@@ -73,76 +88,104 @@ const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 	};
 
 	return (
-		<NavigationBar title={t.reports.title}>
-			<Protected permission="can_print">
-				<Stack spacing={3} sx={{ p: { xs: 2, md: 3 }, mt: 2, maxWidth: 900 }}>
-					<Stack spacing={0.5}>
-						<Typography variant="h5" sx={{ fontWeight: 700 }}>
-							{t.reports.title}
-						</Typography>
-						<Typography color="text.secondary">{t.reports.description}</Typography>
-					</Stack>
-					<Card elevation={2}>
-						<CardContent>
-							<Stack spacing={3}>
-								<Alert severity="info">{t.reports.periodHelp}</Alert>
-								<Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-									<TextField
-										fullWidth
-										type="date"
-										label={t.reports.startDate}
-										value={dateFrom}
-										onChange={(event) => setDateFrom(event.target.value)}
-										slotProps={{ inputLabel: { shrink: true } }}
-									/>
-									<TextField
-										fullWidth
-										type="date"
-										label={t.reports.endDate}
-										value={dateTo}
-										onChange={(event) => setDateTo(event.target.value)}
-										slotProps={{ inputLabel: { shrink: true } }}
-									/>
-								</Stack>
-								{!periodIsValid && <Alert severity="error">{t.reports.invalidPeriod}</Alert>}
-								<FormControl fullWidth>
-									<InputLabel id="report-scope-label">{t.reports.scope}</InputLabel>
-									<Select
-										labelId="report-scope-label"
-										label={t.reports.scope}
-										value={projectId}
-										onChange={(event) => {
-											const value = event.target.value as number | string;
-											setProjectId(value === '' ? '' : Number(value));
-										}}
-										disabled={projectsLoading}
-									>
-										<MenuItem value="">{t.reports.allProjects}</MenuItem>
-										{projects.map((project) => (
-											<MenuItem key={project.id} value={project.id}>
-												{project.nom}
-											</MenuItem>
-										))}
-									</Select>
-								</FormControl>
-								<Button
-									variant="contained"
-									startIcon={isGenerating ? <CircularProgress size={18} color="inherit" /> : <PictureAsPdfIcon />}
-									disabled={!token || !periodIsValid || isGenerating}
+		<LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
+			<Stack
+				direction="column"
+				spacing={2}
+				className={Styles.flexRootStack}
+				sx={{ mt: '48px', overflowX: 'auto' }}
+			>
+				<NavigationBar title={t.reports.title}>
+					<Protected permission="can_print">
+						<Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
+							<Card elevation={2} sx={{ borderRadius: 2 }}>
+								<CardContent sx={{ p: 3 }}>
+									<Stack direction="row" spacing={2} sx={{ alignItems: 'center', mb: 2 }}>
+										<PictureAsPdfIcon color="primary" />
+										<Typography variant="h6" sx={{ fontWeight: 700 }}>
+											{t.reports.configuration}
+										</Typography>
+									</Stack>
+									<Divider sx={{ mb: 3 }} />
+									<Stack spacing={2.5}>
+										<Alert severity="info">{t.reports.periodHelp}</Alert>
+										<Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+											<DatePicker
+												label={t.reports.startDate}
+												value={dateFrom ? parseISO(dateFrom) : null}
+												onChange={(value) => setDateFrom(value ? format(value, 'yyyy-MM-dd') : '')}
+												slotProps={{
+													textField: {
+														size: 'small',
+														fullWidth: true,
+														slotProps: {
+															input: {
+																startAdornment: (
+																	<InputAdornment position="start">
+																		<CalendarMonthIcon fontSize="small" />
+																	</InputAdornment>
+																),
+															},
+														},
+													},
+												}}
+											/>
+											<DatePicker
+												label={t.reports.endDate}
+												value={dateTo ? parseISO(dateTo) : null}
+												onChange={(value) => setDateTo(value ? format(value, 'yyyy-MM-dd') : '')}
+												slotProps={{
+													textField: {
+														size: 'small',
+														fullWidth: true,
+														slotProps: {
+															input: {
+																startAdornment: (
+																	<InputAdornment position="start">
+																		<CalendarMonthIcon fontSize="small" />
+																	</InputAdornment>
+																),
+															},
+														},
+													},
+												}}
+											/>
+										</Stack>
+										{!periodIsValid && <Alert severity="error">{t.reports.invalidPeriod}</Alert>}
+										<CustomAutoCompleteSelect
+											id="report-scope"
+											size="small"
+											label={t.reports.scope}
+											items={projectItems}
+											value={selectedProject}
+											theme={inputTheme}
+											noOptionsText={t.projects.noProjectFound}
+											fullWidth
+											disabled={projectsLoading}
+											onChange={(_, value) => setProjectId(value?.code ? Number(value.code) : '')}
+										/>
+									</Stack>
+								</CardContent>
+							</Card>
+							<Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 2 }}>
+								<PrimaryLoadingButton
+									buttonText={t.reports.generate}
+									loading={isGenerating}
+									active={Boolean(token && periodIsValid && !isGenerating)}
+									type="button"
+									startIcon={<PictureAsPdfIcon />}
 									onClick={() => setShowLanguageModal(true)}
-									sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' } }}
-								>
-									{t.reports.generate}
-								</Button>
-							</Stack>
-						</CardContent>
-					</Card>
-				</Stack>
-				{showLanguageModal && (
-					<PdfLanguageModal onSelectLanguage={generateReport} onClose={() => setShowLanguageModal(false)} />
-				)}
-			</Protected>
-		</NavigationBar>
+									cssClass={Styles.submitButton}
+								/>
+							</Box>
+						</Stack>
+						{showLanguageModal && (
+							<PdfLanguageModal onSelectLanguage={generateReport} onClose={() => setShowLanguageModal(false)} />
+						)}
+					</Protected>
+				</NavigationBar>
+			</Stack>
+		</LocalizationProvider>
 	);
 };
 

@@ -3,6 +3,19 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import ReportsClient from './reports';
 import { fetchFileBlob } from '@/utils/apiHelpers';
 
+jest.mock('@mui/x-date-pickers/DatePicker', () => ({
+	DatePicker: ({ label, value, onChange }: { label: string; value: Date | null; onChange: (value: Date | null) => void }) => (
+		<input
+			aria-label={label}
+			type="date"
+			value={value ? value.toISOString().slice(0, 10) : ''}
+			onChange={(event) => onChange(event.target.value ? new Date(`${event.target.value}T00:00:00`) : null)}
+		/>
+	),
+}));
+jest.mock('@mui/x-date-pickers/LocalizationProvider', () => ({
+	LocalizationProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
 jest.mock('@/components/layouts/navigationBar/navigationBar', () => ({
 	__esModule: true,
 	default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -29,8 +42,9 @@ jest.mock('@/utils/hooks', () => ({
 	useToast: () => ({ onError: jest.fn() }),
 	useLanguage: () => ({
 		t: {
+			projects: { noProjectFound: 'Aucun projet trouvé' },
 			reports: {
-				title: 'Rapports', description: 'Description', periodHelp: 'Aide', startDate: 'Date de début',
+				title: 'Rapports', description: 'Description', configuration: 'Configuration du rapport', periodHelp: 'Aide', startDate: 'Date de début',
 				endDate: 'Date de fin', scope: 'Périmètre', allProjects: 'Tous les projets', generate: 'Générer le PDF',
 				invalidPeriod: 'Période invalide', generationError: 'Erreur',
 			},

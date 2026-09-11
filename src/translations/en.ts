@@ -418,6 +418,7 @@ export const en: TranslationDictionary = {
 	reports: {
 		title: 'Reports',
 		description: 'Generate a financial PDF report with charts',
+		configuration: 'Report configuration',
 		periodHelp: 'Revenue and expenses are filtered using their transaction date.',
 		startDate: 'Start date',
 		endDate: 'End date',
