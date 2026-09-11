@@ -200,7 +200,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 		window.scrollTo({ top: 0, behavior: 'smooth' });
 	};
 
-	const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+	const handleFormSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
 		setSubmitAttempted(true);
 		if (hasRealBudgetValidationError) {
 			event.preventDefault();

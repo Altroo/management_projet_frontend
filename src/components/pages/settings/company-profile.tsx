@@ -69,7 +69,7 @@ const CompanyProfileForm: React.FC<{ profile: CompanyProfileType }> = ({ profile
 		setFields((current) => ({ ...current, [name]: event.target.value }));
 	};
 
-	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		const formData = new FormData();
 		Object.entries(fields).forEach(([key, value]) => formData.append(key, value));
@@ -127,7 +127,7 @@ const CompanyProfileForm: React.FC<{ profile: CompanyProfileType }> = ({ profile
 					<CardContent sx={{ p: 3 }}>
 						{sectionTitle(<BusinessIcon color="primary" />, t.companyProfile.identity)}
 						<Stack spacing={3}>
-							{field('raison_sociale', `${t.companyProfile.name} *`, <BusinessIcon fontSize="small" />, { required: true })}
+							{field('raison_sociale', `${t.companyProfile.name}`, <BusinessIcon fontSize="small" />, { required: true })}
 							<CustomSquareImageUploading
 								image={logo}
 								croppedImage={croppedLogo}

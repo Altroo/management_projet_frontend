@@ -54,6 +54,7 @@ const mockProfileData = {
 	last_name: 'Doe',
 	gender: 'Homme',
 	is_staff: false,
+	can_print: false,
 };
 
 describe('NavigationBar', () => {
@@ -65,6 +66,7 @@ describe('NavigationBar', () => {
 		mockProfileData.last_name = 'Doe';
 		mockProfileData.gender = 'Homme';
 		mockProfileData.is_staff = false;
+		mockProfileData.can_print = false;
 		mockUseAppSelector.mockImplementation((selector: (...args: unknown[]) => unknown) => {
 			if (typeof selector === 'function' && selector.name === 'getUnreadNotificationCount') {
 				return 0;
@@ -157,6 +159,28 @@ describe('NavigationBar', () => {
 			</Provider>,
 		);
 		expect(screen.queryByText('Utilisateurs')).not.toBeInTheDocument();
+	});
+
+	it('shows the company profile only to staff users', () => {
+		mockProfileData.is_staff = true;
+		const { rerender } = render(
+			<Provider store={store}>
+				<NavigationBar title="Admin">
+					<div />
+				</NavigationBar>
+			</Provider>,
+		);
+		expect(screen.getByText('Profil société')).toBeInTheDocument();
+
+		mockProfileData.is_staff = false;
+		rerender(
+			<Provider store={store}>
+				<NavigationBar title="Staff">
+					<div />
+				</NavigationBar>
+			</Provider>,
+		);
+		expect(screen.queryByText('Profil société')).not.toBeInTheDocument();
 	});
 
 	it('shows the internal dashboard under the projects menu', () => {

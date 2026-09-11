@@ -31,7 +31,11 @@ jest.mock('@/components/layouts/navigationBar/navigationBar', () => ({
 	default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 jest.mock('@/components/layouts/protected/protected', () => ({
-	Protected: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+	Protected: ({ children, permission }: { children: React.ReactNode; permission?: string }) => (
+		<div data-testid="company-profile-protected" data-permission={permission}>
+			{children}
+		</div>
+	),
 }));
 jest.mock('@/contexts/InitContext', () => ({ useInitAccessToken: () => 'token' }));
 jest.mock('@/store/services/project', () => ({
@@ -66,9 +70,13 @@ describe('CompanyProfileClient', () => {
 
 	it('loads and submits the staff-managed report identity', async () => {
 		render(<CompanyProfileClient />);
+		expect(screen.getByTestId('company-profile-protected')).toHaveAttribute('data-permission', 'is_staff');
 		expect(screen.getByTestId('company-logo-cropper')).toBeInTheDocument();
 		expect(screen.getByDisplayValue('E.B.H Gestion Projet')).toBeInTheDocument();
-		fireEvent.change(screen.getByRole('textbox', { name: /Raison sociale/ }), { target: { value: 'Nouvelle Société' } });
+		const companyNameLabel = screen.getByText('Raison sociale', { selector: 'label' });
+		expect(companyNameLabel).toHaveTextContent(/^Raison sociale\s*\*$/);
+		const companyNameInput = screen.getByRole('textbox', { name: 'Raison sociale' });
+		fireEvent.change(companyNameInput, { target: { value: 'Nouvelle Société' } });
 		fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
 		await waitFor(() => expect(updateCompanyProfile).toHaveBeenCalledTimes(1));
