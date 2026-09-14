@@ -2,6 +2,7 @@ import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import ReportsClient from './reports';
 import { fetchFileBlob } from '@/utils/apiHelpers';
+import { downloadBlobFile } from '@/utils/fileDownload';
 
 jest.mock('@mui/x-date-pickers/DatePicker', () => ({
 	DatePicker: ({ label, value, onChange }: { label: string; value: Date | null; onChange: (value: Date | null) => void }) => (
@@ -34,6 +35,10 @@ jest.mock('@/store/services/project', () => ({
 	useGetProjectsListQuery: () => ({ data: [{ id: 7, nom: 'Projet Sept' }], isLoading: false }),
 }));
 jest.mock('@/utils/apiHelpers', () => ({ fetchFileBlob: jest.fn() }));
+jest.mock('@/utils/fileDownload', () => ({
+	...jest.requireActual('@/utils/fileDownload'),
+	downloadBlobFile: jest.fn(),
+}));
 jest.mock('@/utils/routes', () => ({
 	REPORTS_PDF: (language: string, filters: { dateFrom: string; dateTo: string; projectId?: number }) =>
 		`/pdf/${language}?from=${filters.dateFrom}&to=${filters.dateTo}&project=${filters.projectId ?? ''}`,
@@ -56,9 +61,6 @@ describe('ReportsClient', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
 		(fetchFileBlob as jest.Mock).mockResolvedValue(new Blob(['pdf'], { type: 'application/pdf' }));
-		Object.defineProperty(window.URL, 'createObjectURL', { configurable: true, value: jest.fn(() => 'blob:report') });
-		Object.defineProperty(window.URL, 'revokeObjectURL', { configurable: true, value: jest.fn() });
-		window.open = jest.fn();
 	});
 
 	it('validates dates and uses the Facturation language step before downloading', async () => {
@@ -69,7 +71,10 @@ describe('ReportsClient', () => {
 		await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Français' })));
 
 		await waitFor(() => expect(fetchFileBlob).toHaveBeenCalledWith('/pdf/fr?from=2026-03-01&to=2026-03-31&project=', 'token'));
-		expect(window.open).toHaveBeenCalledWith('blob:report', '_blank');
+		expect(downloadBlobFile).toHaveBeenCalledWith(
+			expect.any(Blob),
+			'rapport-financier-tous-les-projets-du-2026-03-01-au-2026-03-31-fr.pdf',
+		);
 	});
 
 	it('blocks generation when the start date is after the end date', () => {

@@ -43,6 +43,7 @@ import PdfLanguageModal from '@/components/shared/pdfLanguageModal/pdfLanguageMo
 import { Protected } from '@/components/layouts/protected/protected';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
 import { fetchFileBlob } from '@/utils/apiHelpers';
+import { downloadBlobFile, financialReportFilename } from '@/utils/fileDownload';
 import { useLanguage, useToast } from '@/utils/hooks';
 import { STATUS_CHIP_COLORS } from '@/utils/rawData';
 import ProjectPaymentScheduleCard from '@/components/shared/projectPaymentSchedule/projectPaymentSchedule';
@@ -171,9 +172,10 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 		try {
 			const reportUrl = REPORTS_PDF(language, { projectId: id });
 			const blob = await fetchFileBlob(reportUrl, token);
-			const blobUrl = window.URL.createObjectURL(blob);
-			window.open(blobUrl, '_blank');
-			setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60_000);
+			downloadBlobFile(
+				blob,
+				financialReportFilename({ projectName: project.nom, language }),
+			);
 		} catch (err) {
 			onError(extractApiErrorMessage(err, t.projects.reportDownloadError));
 		} finally {

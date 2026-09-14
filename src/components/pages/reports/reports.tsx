@@ -30,6 +30,7 @@ import { fetchFileBlob } from '@/utils/apiHelpers';
 import { extractApiErrorMessage } from '@/utils/helpers';
 import { useLanguage, useToast } from '@/utils/hooks';
 import { REPORTS_PDF, type PdfLanguage } from '@/utils/routes';
+import { downloadBlobFile, financialReportFilename } from '@/utils/fileDownload';
 import { textInputTheme } from '@/utils/themes';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
 
@@ -77,9 +78,15 @@ const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 				}),
 				token,
 			);
-			const blobUrl = window.URL.createObjectURL(blob);
-			window.open(blobUrl, '_blank');
-			setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60_000);
+			downloadBlobFile(
+				blob,
+				financialReportFilename({
+					projectName: projectId ? selectedProject?.value : undefined,
+					dateFrom,
+					dateTo,
+					language,
+				}),
+			);
 		} catch (error) {
 			onError(extractApiErrorMessage(error, t.reports.generationError));
 		} finally {
