@@ -26,11 +26,10 @@ import CustomAutoCompleteSelect from '@/components/formikElements/customAutoComp
 import PrimaryLoadingButton from '@/components/htmlElements/buttons/primaryLoadingButton/primaryLoadingButton';
 import { useInitAccessToken } from '@/contexts/InitContext';
 import { useGetProjectsListQuery } from '@/store/services/project';
-import { fetchFileBlob } from '@/utils/apiHelpers';
 import { extractApiErrorMessage } from '@/utils/helpers';
 import { useLanguage, useToast } from '@/utils/hooks';
-import { REPORTS_PDF, type PdfLanguage } from '@/utils/routes';
-import { downloadBlobFile, financialReportFilename } from '@/utils/fileDownload';
+import { REPORTS_DOWNLOAD, type PdfLanguage } from '@/utils/routes';
+import { downloadFileUrl } from '@/utils/fileDownload';
 import { textInputTheme } from '@/utils/themes';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
 
@@ -70,21 +69,12 @@ const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 		setShowLanguageModal(false);
 		setIsGenerating(true);
 		try {
-			const blob = await fetchFileBlob(
-				REPORTS_PDF(language, {
+			downloadFileUrl(
+				REPORTS_DOWNLOAD(language, {
 					dateFrom,
 					dateTo,
 					projectId: projectId || undefined,
-				}),
-				token,
-			);
-			downloadBlobFile(
-				blob,
-				financialReportFilename({
 					projectName: projectId ? selectedProject?.value : undefined,
-					dateFrom,
-					dateTo,
-					language,
 				}),
 			);
 		} catch (error) {

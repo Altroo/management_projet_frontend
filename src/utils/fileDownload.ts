@@ -29,15 +29,13 @@ export const financialReportFilename = ({
 	return `rapport-financier-${scope}${period}-${language}.pdf`;
 };
 
-export const downloadBlobFile = (blob: Blob, filename: string): void => {
-	const blobUrl = window.URL.createObjectURL(blob);
+export const downloadFileUrl = (url: string): void => {
 	const link = document.createElement('a');
-	link.href = blobUrl;
-	link.download = filename;
+	link.href = url;
+	link.download = '';
 	link.rel = 'noopener';
 	link.style.display = 'none';
 	document.body.appendChild(link);
 	link.click();
 	link.remove();
-	setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60_000);
 };

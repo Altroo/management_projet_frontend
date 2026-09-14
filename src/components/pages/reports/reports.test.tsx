@@ -1,8 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import ReportsClient from './reports';
-import { fetchFileBlob } from '@/utils/apiHelpers';
-import { downloadBlobFile } from '@/utils/fileDownload';
+import { downloadFileUrl } from '@/utils/fileDownload';
 
 jest.mock('@mui/x-date-pickers/DatePicker', () => ({
 	DatePicker: ({ label, value, onChange }: { label: string; value: Date | null; onChange: (value: Date | null) => void }) => (
@@ -34,14 +33,13 @@ jest.mock('@/contexts/InitContext', () => ({ useInitAccessToken: () => 'token' }
 jest.mock('@/store/services/project', () => ({
 	useGetProjectsListQuery: () => ({ data: [{ id: 7, nom: 'Projet Sept' }], isLoading: false }),
 }));
-jest.mock('@/utils/apiHelpers', () => ({ fetchFileBlob: jest.fn() }));
 jest.mock('@/utils/fileDownload', () => ({
 	...jest.requireActual('@/utils/fileDownload'),
-	downloadBlobFile: jest.fn(),
+	downloadFileUrl: jest.fn(),
 }));
 jest.mock('@/utils/routes', () => ({
-	REPORTS_PDF: (language: string, filters: { dateFrom: string; dateTo: string; projectId?: number }) =>
-		`/pdf/${language}?from=${filters.dateFrom}&to=${filters.dateTo}&project=${filters.projectId ?? ''}`,
+	REPORTS_DOWNLOAD: (language: string, filters: { dateFrom: string; dateTo: string; projectId?: number }) =>
+		`/api/reports/pdf?language=${language}&from=${filters.dateFrom}&to=${filters.dateTo}&project=${filters.projectId ?? ''}`,
 }));
 jest.mock('@/utils/hooks', () => ({
 	useToast: () => ({ onError: jest.fn() }),
@@ -60,7 +58,6 @@ jest.mock('@/utils/hooks', () => ({
 describe('ReportsClient', () => {
 	beforeEach(() => {
 		jest.clearAllMocks();
-		(fetchFileBlob as jest.Mock).mockResolvedValue(new Blob(['pdf'], { type: 'application/pdf' }));
 	});
 
 	it('validates dates and uses the Facturation language step before downloading', async () => {
@@ -70,10 +67,10 @@ describe('ReportsClient', () => {
 		fireEvent.click(screen.getByRole('button', { name: 'Générer le PDF' }));
 		await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Français' })));
 
-		await waitFor(() => expect(fetchFileBlob).toHaveBeenCalledWith('/pdf/fr?from=2026-03-01&to=2026-03-31&project=', 'token'));
-		expect(downloadBlobFile).toHaveBeenCalledWith(
-			expect.any(Blob),
-			'rapport-financier-tous-les-projets-du-2026-03-01-au-2026-03-31-fr.pdf',
+		await waitFor(() =>
+			expect(downloadFileUrl).toHaveBeenCalledWith(
+				'/api/reports/pdf?language=fr&from=2026-03-01&to=2026-03-31&project=',
+			),
 		);
 	});
 

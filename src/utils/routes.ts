@@ -30,6 +30,17 @@ export const REPORTS_PDF = (
 	const query = params.toString();
 	return `${process.env.NEXT_PUBLIC_ROOT_API_URL}/project/reports/pdf/${language}/${query ? `?${query}` : ''}`;
 };
+export const REPORTS_DOWNLOAD = (
+	language: PdfLanguage,
+	filters: { dateFrom?: string; dateTo?: string; projectId?: number; projectName?: string } = {},
+) => {
+	const params = new URLSearchParams({ language });
+	if (filters.dateFrom) params.set('date_from', filters.dateFrom);
+	if (filters.dateTo) params.set('date_to', filters.dateTo);
+	if (filters.projectId) params.set('project_id', String(filters.projectId));
+	if (filters.projectName) params.set('project_name', filters.projectName);
+	return `/api/reports/pdf?${params.toString()}`;
+};
 // Users (staff only)
 export const USERS_LIST = `${SITE_ROOT}dashboard/users`;
 export const USERS_ADD = `${SITE_ROOT}dashboard/users/new`;

@@ -38,6 +38,22 @@ describe('routes', () => {
 		);
 	});
 
+	it('builds same-origin report download URLs', () => {
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		const routes = require('./routes');
+
+		expect(
+			routes.REPORTS_DOWNLOAD('fr', {
+				dateFrom: '2026-01-01',
+				dateTo: '2026-12-31',
+				projectId: 4,
+				projectName: 'Appartement - Mourad Belkhir',
+			}),
+		).toBe(
+			'/api/reports/pdf?language=fr&date_from=2026-01-01&date_to=2026-12-31&project_id=4&project_name=Appartement+-+Mourad+Belkhir',
+		);
+	});
+
 	it('builds USERS routes with a prefix', () => {
 		process.env.NEXT_PUBLIC_DOMAIN_URL_PREFIX = 'https://app.example.com';
 		// eslint-disable-next-line @typescript-eslint/no-require-imports

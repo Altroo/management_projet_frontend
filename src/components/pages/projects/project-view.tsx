@@ -35,15 +35,14 @@ import {
 	Phone as PhoneIcon,
 	Schedule as ScheduleIcon,
 } from '@mui/icons-material';
-import { PROJECTS_EDIT, PROJECTS_LIST, REPORTS_PDF, type PdfLanguage } from '@/utils/routes';
+import { PROJECTS_EDIT, PROJECTS_LIST, REPORTS_DOWNLOAD, type PdfLanguage } from '@/utils/routes';
 import ApiProgress from '@/components/formikElements/apiLoading/apiProgress/apiProgress';
 import ApiAlert from '@/components/formikElements/apiLoading/apiAlert/apiAlert';
 import ActionModals from '@/components/htmlElements/modals/actionModal/actionModals';
 import PdfLanguageModal from '@/components/shared/pdfLanguageModal/pdfLanguageModal';
 import { Protected } from '@/components/layouts/protected/protected';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
-import { fetchFileBlob } from '@/utils/apiHelpers';
-import { downloadBlobFile, financialReportFilename } from '@/utils/fileDownload';
+import { downloadFileUrl } from '@/utils/fileDownload';
 import { useLanguage, useToast } from '@/utils/hooks';
 import { STATUS_CHIP_COLORS } from '@/utils/rawData';
 import ProjectPaymentScheduleCard from '@/components/shared/projectPaymentSchedule/projectPaymentSchedule';
@@ -170,12 +169,7 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 		setShowLanguageModal(false);
 		setIsDownloadingReport(true);
 		try {
-			const reportUrl = REPORTS_PDF(language, { projectId: id });
-			const blob = await fetchFileBlob(reportUrl, token);
-			downloadBlobFile(
-				blob,
-				financialReportFilename({ projectName: project.nom, language }),
-			);
+			downloadFileUrl(REPORTS_DOWNLOAD(language, { projectId: id, projectName: project.nom }));
 		} catch (err) {
 			onError(extractApiErrorMessage(err, t.projects.reportDownloadError));
 		} finally {
