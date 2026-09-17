@@ -261,8 +261,8 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 					setError('');
 					setNotice('');
 				}}
-				fullWidth
-				maxWidth="md"
+				fullWidth={Boolean(result)}
+				maxWidth={result ? 'md' : 'sm'}
 			>
 				<DialogTitle>{t.aiAssistant.previewTitle}</DialogTitle>
 				<DialogContent>

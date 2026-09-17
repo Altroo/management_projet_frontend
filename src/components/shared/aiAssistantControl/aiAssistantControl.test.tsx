@@ -152,6 +152,7 @@ describe('AiAssistantControl', () => {
 		fireEvent.click(screen.getByRole('button', { name: label }));
 
 		expect(await screen.findByText(message)).toBeInTheDocument();
+		expect(screen.getByRole('dialog')).not.toHaveClass('MuiDialog-paperFullWidth');
 		expect(screen.queryByTestId('suggested-text')).not.toBeInTheDocument();
 		expect(screen.getByRole('button', { name: 'Use suggestion' })).toBeDisabled();
 		expect(onApply).not.toHaveBeenCalled();
