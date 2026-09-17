@@ -93,13 +93,13 @@ export type TranslationDictionary = {
 		administration: string;
 		welcomeMale: string;
 		welcomeFemale: string;
-			welcomeNeutral: string;
-			projects: string;
-			projectsList: string;
-			newProject: string;
-			clients: string;
-			clientsList: string;
-			newClient: string;
+		welcomeNeutral: string;
+		projects: string;
+		projectsList: string;
+		newProject: string;
+		clients: string;
+		clientsList: string;
+		newClient: string;
 		suppliers: string;
 		suppliersList: string;
 		newSupplier: string;
@@ -279,26 +279,26 @@ export type TranslationDictionary = {
 			male: string;
 			female: string;
 		};
-			projectStatuses: {
-				completed: string;
-				inProgress: string;
-				notStarted: string;
-				onHold: string;
-				paused: string;
-				cancelled: string;
-				waitingStart: string;
-				delivered: string;
-			};
-			statusColors: {
-				default: string;
-				info: string;
-				success: string;
-				warning: string;
-				error: string;
-			};
-			fieldLabels: {
-				project: Record<string, string>;
-				projectStatus: Record<string, string>;
+		projectStatuses: {
+			completed: string;
+			inProgress: string;
+			notStarted: string;
+			onHold: string;
+			paused: string;
+			cancelled: string;
+			waitingStart: string;
+			delivered: string;
+		};
+		statusColors: {
+			default: string;
+			info: string;
+			success: string;
+			warning: string;
+			error: string;
+		};
+		fieldLabels: {
+			project: Record<string, string>;
+			projectStatus: Record<string, string>;
 			client: Record<string, string>;
 			supplier: Record<string, string>;
 			paymentSchedule: Record<string, string>;
@@ -361,6 +361,21 @@ export type TranslationDictionary = {
 		generate: string;
 		invalidPeriod: string;
 		generationError: string;
+	};
+	aiAssistant: {
+		translate: string;
+		fixGrammar: string;
+		professionalize: string;
+		translateToFrench: string;
+		translateToEnglish: string;
+		previewTitle: string;
+		original: string;
+		suggestion: string;
+		useSuggestion: string;
+		tryAgain: string;
+		cancel: string;
+		emptyText: string;
+		requestError: string;
 	};
 	companyProfile: {
 		title: string;
@@ -589,12 +604,12 @@ export type TranslationDictionary = {
 		projectsListTitle: string;
 		projectsListDescription: string;
 		newProjectTitle: string;
-			newProjectDescription: string;
-			projectDetailsTitle: string;
-			projectDetailsDescription: string;
-			editProjectTitle: string;
-			editProjectDescription: string;
-			clientsListTitle: string;
+		newProjectDescription: string;
+		projectDetailsTitle: string;
+		projectDetailsDescription: string;
+		editProjectTitle: string;
+		editProjectDescription: string;
+		clientsListTitle: string;
 		clientsListDescription: string;
 		newClientTitle: string;
 		newClientDescription: string;

@@ -33,6 +33,7 @@ import type {
 	SupplierType,
 } from '@/types/projectTypes';
 import type { CompanyProfileType } from '@/types/reportTypes';
+import type { AiAssistRequest, AiAssistResponse } from '@/types/aiTypes';
 
 const rawBaseQuery = axiosBaseQuery((api) =>
 	isAuthenticatedInstance(
@@ -861,6 +862,14 @@ export const projectApi = createApi({
 			}),
 			invalidatesTags: ['CompanyProfile'],
 		}),
+
+		assistText: builder.mutation<AiAssistResponse, AiAssistRequest>({
+			query: (data) => ({
+				url: process.env.NEXT_PUBLIC_AI_ASSISTANT ?? '/ai/assist/',
+				method: 'POST',
+				data,
+			}),
+		}),
 	}),
 });
 
@@ -951,4 +960,5 @@ export const {
 	useGetClientProjectDashboardQuery,
 	useGetCompanyProfileQuery,
 	useUpdateCompanyProfileMutation,
+	useAssistTextMutation,
 } = projectApi;

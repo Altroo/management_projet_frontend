@@ -43,6 +43,7 @@ import { Protected } from '@/components/layouts/protected/protected';
 import CustomTextInput from '@/components/formikElements/customTextInput/customTextInput';
 import CustomAutoCompleteSelect from '@/components/formikElements/customAutoCompleteSelect/customAutoCompleteSelect';
 import PrimaryLoadingButton from '@/components/htmlElements/buttons/primaryLoadingButton/primaryLoadingButton';
+import AiAssistantControl from '@/components/shared/aiAssistantControl/aiAssistantControl';
 import ApiProgress from '@/components/formikElements/apiLoading/apiProgress/apiProgress';
 import EntityCrudControls from '@/components/shared/entityCrudControls/entityCrudControls';
 import {
@@ -305,6 +306,11 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										fullWidth
 										startIcon={<NotesIcon fontSize="small" />}
 									/>
+									<AiAssistantControl
+										value={formik.values.description}
+										onApply={(value) => void formik.setFieldValue('description', value)}
+										context="expense"
+									/>
 									<Stack direction="row" spacing={2}>
 										<CustomTextInput
 											theme={inputTheme}
@@ -541,6 +547,11 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										fullWidth
 										startIcon={<NotesIcon fontSize="small" />}
 									/>
+									<AiAssistantControl
+										value={formik.values.element}
+										onApply={(value) => void formik.setFieldValue('element', value)}
+										context="expense"
+									/>
 									<CustomAutoCompleteSelect
 										id="supplier"
 										size="small"
@@ -600,6 +611,11 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 									multiline
 									rows={3}
 									startIcon={<NotesIcon fontSize="small" />}
+								/>
+								<AiAssistantControl
+									value={formik.values.notes}
+									onApply={(value) => void formik.setFieldValue('notes', value)}
+									context="expense"
 								/>
 							</CardContent>
 						</Card>

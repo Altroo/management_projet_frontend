@@ -42,7 +42,7 @@ import ActionModals from '@/components/htmlElements/modals/actionModal/actionMod
 import PdfLanguageModal from '@/components/shared/pdfLanguageModal/pdfLanguageModal';
 import { Protected } from '@/components/layouts/protected/protected';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
-import { downloadFileUrl } from '@/utils/fileDownload';
+import { downloadFileBlob } from '@/utils/fileDownload';
 import { useLanguage, useToast } from '@/utils/hooks';
 import { STATUS_CHIP_COLORS } from '@/utils/rawData';
 import ProjectPaymentScheduleCard from '@/components/shared/projectPaymentSchedule/projectPaymentSchedule';
@@ -169,7 +169,7 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 		setShowLanguageModal(false);
 		setIsDownloadingReport(true);
 		try {
-			downloadFileUrl(REPORTS_DOWNLOAD(language, { projectId: id, projectName: project.nom }));
+			await downloadFileBlob(REPORTS_DOWNLOAD(language, { projectId: id, projectName: project.nom }));
 		} catch (err) {
 			onError(extractApiErrorMessage(err, t.projects.reportDownloadError));
 		} finally {
@@ -408,7 +408,11 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 											<Divider />
 											<InfoRow icon={<EmailIcon />} label={t.projects.clientEmail} value={project.email_client} />
 											<Divider />
-											<InfoRow icon={<LocationCityIcon />} label={t.common.city} value={project.ville_client || project.client_city} />
+											<InfoRow
+												icon={<LocationCityIcon />}
+												label={t.common.city}
+												value={project.ville_client || project.client_city}
+											/>
 											<Divider />
 											<InfoRow icon={<PersonIcon />} label={t.projects.clientAddress} value={project.client_address} />
 										</Stack>
@@ -471,10 +475,7 @@ const ProjectViewClient: React.FC<Props> = ({ session, id }) => {
 				/>
 			)}
 			{showLanguageModal && (
-				<PdfLanguageModal
-					onSelectLanguage={handleDownloadReport}
-					onClose={() => setShowLanguageModal(false)}
-				/>
+				<PdfLanguageModal onSelectLanguage={handleDownloadReport} onClose={() => setShowLanguageModal(false)} />
 			)}
 		</Stack>
 	);

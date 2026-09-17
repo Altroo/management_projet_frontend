@@ -39,3 +39,33 @@ export const downloadFileUrl = (url: string): void => {
 	link.click();
 	link.remove();
 };
+
+export const downloadFileBlob = async (url: string): Promise<void> => {
+	const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
+	if (!response.ok) {
+		let data: unknown = { message: 'Unable to download file.' };
+		if (response.headers.get('content-type')?.includes('application/json')) {
+			data = await response.json();
+		}
+		const downloadError = new Error('Unable to download file.');
+		Object.assign(downloadError, { data });
+		throw downloadError;
+	}
+
+	const blob = await response.blob();
+	const objectUrl = URL.createObjectURL(blob);
+	const disposition = response.headers.get('content-disposition') ?? '';
+	const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] ?? 'download.pdf';
+	const link = document.createElement('a');
+	link.href = objectUrl;
+	link.download = filename;
+	link.rel = 'noopener';
+	link.style.display = 'none';
+	document.body.appendChild(link);
+	try {
+		link.click();
+	} finally {
+		link.remove();
+		URL.revokeObjectURL(objectUrl);
+	}
+};

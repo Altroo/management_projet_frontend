@@ -1,14 +1,28 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { format } from 'date-fns';
 import ReportsClient from './reports';
-import { downloadFileUrl } from '@/utils/fileDownload';
+import { downloadFileBlob } from '@/utils/fileDownload';
+
+const mockProjects = [
+	{ id: 7, nom: 'Projet Sept', date_debut: '2026-05-01' },
+	{ id: 8, nom: 'Projet Huit', date_debut: '2026-01-01' },
+];
 
 jest.mock('@mui/x-date-pickers/DatePicker', () => ({
-	DatePicker: ({ label, value, onChange }: { label: string; value: Date | null; onChange: (value: Date | null) => void }) => (
+	DatePicker: ({
+		label,
+		value,
+		onChange,
+	}: {
+		label: string;
+		value: Date | null;
+		onChange: (value: Date | null) => void;
+	}) => (
 		<input
 			aria-label={label}
 			type="date"
-			value={value ? value.toISOString().slice(0, 10) : ''}
+			value={value ? format(value, 'yyyy-MM-dd') : ''}
 			onChange={(event) => onChange(event.target.value ? new Date(`${event.target.value}T00:00:00`) : null)}
 		/>
 	),
@@ -29,13 +43,39 @@ jest.mock('@/components/shared/pdfLanguageModal/pdfLanguageModal', () => ({
 		<button onClick={() => onSelectLanguage('fr')}>Français</button>
 	),
 }));
+jest.mock('@/components/formikElements/customAutoCompleteSelect/customAutoCompleteSelect', () => ({
+	__esModule: true,
+	default: ({
+		label,
+		items,
+		value,
+		onChange,
+	}: {
+		label: string;
+		items: { code: string; value: string }[];
+		value: { code: string; value: string };
+		onChange: (event: React.ChangeEvent<HTMLSelectElement>, value: { code: string; value: string } | null) => void;
+	}) => (
+		<select
+			aria-label={label}
+			value={value.code}
+			onChange={(event) => onChange(event, items.find((item) => item.code === event.target.value) ?? null)}
+		>
+			{items.map((item) => (
+				<option key={item.code} value={item.code}>
+					{item.value}
+				</option>
+			))}
+		</select>
+	),
+}));
 jest.mock('@/contexts/InitContext', () => ({ useInitAccessToken: () => 'token' }));
 jest.mock('@/store/services/project', () => ({
-	useGetProjectsListQuery: () => ({ data: [{ id: 7, nom: 'Projet Sept' }], isLoading: false }),
+	useGetProjectsListQuery: () => ({ data: mockProjects, isLoading: false }),
 }));
 jest.mock('@/utils/fileDownload', () => ({
 	...jest.requireActual('@/utils/fileDownload'),
-	downloadFileUrl: jest.fn(),
+	downloadFileBlob: jest.fn().mockResolvedValue(undefined),
 }));
 jest.mock('@/utils/routes', () => ({
 	REPORTS_DOWNLOAD: (language: string, filters: { dateFrom: string; dateTo: string; projectId?: number }) =>
@@ -47,9 +87,17 @@ jest.mock('@/utils/hooks', () => ({
 		t: {
 			projects: { noProjectFound: 'Aucun projet trouvé' },
 			reports: {
-				title: 'Rapports', description: 'Description', configuration: 'Configuration du rapport', periodHelp: 'Aide', startDate: 'Date de début',
-				endDate: 'Date de fin', scope: 'Périmètre', allProjects: 'Tous les projets', generate: 'Générer le PDF',
-				invalidPeriod: 'Période invalide', generationError: 'Erreur',
+				title: 'Rapports',
+				description: 'Description',
+				configuration: 'Configuration du rapport',
+				periodHelp: 'Aide',
+				startDate: 'Date de début',
+				endDate: 'Date de fin',
+				scope: 'Périmètre',
+				allProjects: 'Tous les projets',
+				generate: 'Générer le PDF',
+				invalidPeriod: 'Période invalide',
+				generationError: 'Erreur',
 			},
 		},
 	}),
@@ -68,7 +116,7 @@ describe('ReportsClient', () => {
 		await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Français' })));
 
 		await waitFor(() =>
-			expect(downloadFileUrl).toHaveBeenCalledWith(
+			expect(downloadFileBlob).toHaveBeenCalledWith(
 				'/api/reports/pdf?language=fr&from=2026-03-01&to=2026-03-31&project=',
 			),
 		);
@@ -81,5 +129,34 @@ describe('ReportsClient', () => {
 
 		expect(screen.getByText('Période invalide')).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: 'Générer le PDF' })).toBeDisabled();
+	});
+
+	it('defaults all projects to the earliest project start date and keeps it editable', async () => {
+		render(<ReportsClient />);
+
+		await waitFor(() => expect(screen.getByLabelText('Date de début')).toHaveValue('2026-01-01'));
+		fireEvent.change(screen.getByLabelText('Date de début'), { target: { value: '2026-02-15' } });
+
+		expect(screen.getByLabelText('Date de début')).toHaveValue('2026-02-15');
+	});
+
+	it('defaults a selected project to its own start date and keeps it editable', async () => {
+		render(<ReportsClient />);
+
+		fireEvent.change(screen.getByLabelText('Périmètre'), { target: { value: '7' } });
+		await waitFor(() => expect(screen.getByLabelText('Date de début')).toHaveValue('2026-05-01'));
+		fireEvent.change(screen.getByLabelText('Date de début'), { target: { value: '2026-05-15' } });
+
+		expect(screen.getByLabelText('Date de début')).toHaveValue('2026-05-15');
+	});
+
+	it('restores the earliest project date when switching back to all projects', async () => {
+		render(<ReportsClient />);
+
+		fireEvent.change(screen.getByLabelText('Périmètre'), { target: { value: '7' } });
+		await waitFor(() => expect(screen.getByLabelText('Date de début')).toHaveValue('2026-05-01'));
+		fireEvent.change(screen.getByLabelText('Périmètre'), { target: { value: '' } });
+
+		await waitFor(() => expect(screen.getByLabelText('Date de début')).toHaveValue('2026-01-01'));
 	});
 });

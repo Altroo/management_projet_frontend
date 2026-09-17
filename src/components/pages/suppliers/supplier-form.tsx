@@ -19,6 +19,7 @@ import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import { Protected } from '@/components/layouts/protected/protected';
 import CustomTextInput from '@/components/formikElements/customTextInput/customTextInput';
 import PrimaryLoadingButton from '@/components/htmlElements/buttons/primaryLoadingButton/primaryLoadingButton';
+import AiAssistantControl from '@/components/shared/aiAssistantControl/aiAssistantControl';
 import ApiProgress from '@/components/formikElements/apiLoading/apiProgress/apiProgress';
 import { textInputTheme } from '@/utils/themes';
 import { supplierSchema } from '@/utils/formValidationSchemas';
@@ -73,13 +74,21 @@ const SupplierFormContent: React.FC<{ token: string | undefined; id?: number }> 
 		},
 	});
 
-	const validationEntries = Object.entries(formik.errors).filter(([key]) => key !== 'globalError') as [string, string][];
+	const validationEntries = Object.entries(formik.errors).filter(([key]) => key !== 'globalError') as [
+		string,
+		string,
+	][];
 	const showValidationAlert = validationEntries.length > 0 && formik.submitCount > 0;
 	const isLoading = isCreateLoading || isUpdateLoading || isPending;
 
 	return (
 		<Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
-			<Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => router.push(SUPPLIERS_LIST)} sx={{ alignSelf: 'flex-start' }}>
+			<Button
+				variant="outlined"
+				startIcon={<ArrowBackIcon />}
+				onClick={() => router.push(SUPPLIERS_LIST)}
+				sx={{ alignSelf: 'flex-start' }}
+			>
 				{t.suppliers.suppliersList}
 			</Button>
 			{showValidationAlert && (
@@ -145,6 +154,11 @@ const SupplierFormContent: React.FC<{ token: string | undefined; id?: number }> 
 									helperText={formik.submitCount > 0 ? (formik.errors.specialite ?? '') : ''}
 									fullWidth
 									startIcon={<BuildIcon fontSize="small" />}
+								/>
+								<AiAssistantControl
+									value={formik.values.specialite}
+									onApply={(value) => void formik.setFieldValue('specialite', value)}
+									context="supplier"
 								/>
 							</Stack>
 						</CardContent>

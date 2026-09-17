@@ -1,16 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import {
-	Alert,
-	Box,
-	Card,
-	CardContent,
-	Divider,
-	InputAdornment,
-	Stack,
-	Typography,
-} from '@mui/material';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Box, Card, CardContent, Divider, InputAdornment, Stack, Typography } from '@mui/material';
 import { CalendarMonth as CalendarMonthIcon, PictureAsPdf as PictureAsPdfIcon } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -19,6 +10,7 @@ import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { SessionProps } from '@/types/_initTypes';
 import type { DropDownType } from '@/types/accountTypes';
+import type { ProjectListType } from '@/types/projectTypes';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import { Protected } from '@/components/layouts/protected/protected';
 import PdfLanguageModal from '@/components/shared/pdfLanguageModal/pdfLanguageModal';
@@ -29,7 +21,7 @@ import { useGetProjectsListQuery } from '@/store/services/project';
 import { extractApiErrorMessage } from '@/utils/helpers';
 import { useLanguage, useToast } from '@/utils/hooks';
 import { REPORTS_DOWNLOAD, type PdfLanguage } from '@/utils/routes';
-import { downloadFileUrl } from '@/utils/fileDownload';
+import { downloadFileBlob } from '@/utils/fileDownload';
 import { textInputTheme } from '@/utils/themes';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
 
@@ -40,6 +32,22 @@ const currentYearPeriod = () => {
 	return { dateFrom: `${year}-01-01`, dateTo: `${year}-12-31` };
 };
 
+export const defaultReportStartDate = (
+	projects: Pick<ProjectListType, 'id' | 'date_debut'>[],
+	projectId: number | '',
+	fallback: string,
+) => {
+	if (projectId) {
+		return projects.find((project) => project.id === projectId)?.date_debut || fallback;
+	}
+	return (
+		projects
+			.map((project) => project.date_debut)
+			.filter(Boolean)
+			.sort()[0] || fallback
+	);
+};
+
 const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 	const { t } = useLanguage();
 	const { onError } = useToast();
@@ -48,28 +56,39 @@ const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 	const [dateFrom, setDateFrom] = useState(initialPeriod.dateFrom);
 	const [dateTo, setDateTo] = useState(initialPeriod.dateTo);
 	const [projectId, setProjectId] = useState<number | ''>('');
+	const startDateInitialized = useRef(false);
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
 	const [isGenerating, setIsGenerating] = useState(false);
 	const { data: projectsData, isLoading: projectsLoading } = useGetProjectsListQuery(
 		{ with_pagination: false },
 		{ skip: !token },
 	);
+	const projects = useMemo(
+		() => (Array.isArray(projectsData) ? projectsData : (projectsData?.results ?? [])),
+		[projectsData],
+	);
 	const projectItems = useMemo<DropDownType[]>(() => {
-		const projects = Array.isArray(projectsData) ? projectsData : (projectsData?.results ?? []);
 		return [
 			{ code: '', value: t.reports.allProjects },
 			...projects.map((project) => ({ code: String(project.id), value: project.nom })),
 		];
-	}, [projectsData, t.reports.allProjects]);
+	}, [projects, t.reports.allProjects]);
 	const selectedProject = projectItems.find((project) => project.code === String(projectId)) ?? projectItems[0];
 	const periodIsValid = Boolean(dateFrom && dateTo && dateFrom <= dateTo);
+
+	useEffect(() => {
+		if (projectsData !== undefined && !projectsLoading && !startDateInitialized.current) {
+			setDateFrom(defaultReportStartDate(projects, projectId, initialPeriod.dateFrom));
+			startDateInitialized.current = true;
+		}
+	}, [initialPeriod.dateFrom, projectId, projects, projectsData, projectsLoading]);
 
 	const generateReport = async (language: PdfLanguage) => {
 		if (!token || !periodIsValid) return;
 		setShowLanguageModal(false);
 		setIsGenerating(true);
 		try {
-			downloadFileUrl(
+			await downloadFileBlob(
 				REPORTS_DOWNLOAD(language, {
 					dateFrom,
 					dateTo,
@@ -86,12 +105,7 @@ const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 
 	return (
 		<LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
-			<Stack
-				direction="column"
-				spacing={2}
-				className={Styles.flexRootStack}
-				sx={{ mt: '48px', overflowX: 'auto' }}
-			>
+			<Stack direction="column" spacing={2} className={Styles.flexRootStack} sx={{ mt: '48px', overflowX: 'auto' }}>
 				<NavigationBar title={t.reports.title}>
 					<Protected permission="can_print">
 						<Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
@@ -159,7 +173,11 @@ const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 											noOptionsText={t.projects.noProjectFound}
 											fullWidth
 											disabled={projectsLoading}
-											onChange={(_, value) => setProjectId(value?.code ? Number(value.code) : '')}
+											onChange={(_, value) => {
+												const nextProjectId = value?.code ? Number(value.code) : '';
+												setProjectId(nextProjectId);
+												setDateFrom(defaultReportStartDate(projects, nextProjectId, initialPeriod.dateFrom));
+											}}
 										/>
 									</Stack>
 								</CardContent>

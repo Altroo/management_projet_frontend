@@ -29,6 +29,7 @@ import type { PaymentScheduleFormValues } from '@/types/projectTypes';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
 import { getDefaultTheme } from '@/utils/themes';
 import { useLanguage, useToast } from '@/utils/hooks';
+import AiAssistantControl from '@/components/shared/aiAssistantControl/aiAssistantControl';
 
 export type QueuedPaymentSchedule = {
 	id: string;
@@ -50,6 +51,7 @@ type ScheduleGridRow = {
 	savedId?: number;
 	due_date: string;
 	description: string;
+	notes: string;
 	expected_amount: string;
 	actual_amount: string;
 	expected_cumulative: string;
@@ -92,6 +94,7 @@ const ProjectPaymentScheduleCard: React.FC<ProjectPaymentScheduleCardProps> = ({
 	const [dueDate, setDueDate] = useState('');
 	const [expectedAmount, setExpectedAmount] = useState('');
 	const [description, setDescription] = useState('');
+	const [notes, setNotes] = useState('');
 	const [isPending, setIsPending] = useState(false);
 	const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 5 });
 
@@ -113,6 +116,7 @@ const ProjectPaymentScheduleCard: React.FC<ProjectPaymentScheduleCardProps> = ({
 			id: `queued-${row.id}`,
 			due_date: row.due_date,
 			description: row.description,
+			notes: row.notes,
 			expected_amount: row.expected_amount,
 			actual_amount: '',
 			expected_cumulative: '',
@@ -125,6 +129,7 @@ const ProjectPaymentScheduleCard: React.FC<ProjectPaymentScheduleCardProps> = ({
 			savedId: row.id,
 			due_date: row.due_date,
 			description: row.description,
+			notes: row.notes ?? '',
 			expected_amount: row.expected_amount,
 			actual_amount: row.actual_amount,
 			expected_cumulative: row.expected_cumulative,
@@ -138,6 +143,7 @@ const ProjectPaymentScheduleCard: React.FC<ProjectPaymentScheduleCardProps> = ({
 		setDueDate('');
 		setExpectedAmount('');
 		setDescription('');
+		setNotes('');
 	};
 
 	const handleAdd = async () => {
@@ -151,7 +157,7 @@ const ProjectPaymentScheduleCard: React.FC<ProjectPaymentScheduleCardProps> = ({
 					due_date: dueDate,
 					expected_amount: expectedAmount,
 					description: description.trim(),
-					notes: '',
+					notes,
 				},
 			]);
 			resetFields();
@@ -165,7 +171,7 @@ const ProjectPaymentScheduleCard: React.FC<ProjectPaymentScheduleCardProps> = ({
 					due_date: dueDate,
 					expected_amount: expectedAmount,
 					description,
-					notes: '',
+					notes,
 				}),
 			}).unwrap();
 			resetFields();
@@ -177,22 +183,35 @@ const ProjectPaymentScheduleCard: React.FC<ProjectPaymentScheduleCardProps> = ({
 		}
 	};
 
-	const handleDelete = useCallback(async (id: number) => {
-		if (!editable) return;
-		setIsPending(true);
-		try {
-			await deleteSchedule({ id }).unwrap();
-			onSuccess(t.paymentSchedules.scheduleDeletedSuccess);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.paymentSchedules.scheduleDeleteError));
-		} finally {
-			setIsPending(false);
-		}
-	}, [deleteSchedule, editable, onError, onSuccess, t.paymentSchedules.scheduleDeleteError, t.paymentSchedules.scheduleDeletedSuccess]);
+	const handleDelete = useCallback(
+		async (id: number) => {
+			if (!editable) return;
+			setIsPending(true);
+			try {
+				await deleteSchedule({ id }).unwrap();
+				onSuccess(t.paymentSchedules.scheduleDeletedSuccess);
+			} catch (err) {
+				onError(extractApiErrorMessage(err, t.paymentSchedules.scheduleDeleteError));
+			} finally {
+				setIsPending(false);
+			}
+		},
+		[
+			deleteSchedule,
+			editable,
+			onError,
+			onSuccess,
+			t.paymentSchedules.scheduleDeleteError,
+			t.paymentSchedules.scheduleDeletedSuccess,
+		],
+	);
 
-	const handleRemoveQueued = useCallback((id: string) => {
-		setQueuedSchedules?.((current) => current.filter((row) => row.id !== id));
-	}, [setQueuedSchedules]);
+	const handleRemoveQueued = useCallback(
+		(id: string) => {
+			setQueuedSchedules?.((current) => current.filter((row) => row.id !== id));
+		},
+		[setQueuedSchedules],
+	);
 
 	const columns = useMemo<GridColDef<ScheduleGridRow>[]>(
 		() => [
@@ -210,9 +229,16 @@ const ProjectPaymentScheduleCard: React.FC<ProjectPaymentScheduleCardProps> = ({
 				flex: 1.4,
 				renderCell: (params: GridRenderCellParams<ScheduleGridRow, string>) => (
 					<Stack direction="row" spacing={1} sx={{ alignItems: 'center', minWidth: 0 }}>
-						<Typography variant="body2" noWrap>
-							{params.value}
-						</Typography>
+						<Box sx={{ minWidth: 0 }}>
+							<Typography variant="body2" noWrap>
+								{params.value}
+							</Typography>
+							{params.row.notes ? (
+								<Typography variant="caption" color="text.secondary" noWrap>
+									{params.row.notes}
+								</Typography>
+							) : null}
+						</Box>
 						{params.row.isQueued ? (
 							<Chip size="small" color="warning" variant="outlined" label={t.paymentSchedules.pendingSave} />
 						) : null}
@@ -331,7 +357,12 @@ const ProjectPaymentScheduleCard: React.FC<ProjectPaymentScheduleCardProps> = ({
 						</Typography>
 					</Stack>
 					{editable && sortedQueuedRows.length > 0 ? (
-						<Chip size="small" color="warning" variant="outlined" label={`${sortedQueuedRows.length} ${t.paymentSchedules.pendingSave}`} />
+						<Chip
+							size="small"
+							color="warning"
+							variant="outlined"
+							label={`${sortedQueuedRows.length} ${t.paymentSchedules.pendingSave}`}
+						/>
 					) : null}
 				</Stack>
 				<Divider sx={{ mb: 3 }} />
@@ -357,13 +388,26 @@ const ProjectPaymentScheduleCard: React.FC<ProjectPaymentScheduleCardProps> = ({
 							slotProps={{ htmlInput: { inputMode: 'decimal' } }}
 							fullWidth
 						/>
-						<TextField
-							size="small"
-							label={t.common.description}
-							value={description}
-							onChange={(event) => setDescription(event.target.value)}
-							fullWidth
-						/>
+						<Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', width: '100%' }}>
+							<TextField
+								size="small"
+								label={t.common.description}
+								value={description}
+								onChange={(event) => setDescription(event.target.value)}
+								fullWidth
+							/>
+							<AiAssistantControl value={description} onApply={setDescription} context="payment_schedule" compact />
+						</Stack>
+						<Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', width: '100%' }}>
+							<TextField
+								size="small"
+								label={t.common.notes}
+								value={notes}
+								onChange={(event) => setNotes(event.target.value)}
+								fullWidth
+							/>
+							<AiAssistantControl value={notes} onApply={setNotes} context="payment_schedule" compact />
+						</Stack>
 						<Button
 							variant="contained"
 							startIcon={<AddIcon />}

@@ -43,6 +43,7 @@ import type { RealBudgetEntryFormValues } from '@/types/projectTypes';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
 import { getDefaultTheme, textInputTheme } from '@/utils/themes';
 import { useLanguage, useToast } from '@/utils/hooks';
+import AiAssistantControl from '@/components/shared/aiAssistantControl/aiAssistantControl';
 
 const inputTheme = textInputTheme();
 
@@ -185,6 +186,7 @@ const ProjectRealBudgetCard = React.forwardRef<ProjectRealBudgetCardHandle, Proj
 		const [date, setDate] = useState(today());
 		const [stage, setStage] = useState('');
 		const [description, setDescription] = useState('');
+		const [notes, setNotes] = useState('');
 		const [montantClient, setMontantClient] = useState('');
 		const [montantFournisseur, setMontantFournisseur] = useState('');
 		const [isPending, setIsPending] = useState(false);
@@ -198,7 +200,9 @@ const ProjectRealBudgetCard = React.forwardRef<ProjectRealBudgetCardHandle, Proj
 			[queuedEntries],
 		);
 
-		const hasDraftInput = Boolean(stage.trim() || description.trim() || montantClient || montantFournisseur);
+		const hasDraftInput = Boolean(
+			stage.trim() || description.trim() || notes.trim() || montantClient || montantFournisseur,
+		);
 		const canSubmit = Boolean(date && stage.trim() && montantClient && montantFournisseur);
 		const shouldShowDraftErrors = validationAttempted || draftValidationAttempted;
 		const draftErrors = useMemo(
@@ -277,6 +281,7 @@ const ProjectRealBudgetCard = React.forwardRef<ProjectRealBudgetCardHandle, Proj
 			setDate(today());
 			setStage('');
 			setDescription('');
+			setNotes('');
 			setMontantClient('');
 			setMontantFournisseur('');
 		};
@@ -289,9 +294,9 @@ const ProjectRealBudgetCard = React.forwardRef<ProjectRealBudgetCardHandle, Proj
 				description: description.trim(),
 				montant_client: montantClient,
 				montant_fournisseur: montantFournisseur,
-				notes: '',
+				notes,
 			}),
-			[date, description, montantClient, montantFournisseur, stage],
+			[date, description, montantClient, montantFournisseur, notes, stage],
 		);
 
 		const handleAdd = useCallback(
@@ -552,12 +557,15 @@ const ProjectRealBudgetCard = React.forwardRef<ProjectRealBudgetCardHandle, Proj
 					filterable: false,
 					renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
 						params.row.isDraft ? (
-							draftTextInput({
-								value: description,
-								onChange: (event) => setDescription(event.target.value),
-								placeholder: t.common.description,
-								icon: <NotesIcon fontSize="small" />,
-							})
+							<Stack direction="row" spacing={0.25} sx={{ alignItems: 'center', width: '100%' }}>
+								{draftTextInput({
+									value: description,
+									onChange: (event) => setDescription(event.target.value),
+									placeholder: t.common.description,
+									icon: <NotesIcon fontSize="small" />,
+								})}
+								<AiAssistantControl value={description} onApply={setDescription} context="real_budget" compact />
+							</Stack>
 						) : (
 							<Typography variant="body2" noWrap>
 								{params.value || '-'}
@@ -781,6 +789,20 @@ const ProjectRealBudgetCard = React.forwardRef<ProjectRealBudgetCardHandle, Proj
 					</Box>
 
 					{isPending || isLoading ? <LinearProgress sx={{ mb: 2 }} /> : null}
+
+					{editable ? (
+						<Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', mb: 2 }}>
+							<TextField
+								size="small"
+								label={t.common.notes}
+								value={notes}
+								onChange={(event) => setNotes(event.target.value)}
+								disabled={isPending || isLoading}
+								fullWidth
+							/>
+							<AiAssistantControl value={notes} onApply={setNotes} context="real_budget" compact />
+						</Stack>
+					) : null}
 
 					<ThemeProvider theme={getDefaultTheme()}>
 						<Box sx={{ width: '100%', height: hasRows ? 430 : 320 }}>
