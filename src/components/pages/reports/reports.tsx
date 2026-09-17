@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Box, Card, CardContent, Divider, InputAdornment, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, Divider, InputAdornment, LinearProgress, Stack, Typography } from '@mui/material';
 import { CalendarMonth as CalendarMonthIcon, PictureAsPdf as PictureAsPdfIcon } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -26,6 +26,7 @@ import { textInputTheme } from '@/utils/themes';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
 
 const inputTheme = textInputTheme();
+type GenerationStage = 'preparing' | 'downloading';
 
 const currentYearPeriod = () => {
 	const year = new Date().getFullYear();
@@ -58,7 +59,9 @@ const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 	const [projectId, setProjectId] = useState<number | ''>('');
 	const startDateInitialized = useRef(false);
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
-	const [isGenerating, setIsGenerating] = useState(false);
+	const [generationStage, setGenerationStage] = useState<GenerationStage | null>(null);
+	const [generatingLanguage, setGeneratingLanguage] = useState<PdfLanguage | null>(null);
+	const [generationError, setGenerationError] = useState('');
 	const { data: projectsData, isLoading: projectsLoading } = useGetProjectsListQuery(
 		{ with_pagination: false },
 		{ skip: !token },
@@ -75,6 +78,9 @@ const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 	}, [projects, t.reports.allProjects]);
 	const selectedProject = projectItems.find((project) => project.code === String(projectId)) ?? projectItems[0];
 	const periodIsValid = Boolean(dateFrom && dateTo && dateFrom <= dateTo);
+	const isGenerating = generationStage !== null;
+	const generatingLanguageLabel =
+		generatingLanguage === 'en' ? t.aiAssistant.translateToEnglish : t.aiAssistant.translateToFrench;
 
 	useEffect(() => {
 		if (projectsData !== undefined && !projectsLoading && !startDateInitialized.current) {
@@ -86,7 +92,9 @@ const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 	const generateReport = async (language: PdfLanguage) => {
 		if (!token || !periodIsValid) return;
 		setShowLanguageModal(false);
-		setIsGenerating(true);
+		setGenerationError('');
+		setGeneratingLanguage(language);
+		setGenerationStage('preparing');
 		try {
 			await downloadFileBlob(
 				REPORTS_DOWNLOAD(language, {
@@ -95,11 +103,15 @@ const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 					projectId: projectId || undefined,
 					projectName: projectId ? selectedProject?.value : undefined,
 				}),
+				{ onResponseReady: () => setGenerationStage('downloading') },
 			);
 		} catch (error) {
-			onError(extractApiErrorMessage(error, t.reports.generationError));
+			const message = extractApiErrorMessage(error, t.reports.generationError);
+			setGenerationError(message);
+			onError(message);
 		} finally {
-			setIsGenerating(false);
+			setGenerationStage(null);
+			setGeneratingLanguage(null);
 		}
 	};
 
@@ -182,6 +194,25 @@ const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 									</Stack>
 								</CardContent>
 							</Card>
+							{generationStage && (
+								<Alert severity="info" icon={<PictureAsPdfIcon fontSize="inherit" />}>
+									<Stack spacing={1} sx={{ minWidth: { sm: 420 } }}>
+										<Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+											{t.reports.preparingReport}: {generatingLanguageLabel}
+										</Typography>
+										<Typography variant="body2">
+											{generationStage === 'preparing'
+												? t.reports.translatingAndGenerating
+												: t.reports.downloadingFile}
+										</Typography>
+										<LinearProgress aria-label={t.reports.generationProgress} />
+										<Typography variant="caption" color="text.secondary">
+											{t.reports.progressHelp}
+										</Typography>
+									</Stack>
+								</Alert>
+							)}
+							{generationError && <Alert severity="error">{generationError}</Alert>}
 							<Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 2 }}>
 								<PrimaryLoadingButton
 									buttonText={t.reports.generate}

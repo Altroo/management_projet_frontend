@@ -48,6 +48,7 @@ describe('downloadFileBlob', () => {
 
 	it('waits for the response and downloads the returned blob filename', async () => {
 		const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+		const onResponseReady = jest.fn();
 		global.fetch = jest.fn().mockResolvedValue({
 			ok: true,
 			blob: async () => new Blob(['pdf'], { type: 'application/pdf' }),
@@ -57,8 +58,9 @@ describe('downloadFileBlob', () => {
 			}),
 		});
 
-		await downloadFileBlob('/api/reports/pdf?language=en');
+		await downloadFileBlob('/api/reports/pdf?language=en', { onResponseReady });
 
+		expect(onResponseReady).toHaveBeenCalledTimes(1);
 		expect(click).toHaveBeenCalledTimes(1);
 		expect(createObjectURL).toHaveBeenCalledTimes(1);
 		expect(revokeObjectURL).toHaveBeenCalledWith('blob:report');

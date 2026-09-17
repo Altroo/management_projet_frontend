@@ -361,6 +361,11 @@ export type TranslationDictionary = {
 		generate: string;
 		invalidPeriod: string;
 		generationError: string;
+		preparingReport: string;
+		translatingAndGenerating: string;
+		downloadingFile: string;
+		generationProgress: string;
+		progressHelp: string;
 	};
 	aiAssistant: {
 		translate: string;

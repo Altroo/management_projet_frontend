@@ -427,6 +427,11 @@ export const en: TranslationDictionary = {
 		generate: 'Generate PDF',
 		invalidPeriod: 'The start date must be before the end date.',
 		generationError: 'Error generating the PDF report',
+		preparingReport: 'Preparing the report',
+		translatingAndGenerating: 'Step 1 of 2 · Translating content and generating the PDF…',
+		downloadingFile: 'Step 2 of 2 · Downloading the file…',
+		generationProgress: 'Report generation progress',
+		progressHelp: 'Names, dates, identifiers, and amounts remain unchanged.',
 	},
 	aiAssistant: {
 		translate: 'Translate',

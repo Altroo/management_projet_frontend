@@ -40,10 +40,14 @@ export const downloadFileUrl = (url: string): void => {
 	link.remove();
 };
 
-export const downloadFileBlob = async (url: string): Promise<void> => {
+interface DownloadFileBlobOptions {
+	onResponseReady?: () => void;
+}
+
+export const downloadFileBlob = async (url: string, options: DownloadFileBlobOptions = {}): Promise<void> => {
 	const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
 	if (!response.ok) {
-		let data: unknown = { message: 'Unable to download file.' };
+		let data: unknown;
 		if (response.headers.get('content-type')?.includes('application/json')) {
 			data = await response.json();
 		}
@@ -52,6 +56,7 @@ export const downloadFileBlob = async (url: string): Promise<void> => {
 		throw downloadError;
 	}
 
+	options.onResponseReady?.();
 	const blob = await response.blob();
 	const objectUrl = URL.createObjectURL(blob);
 	const disposition = response.headers.get('content-disposition') ?? '';

@@ -427,6 +427,11 @@ export const fr: TranslationDictionary = {
 		generate: 'Générer le PDF',
 		invalidPeriod: 'La date de début doit précéder la date de fin.',
 		generationError: 'Erreur lors de la génération du rapport PDF',
+		preparingReport: 'Préparation du rapport',
+		translatingAndGenerating: 'Étape 1 sur 2 · Traduction du contenu et génération du PDF…',
+		downloadingFile: 'Étape 2 sur 2 · Téléchargement du fichier…',
+		generationProgress: 'Progression de la génération du rapport',
+		progressHelp: 'Les noms, dates, identifiants et montants restent inchangés.',
 	},
 	aiAssistant: {
 		translate: 'Traduire',
