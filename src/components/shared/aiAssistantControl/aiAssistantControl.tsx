@@ -31,7 +31,7 @@ import { LanguageFlag } from '@/components/shared/languageSwitcher/languageSwitc
 import { useAssistTextMutation } from '@/store/services/project';
 import type { AiAssistAction, AiAssistRequest, AiAssistResponse } from '@/types/aiTypes';
 import { extractApiErrorMessage } from '@/utils/helpers';
-import { useLanguage } from '@/utils/hooks';
+import { useLanguage, useToast } from '@/utils/hooks';
 
 type AiAssistantControlProps = {
 	value: string;
@@ -86,12 +86,12 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 	compact = false,
 }) => {
 	const { t } = useLanguage();
+	const { onSuccess } = useToast();
 	const [assistText, { isLoading }] = useAssistTextMutation();
 	const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
 	const [result, setResult] = useState<AiAssistResponse | null>(null);
 	const [lastRequest, setLastRequest] = useState<AiAssistRequest | null>(null);
 	const [error, setError] = useState('');
-	const [notice, setNotice] = useState('');
 	const [translationDialogOpen, setTranslationDialogOpen] = useState(false);
 	const changes = useMemo(() => (result ? diff(result.original_text, result.suggested_text) : []), [result]);
 
@@ -100,17 +100,16 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 
 		if (isUnchanged && request.action === 'fix_grammar') {
 			setResult(null);
-			setNotice(t.aiAssistant.alreadyCorrect);
+			onSuccess(t.aiAssistant.alreadyCorrect);
 			return;
 		}
 
 		if (isUnchanged && request.action === 'professionalize') {
 			setResult(null);
-			setNotice(t.aiAssistant.alreadyProfessional);
+			onSuccess(t.aiAssistant.alreadyProfessional);
 			return;
 		}
 
-		setNotice('');
 		setResult(response);
 	};
 
@@ -129,7 +128,6 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 		};
 		setLastRequest(request);
 		setError('');
-		setNotice('');
 		try {
 			handleResponse(request, await assistText(request).unwrap());
 		} catch (requestError) {
@@ -140,7 +138,6 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 	const retry = async () => {
 		if (!lastRequest) return;
 		setError('');
-		setNotice('');
 		try {
 			handleResponse(lastRequest, await assistText(lastRequest).unwrap());
 		} catch (requestError) {
@@ -255,11 +252,10 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 			)}
 
 			<Dialog
-				open={Boolean(result || error || notice)}
+				open={Boolean(result || error)}
 				onClose={() => {
 					setResult(null);
 					setError('');
-					setNotice('');
 				}}
 				fullWidth={Boolean(result)}
 				maxWidth={result ? 'md' : 'sm'}
@@ -287,7 +283,6 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 								</Paper>
 							</Box>
 						)}
-						{notice && <Alert severity="success">{notice}</Alert>}
 						{error && <Alert severity="error">{error}</Alert>}
 					</Stack>
 				</DialogContent>
@@ -296,7 +291,6 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 						onClick={() => {
 							setResult(null);
 							setError('');
-							setNotice('');
 						}}
 					>
 						{t.aiAssistant.cancel}
@@ -310,7 +304,6 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 						onClick={() => {
 							if (result) onApply(result.suggested_text);
 							setResult(null);
-							setNotice('');
 						}}
 					>
 						{t.aiAssistant.useSuggestion}

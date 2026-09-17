@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import AiAssistantControl from './aiAssistantControl';
 
 const assistText = jest.fn();
+const onSuccess = jest.fn();
 let mockMutationState = { isLoading: false };
 
 jest.mock('@/store/services/project', () => ({
@@ -10,6 +11,7 @@ jest.mock('@/store/services/project', () => ({
 }));
 
 jest.mock('@/utils/hooks', () => ({
+	useToast: () => ({ onSuccess, onError: jest.fn() }),
 	useLanguage: () => ({
 		t: {
 			aiAssistant: {
@@ -137,7 +139,7 @@ describe('AiAssistantControl', () => {
 	it.each([
 		['Fix grammar', 'The text is already correct.'],
 		['Make professional', 'The text is already professionally written.'],
-	])('reports an unchanged result for %s without offering a duplicate suggestion', async (label, message) => {
+	])('shows a toast for an unchanged %s result without opening a preview', async (label, message) => {
 		const onApply = jest.fn();
 		assistText.mockReturnValue({
 			unwrap: () =>
@@ -151,10 +153,9 @@ describe('AiAssistantControl', () => {
 
 		fireEvent.click(screen.getByRole('button', { name: label }));
 
-		expect(await screen.findByText(message)).toBeInTheDocument();
-		expect(screen.getByRole('dialog')).not.toHaveClass('MuiDialog-paperFullWidth');
+		await waitFor(() => expect(onSuccess).toHaveBeenCalledWith(message));
+		expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 		expect(screen.queryByTestId('suggested-text')).not.toBeInTheDocument();
-		expect(screen.getByRole('button', { name: 'Use suggestion' })).toBeDisabled();
 		expect(onApply).not.toHaveBeenCalled();
 	});
 
