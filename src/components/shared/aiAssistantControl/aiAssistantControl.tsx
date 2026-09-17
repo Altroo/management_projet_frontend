@@ -68,7 +68,6 @@ const DiffText: React.FC<DiffTextProps> = ({ changes, variant }) => (
 						bgcolor: variant === 'original' ? 'error.light' : '#fff59d',
 						color: variant === 'original' ? 'error.contrastText' : 'text.primary',
 						borderRadius: 0.5,
-						px: 0.25,
 					}}
 				>
 					{text}
