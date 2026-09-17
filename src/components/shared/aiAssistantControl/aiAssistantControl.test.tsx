@@ -18,8 +18,8 @@ jest.mock('@/utils/hooks', () => ({
 				translate: 'Translate',
 				fixGrammar: 'Fix grammar',
 				professionalize: 'Make professional',
-				translateToFrench: 'Translate to French',
-				translateToEnglish: 'Translate to English',
+				translateToFrench: 'French',
+				translateToEnglish: 'English',
 				chooseLanguage: 'Choose a translation language.',
 				previewTitle: 'AI assistant suggestion',
 				original: 'Original text',
@@ -74,8 +74,8 @@ describe('AiAssistantControl', () => {
 		render(<AiAssistantControl value="texte source" context="project" onApply={onApply} />);
 
 		fireEvent.click(screen.getByRole('button', { name: 'Translate' }));
-		expect(await screen.findByRole('button', { name: 'Translate to French' })).toBeInTheDocument();
-		fireEvent.click(await screen.findByRole('button', { name: 'Translate to English' }));
+		expect(await screen.findByRole('button', { name: 'French' })).toBeInTheDocument();
+		fireEvent.click(await screen.findByRole('button', { name: 'English' }));
 
 		expect(await screen.findByTestId('suggested-text')).toHaveTextContent('source text');
 		expect(onApply).not.toHaveBeenCalled();
