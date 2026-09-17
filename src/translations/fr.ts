@@ -434,6 +434,7 @@ export const fr: TranslationDictionary = {
 		professionalize: 'Rendre professionnel',
 		translateToFrench: 'Traduire en français',
 		translateToEnglish: 'Traduire en anglais',
+		chooseLanguage: 'Choisissez la langue dans laquelle vous souhaitez traduire le texte.',
 		previewTitle: "Suggestion de l'assistant IA",
 		original: 'Texte original',
 		suggestion: 'Suggestion',
@@ -442,6 +443,8 @@ export const fr: TranslationDictionary = {
 		cancel: 'Annuler',
 		emptyText: 'Saisissez un texte avant d’utiliser l’assistant.',
 		requestError: 'L’assistant IA n’a pas pu traiter ce texte.',
+		alreadyCorrect: 'Le texte est déjà correct.',
+		alreadyProfessional: 'Le texte est déjà rédigé de manière professionnelle.',
 	},
 	companyProfile: {
 		title: 'Profil société',

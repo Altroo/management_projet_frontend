@@ -18,6 +18,7 @@ jest.mock('@/utils/hooks', () => ({
 				professionalize: 'Make professional',
 				translateToFrench: 'Translate to French',
 				translateToEnglish: 'Translate to English',
+				chooseLanguage: 'Choose a translation language.',
 				previewTitle: 'AI assistant suggestion',
 				original: 'Original text',
 				suggestion: 'Suggestion',
@@ -26,6 +27,8 @@ jest.mock('@/utils/hooks', () => ({
 				cancel: 'Cancel',
 				emptyText: 'Enter text first.',
 				requestError: 'Request failed.',
+				alreadyCorrect: 'The text is already correct.',
+				alreadyProfessional: 'The text is already professionally written.',
 			},
 		},
 	}),
@@ -35,7 +38,7 @@ const response = {
 	original_text: 'texte source',
 	suggested_text: 'source text',
 	detected_language: 'fr' as const,
-	model: 'qwen3.8-27b-q5_k_m',
+	model: 'qwen3.6-35b-a3b-q5_k_m',
 	cached: false,
 	processing_ms: 120,
 };
@@ -69,10 +72,10 @@ describe('AiAssistantControl', () => {
 		render(<AiAssistantControl value="texte source" context="project" onApply={onApply} />);
 
 		fireEvent.click(screen.getByRole('button', { name: 'Translate' }));
-		expect(await screen.findByRole('menuitem', { name: 'Translate to French' })).toBeInTheDocument();
-		fireEvent.click(await screen.findByRole('menuitem', { name: 'Translate to English' }));
+		expect(await screen.findByRole('button', { name: 'Translate to French' })).toBeInTheDocument();
+		fireEvent.click(await screen.findByRole('button', { name: 'Translate to English' }));
 
-		await screen.findByText('source text');
+		expect(await screen.findByTestId('suggested-text')).toHaveTextContent('source text');
 		expect(onApply).not.toHaveBeenCalled();
 		expect(assistText).toHaveBeenCalledWith({
 			action: 'translate',
@@ -94,7 +97,7 @@ describe('AiAssistantControl', () => {
 		render(<AiAssistantControl value="texte source" context="expense" onApply={jest.fn()} />);
 
 		fireEvent.click(screen.getByRole('button', { name: label }));
-		await screen.findByText('source text');
+		expect(await screen.findByTestId('suggested-text')).toHaveTextContent('source text');
 		expect(assistText).toHaveBeenCalledWith({
 			action,
 			text: 'texte source',
@@ -114,7 +117,7 @@ describe('AiAssistantControl', () => {
 		await screen.findByText('Model unavailable');
 		fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
 
-		await waitFor(() => expect(screen.getByText('source text')).toBeInTheDocument());
+		await waitFor(() => expect(screen.getByTestId('suggested-text')).toHaveTextContent('source text'));
 		expect(assistText).toHaveBeenCalledTimes(2);
 	});
 
@@ -124,11 +127,52 @@ describe('AiAssistantControl', () => {
 		render(<AiAssistantControl value="texte source" context="project" onApply={onApply} />);
 
 		fireEvent.click(screen.getByRole('button', { name: 'Fix grammar' }));
-		await screen.findByText('source text');
+		expect(await screen.findByTestId('suggested-text')).toHaveTextContent('source text');
 		fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
 		expect(onApply).not.toHaveBeenCalled();
-		expect(screen.queryByText('source text')).not.toBeInTheDocument();
+		expect(screen.queryByTestId('suggested-text')).not.toBeInTheDocument();
+	});
+
+	it.each([
+		['Fix grammar', 'The text is already correct.'],
+		['Make professional', 'The text is already professionally written.'],
+	])('reports an unchanged result for %s without offering a duplicate suggestion', async (label, message) => {
+		const onApply = jest.fn();
+		assistText.mockReturnValue({
+			unwrap: () =>
+				Promise.resolve({
+					...response,
+					original_text: 'Le rapport est prêt.',
+					suggested_text: '  Le rapport est prêt.\n',
+				}),
+		});
+		render(<AiAssistantControl value="Le rapport est prêt." context="project" onApply={onApply} />);
+
+		fireEvent.click(screen.getByRole('button', { name: label }));
+
+		expect(await screen.findByText(message)).toBeInTheDocument();
+		expect(screen.queryByTestId('suggested-text')).not.toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Use suggestion' })).toBeDisabled();
+		expect(onApply).not.toHaveBeenCalled();
+	});
+
+	it('highlights removed text in red and added text in yellow', async () => {
+		assistText.mockReturnValue({
+			unwrap: () =>
+				Promise.resolve({
+					...response,
+					original_text: 'Le rapport sont prêt.',
+					suggested_text: 'Le rapport est prêt.',
+				}),
+		});
+		render(<AiAssistantControl value="Le rapport sont prêt." context="project" onApply={jest.fn()} />);
+
+		fireEvent.click(screen.getByRole('button', { name: 'Fix grammar' }));
+		await screen.findByTestId('suggested-text');
+
+		expect(screen.getByTestId('original-text').querySelector('mark[data-change="removed"]')).toHaveTextContent('on');
+		expect(screen.getByTestId('suggested-text').querySelector('mark[data-change="added"]')).toHaveTextContent('e');
 	});
 
 	it('disables actions and shows progress while a request is running', () => {

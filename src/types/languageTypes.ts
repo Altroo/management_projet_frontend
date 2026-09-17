@@ -368,6 +368,7 @@ export type TranslationDictionary = {
 		professionalize: string;
 		translateToFrench: string;
 		translateToEnglish: string;
+		chooseLanguage: string;
 		previewTitle: string;
 		original: string;
 		suggestion: string;
@@ -376,6 +377,8 @@ export type TranslationDictionary = {
 		cancel: string;
 		emptyText: string;
 		requestError: string;
+		alreadyCorrect: string;
+		alreadyProfessional: string;
 	};
 	companyProfile: {
 		title: string;

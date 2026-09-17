@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import diff from 'fast-diff';
 import {
 	Alert,
 	Box,
@@ -20,10 +21,13 @@ import {
 } from '@mui/material';
 import {
 	AutoAwesome as AutoAwesomeIcon,
+	Close as CloseIcon,
 	Language as LanguageIcon,
 	Spellcheck as SpellcheckIcon,
 	WorkOutlined as WorkOutlineIcon,
 } from '@mui/icons-material';
+import ActionModals from '@/components/htmlElements/modals/actionModal/actionModals';
+import { LanguageFlag } from '@/components/shared/languageSwitcher/languageSwitcher';
 import { useAssistTextMutation } from '@/store/services/project';
 import type { AiAssistAction, AiAssistRequest, AiAssistResponse } from '@/types/aiTypes';
 import { extractApiErrorMessage } from '@/utils/helpers';
@@ -39,6 +43,41 @@ type AiAssistantControlProps = {
 
 const isEnabled = () => process.env.NEXT_PUBLIC_AI_ASSISTANT_ENABLED === 'true';
 
+const normalizeForComparison = (text: string) => text.normalize('NFC').replace(/\s+/g, ' ').trim();
+
+type DiffTextProps = {
+	changes: diff.Diff[];
+	variant: 'original' | 'suggestion';
+};
+
+const DiffText: React.FC<DiffTextProps> = ({ changes, variant }) => (
+	<>
+		{changes.map(([operation, text], index) => {
+			const isChanged = variant === 'original' ? operation === diff.DELETE : operation === diff.INSERT;
+			const isVisible = operation === diff.EQUAL || isChanged;
+
+			if (!isVisible) return null;
+			if (!isChanged) return <React.Fragment key={`${operation}-${index}`}>{text}</React.Fragment>;
+
+			return (
+				<Box
+					component="mark"
+					data-change={variant === 'original' ? 'removed' : 'added'}
+					key={`${operation}-${index}`}
+					sx={{
+						bgcolor: variant === 'original' ? 'error.light' : '#fff59d',
+						color: variant === 'original' ? 'error.contrastText' : 'text.primary',
+						borderRadius: 0.5,
+						px: 0.25,
+					}}
+				>
+					{text}
+				</Box>
+			);
+		})}
+	</>
+);
+
 const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 	value,
 	onApply,
@@ -52,6 +91,28 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 	const [result, setResult] = useState<AiAssistResponse | null>(null);
 	const [lastRequest, setLastRequest] = useState<AiAssistRequest | null>(null);
 	const [error, setError] = useState('');
+	const [notice, setNotice] = useState('');
+	const [translationDialogOpen, setTranslationDialogOpen] = useState(false);
+	const changes = useMemo(() => (result ? diff(result.original_text, result.suggested_text) : []), [result]);
+
+	const handleResponse = (request: AiAssistRequest, response: AiAssistResponse) => {
+		const isUnchanged = normalizeForComparison(request.text) === normalizeForComparison(response.suggested_text);
+
+		if (isUnchanged && request.action === 'fix_grammar') {
+			setResult(null);
+			setNotice(t.aiAssistant.alreadyCorrect);
+			return;
+		}
+
+		if (isUnchanged && request.action === 'professionalize') {
+			setResult(null);
+			setNotice(t.aiAssistant.alreadyProfessional);
+			return;
+		}
+
+		setNotice('');
+		setResult(response);
+	};
 
 	const run = async (action: AiAssistAction, target_language?: 'fr' | 'en') => {
 		setMenuAnchor(null);
@@ -68,8 +129,9 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 		};
 		setLastRequest(request);
 		setError('');
+		setNotice('');
 		try {
-			setResult(await assistText(request).unwrap());
+			handleResponse(request, await assistText(request).unwrap());
 		} catch (requestError) {
 			setError(extractApiErrorMessage(requestError, t.aiAssistant.requestError));
 		}
@@ -78,8 +140,9 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 	const retry = async () => {
 		if (!lastRequest) return;
 		setError('');
+		setNotice('');
 		try {
-			setResult(await assistText(lastRequest).unwrap());
+			handleResponse(lastRequest, await assistText(lastRequest).unwrap());
 		} catch (requestError) {
 			setError(extractApiErrorMessage(requestError, t.aiAssistant.requestError));
 		}
@@ -88,8 +151,14 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 	const controlsDisabled = disabled || isLoading || !value.trim();
 	const menu = (
 		<Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={() => setMenuAnchor(null)}>
-			<MenuItem onClick={() => void run('translate', 'fr')}>{t.aiAssistant.translateToFrench}</MenuItem>
-			<MenuItem onClick={() => void run('translate', 'en')}>{t.aiAssistant.translateToEnglish}</MenuItem>
+			<MenuItem
+				onClick={() => {
+					setMenuAnchor(null);
+					setTranslationDialogOpen(true);
+				}}
+			>
+				{t.aiAssistant.translate}
+			</MenuItem>
 			{compact && <MenuItem onClick={() => void run('fix_grammar')}>{t.aiAssistant.fixGrammar}</MenuItem>}
 			{compact && <MenuItem onClick={() => void run('professionalize')}>{t.aiAssistant.professionalize}</MenuItem>}
 		</Menu>
@@ -121,7 +190,7 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 							variant="text"
 							startIcon={<LanguageIcon />}
 							disabled={controlsDisabled}
-							onClick={(event) => setMenuAnchor(event.currentTarget)}
+							onClick={() => setTranslationDialogOpen(true)}
 						>
 							{t.aiAssistant.translate}
 						</Button>
@@ -148,11 +217,49 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 				</Box>
 			)}
 
+			{translationDialogOpen && (
+				<ActionModals
+					onClose={() => setTranslationDialogOpen(false)}
+					title={t.aiAssistant.translate}
+					body={t.aiAssistant.chooseLanguage}
+					actions={[
+						{
+							active: false,
+							text: t.aiAssistant.cancel,
+							onClick: () => setTranslationDialogOpen(false),
+							icon: <CloseIcon />,
+							color: '#6B6B6B',
+						},
+						{
+							active: false,
+							text: t.aiAssistant.translateToFrench,
+							onClick: () => {
+								setTranslationDialogOpen(false);
+								void run('translate', 'fr');
+							},
+							icon: <LanguageFlag language="fr" />,
+							color: '#0D070B',
+						},
+						{
+							active: true,
+							text: t.aiAssistant.translateToEnglish,
+							onClick: () => {
+								setTranslationDialogOpen(false);
+								void run('translate', 'en');
+							},
+							icon: <LanguageFlag language="en" />,
+							color: '#0D070B',
+						},
+					]}
+				/>
+			)}
+
 			<Dialog
-				open={Boolean(result || error)}
+				open={Boolean(result || error || notice)}
 				onClose={() => {
 					setResult(null);
 					setError('');
+					setNotice('');
 				}}
 				fullWidth
 				maxWidth="md"
@@ -165,8 +272,8 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 								<Typography variant="subtitle2" gutterBottom>
 									{t.aiAssistant.original}
 								</Typography>
-								<Paper variant="outlined" sx={{ p: 2, whiteSpace: 'pre-wrap' }}>
-									{result?.original_text}
+								<Paper variant="outlined" sx={{ p: 2, whiteSpace: 'pre-wrap' }} data-testid="original-text">
+									<DiffText changes={changes} variant="original" />
 								</Paper>
 							</Box>
 						)}
@@ -175,11 +282,12 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 								<Typography variant="subtitle2" gutterBottom>
 									{t.aiAssistant.suggestion}
 								</Typography>
-								<Paper variant="outlined" sx={{ p: 2, whiteSpace: 'pre-wrap' }}>
-									{result?.suggested_text}
+								<Paper variant="outlined" sx={{ p: 2, whiteSpace: 'pre-wrap' }} data-testid="suggested-text">
+									<DiffText changes={changes} variant="suggestion" />
 								</Paper>
 							</Box>
 						)}
+						{notice && <Alert severity="success">{notice}</Alert>}
 						{error && <Alert severity="error">{error}</Alert>}
 					</Stack>
 				</DialogContent>
@@ -188,6 +296,7 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 						onClick={() => {
 							setResult(null);
 							setError('');
+							setNotice('');
 						}}
 					>
 						{t.aiAssistant.cancel}
@@ -201,6 +310,7 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 						onClick={() => {
 							if (result) onApply(result.suggested_text);
 							setResult(null);
+							setNotice('');
 						}}
 					>
 						{t.aiAssistant.useSuggestion}
