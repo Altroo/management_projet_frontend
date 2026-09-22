@@ -63,7 +63,18 @@ import type {
 	RealBudgetStageSummaryType,
 } from '@/types/projectTypes';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, LineElement, PointElement, Filler, Title, Tooltip, Legend);
+ChartJS.register(
+	CategoryScale,
+	LinearScale,
+	BarElement,
+	ArcElement,
+	LineElement,
+	PointElement,
+	Filler,
+	Title,
+	Tooltip,
+	Legend,
+);
 
 const inputTheme = textInputTheme();
 
@@ -237,16 +248,7 @@ const EmptyChart: React.FC<{ message?: string }> = ({ message }) => {
 	);
 };
 
-const doughnutPalette = [
-	'#1d4ed8',
-	'#047857',
-	'#b91c1c',
-	'#c2410c',
-	'#6d28d9',
-	'#0f766e',
-	'#be123c',
-	'#4d7c0f',
-];
+const doughnutPalette = ['#1d4ed8', '#047857', '#b91c1c', '#c2410c', '#6d28d9', '#0f766e', '#be123c', '#4d7c0f'];
 
 const ALL_PROJECTS_CODE = '__all_projects__';
 
@@ -259,7 +261,9 @@ const buildCumulativeHistoryData = (
 	revenueHistory: DashboardHistoryPointType[],
 	t: ReturnType<typeof useLanguage>['t'],
 ) => {
-	const labels = Array.from(new Set([...expenseHistory.map((item) => item.date), ...revenueHistory.map((item) => item.date)])).sort();
+	const labels = Array.from(
+		new Set([...expenseHistory.map((item) => item.date), ...revenueHistory.map((item) => item.date)]),
+	).sort();
 	const expenseMap = new Map(expenseHistory.map((item) => [item.date, Number(item.total)]));
 	const revenueMap = new Map(revenueHistory.map((item) => [item.date, Number(item.total)]));
 	let expenseRunningTotal = 0;
@@ -332,7 +336,17 @@ const groupedBarOptions = {
 	plugins: { legend: { position: 'top' as const } },
 	scales: {
 		x: { grid: { display: false } },
-		y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.06)' } },
+		y: {
+			beginAtZero: true,
+			position: 'left' as const,
+			grid: { color: 'rgba(0, 0, 0, 0.06)' },
+		},
+		yMargin: {
+			beginAtZero: true,
+			position: 'right' as const,
+			grid: { drawOnChartArea: false },
+			ticks: { callback: (value: string | number) => `${value}%` },
+		},
 	},
 };
 
@@ -360,24 +374,30 @@ const makeHorizontalData = (labels: string[], values: number[], color: string) =
 	],
 });
 
-const makeRealBudgetStageData = (rows: RealBudgetStageSummaryType[], t: ReturnType<typeof useLanguage>['t']) => ({
+export const makeRealBudgetStageData = (
+	rows: RealBudgetStageSummaryType[],
+	t: ReturnType<typeof useLanguage>['t'],
+) => ({
 	labels: rows.map((item) => item.stage),
 	datasets: [
 		{
 			label: t.analytics.realRevenue,
 			data: rows.map((item) => Number(item.total_revenue)),
+			yAxisID: 'y',
 			backgroundColor: '#047857',
 			borderRadius: 3,
 		},
 		{
 			label: t.analytics.realCost,
 			data: rows.map((item) => Number(item.total_cost)),
+			yAxisID: 'y',
 			backgroundColor: '#b91c1c',
 			borderRadius: 3,
 		},
 		{
 			label: t.analytics.realMargin,
-			data: rows.map((item) => Number(item.profit)),
+			data: rows.map((item) => Number(item.margin)),
+			yAxisID: 'yMargin',
 			backgroundColor: '#1d4ed8',
 			borderRadius: 3,
 		},
@@ -414,7 +434,7 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 	const selectedProjectOption =
 		selectedProjectId === null
 			? allProjectsOption
-			: projectOptions.find((project) => Number(project.code) === selectedProjectId) ?? allProjectsOption;
+			: (projectOptions.find((project) => Number(project.code) === selectedProjectId) ?? allProjectsOption);
 	const { data: internalProjectOverview, isFetching: isInternalProjectLoading } = useGetProjectDashboardQuery(
 		{ id: selectedProjectId! },
 		{ skip: !token || selectedProjectId === null || clientFacing },
@@ -435,7 +455,9 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 	const totalExpenses = projectOverview?.depenses_totales ?? data?.total_expenses ?? '0';
 	const totalProfit = projectOverview?.benefice ?? data?.total_profit ?? '0';
 	const totalMargin = projectOverview?.marge ?? data?.total_margin ?? 0;
-	const budgetUtilisation = projectOverview?.budget_utilisation ?? data?.budget_utilisation ?? 0;
+	const budgetUtilisation = projectOverview
+		? (projectOverview.budget_utilisation ?? null)
+		: (data?.budget_utilisation ?? null);
 	const totalServiceFees = projectOverview?.service_fees ?? data?.total_service_fees ?? '0';
 	const totalRevenueReelle = projectOverview?.revenue_reelle ?? data?.total_revenue_reelle ?? '0';
 	const realBudgetInitial = projectOverview?.budget_initial ?? data?.budget_initial ?? totalBudget;
@@ -471,7 +493,9 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 		activeTopCategories.map((item: DashboardCategoryTotalType) => Number(item.total)),
 	);
 	const subcategoryBreakdownData = makeDoughnutData(
-		activeTopSubcategories.map((item: DashboardSubCategoryTotalType) => item.sous_categorie__name ?? t.expenses.subCategory),
+		activeTopSubcategories.map(
+			(item: DashboardSubCategoryTotalType) => item.sous_categorie__name ?? t.expenses.subCategory,
+		),
 		activeTopSubcategories.map((item: DashboardSubCategoryTotalType) => Number(item.total)),
 	);
 	const vendorBreakdownData = makeDoughnutData(
@@ -531,7 +555,7 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 		'#1d4ed8',
 	);
 	const projectBudgetUtilisation = budgetUtilisation;
-	const projectBudgetUsed = clampPercent(projectBudgetUtilisation);
+	const projectBudgetUsed = clampPercent(projectBudgetUtilisation ?? 0);
 	const projectBudgetData = makeDoughnutData(
 		[t.analytics.usedBudget, t.analytics.remainingBudget],
 		[projectBudgetUsed, Math.max(100 - projectBudgetUsed, 0)],
@@ -658,7 +682,9 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 										<KpiCard
 											icon={<UtilisationIcon fontSize="small" />}
 											label={t.analytics.budgetUtilisation}
-											value={`${budgetUtilisation.toFixed(1)}%`}
+											value={
+												budgetUtilisation === null ? t.analytics.budgetUnavailable : `${budgetUtilisation.toFixed(1)}%`
+											}
 											color="#0288d1"
 										/>
 									)}
@@ -688,7 +714,9 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 										<KpiCard
 											icon={<UtilisationIcon fontSize="small" />}
 											label={t.analytics.budgetUtilisation}
-											value={`${budgetUtilisation.toFixed(1)}%`}
+											value={
+												budgetUtilisation === null ? t.analytics.budgetUnavailable : `${budgetUtilisation.toFixed(1)}%`
+											}
 											color="#0288d1"
 										/>
 										<KpiCard
@@ -757,21 +785,27 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 													{t.analytics.budgetUtilisation}
 												</Typography>
 												<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'success.main' }}>
-													{budgetUtilisation.toFixed(1)}%
+													{budgetUtilisation === null ? '—' : `${budgetUtilisation.toFixed(1)}%`}
 												</Typography>
 											</Stack>
-											<LinearProgress
-												variant="determinate"
-												value={clampPercent(budgetUtilisation)}
-												sx={{
-													height: 18,
-													borderRadius: 0,
-													bgcolor: 'rgba(29, 78, 216, 0.18)',
-													'& .MuiLinearProgress-bar': {
-														bgcolor: '#1d4ed8',
-													},
-												}}
-											/>
+											{budgetUtilisation === null ? (
+												<Typography variant="body2" sx={{ color: 'text.secondary' }}>
+													{t.analytics.budgetUnavailable}
+												</Typography>
+											) : (
+												<LinearProgress
+													variant="determinate"
+													value={clampPercent(budgetUtilisation)}
+													sx={{
+														height: 18,
+														borderRadius: 0,
+														bgcolor: 'rgba(29, 78, 216, 0.18)',
+														'& .MuiLinearProgress-bar': {
+															bgcolor: '#1d4ed8',
+														},
+													}}
+												/>
+											)}
 										</Stack>
 									</CardContent>
 								</Card>
@@ -779,7 +813,11 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 								{projectOverview ? (
 									<Stack spacing={2}>
 										{showInternalFinancials && (
-											<ChartCard title={t.analytics.realBudgetByStage} subheader={t.analytics.realBudgetByStageSub} height={330}>
+											<ChartCard
+												title={t.analytics.realBudgetByStage}
+												subheader={t.analytics.realBudgetByStageSub}
+												height={330}
+											>
 												{activeRealBudgetByStage.length > 0 ? (
 													<Bar data={realBudgetStageData} options={groupedBarOptions} />
 												) : (
@@ -787,7 +825,11 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 												)}
 											</ChartCard>
 										)}
-										<ChartCard title={t.analytics.cumulativeIncomeExpenses} subheader={projectOverview.nom} height={340}>
+										<ChartCard
+											title={t.analytics.cumulativeIncomeExpenses}
+											subheader={projectOverview.nom}
+											height={340}
+										>
 											{activeHistoryData.labels.length > 0 ? (
 												<Line data={activeHistoryData} options={areaChartOptions} />
 											) : (
@@ -801,45 +843,63 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 												gap: 2,
 											}}
 										>
-											<ChartCard title={t.analytics.projectBudgetUtilization} subheader={projectOverview.nom} height={300}>
-												<Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ height: '100%', alignItems: 'center' }}>
-													<Box sx={{ height: 230, width: { xs: '100%', sm: 230 }, position: 'relative' }}>
-														<Doughnut data={projectBudgetData} options={{ ...doughnutOptions, plugins: { legend: { display: false } } }} />
-														<Stack
-															spacing={0.5}
-															sx={{
-																position: 'absolute',
-																inset: 0,
-																alignItems: 'center',
-																justifyContent: 'center',
-																pointerEvents: 'none',
-															}}
-														>
-															<Typography variant="h5" sx={{ fontWeight: 700 }}>
-																{projectBudgetUsed.toFixed(1)}%
+											<ChartCard
+												title={t.analytics.projectBudgetUtilization}
+												subheader={projectOverview.nom}
+												height={300}
+											>
+												{projectBudgetUtilisation === null ? (
+													<EmptyChart message={t.analytics.budgetUnavailable} />
+												) : (
+													<Stack
+														direction={{ xs: 'column', sm: 'row' }}
+														spacing={2}
+														sx={{ height: '100%', alignItems: 'center' }}
+													>
+														<Box sx={{ height: 230, width: { xs: '100%', sm: 230 }, position: 'relative' }}>
+															<Doughnut
+																data={projectBudgetData}
+																options={{ ...doughnutOptions, plugins: { legend: { display: false } } }}
+															/>
+															<Stack
+																spacing={0.5}
+																sx={{
+																	position: 'absolute',
+																	inset: 0,
+																	alignItems: 'center',
+																	justifyContent: 'center',
+																	pointerEvents: 'none',
+																}}
+															>
+																<Typography variant="h5" sx={{ fontWeight: 700 }}>
+																	{projectBudgetUsed.toFixed(1)}%
+																</Typography>
+																<Typography variant="caption" sx={{ color: 'text.secondary' }}>
+																	{projectBudgetUtilisation <= 100 ? t.analytics.withinBudget : t.analytics.overBudget}
+																</Typography>
+															</Stack>
+														</Box>
+														<Stack spacing={1.25} sx={{ flex: 1, minWidth: 0 }}>
+															<Typography variant="body2">
+																{t.analytics.totalBudget}: <strong>{compactCurrency(totalBudget)}</strong>
 															</Typography>
-															<Typography variant="caption" sx={{ color: 'text.secondary' }}>
-																{projectBudgetUtilisation <= 100 ? t.analytics.withinBudget : t.analytics.overBudget}
+															<Typography variant="body2">
+																{t.analytics.totalExpenses}: <strong>{compactCurrency(totalExpenses)}</strong>
+															</Typography>
+															<Typography variant="body2">
+																{t.analytics.usedBudget}: <strong>{projectBudgetUsed.toFixed(1)}%</strong>
 															</Typography>
 														</Stack>
-													</Box>
-													<Stack spacing={1.25} sx={{ flex: 1, minWidth: 0 }}>
-														<Typography variant="body2">
-															{t.analytics.totalBudget}: <strong>{compactCurrency(totalBudget)}</strong>
-														</Typography>
-														<Typography variant="body2">
-															{t.analytics.totalExpenses}: <strong>{compactCurrency(totalExpenses)}</strong>
-														</Typography>
-														<Typography variant="body2">
-															{t.analytics.usedBudget}: <strong>{projectBudgetUsed.toFixed(1)}%</strong>
-														</Typography>
 													</Stack>
-												</Stack>
+												)}
 											</ChartCard>
 											{showInternalFinancials && (
 												<ChartCard title={t.analytics.profitGauge} subheader={t.analytics.profitMargin} height={300}>
 													<Box sx={{ height: '100%', position: 'relative' }}>
-														<Doughnut data={projectProfitData} options={{ ...doughnutOptions, plugins: { legend: { display: false } } }} />
+														<Doughnut
+															data={projectProfitData}
+															options={{ ...doughnutOptions, plugins: { legend: { display: false } } }}
+														/>
 														<Stack
 															spacing={0.5}
 															sx={{
@@ -894,7 +954,11 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 								) : (
 									<>
 										{showInternalFinancials && (
-											<ChartCard title={t.analytics.realBudgetByStage} subheader={t.analytics.realBudgetByStageSub} height={330}>
+											<ChartCard
+												title={t.analytics.realBudgetByStage}
+												subheader={t.analytics.realBudgetByStageSub}
+												height={330}
+											>
 												{activeRealBudgetByStage.length > 0 ? (
 													<Bar data={realBudgetStageData} options={groupedBarOptions} />
 												) : (
@@ -939,14 +1003,22 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 												gap: 2,
 											}}
 										>
-											<ChartCard title={t.analytics.expenseIncome} subheader={t.analytics.expenseIncomeSub} height={340}>
+											<ChartCard
+												title={t.analytics.expenseIncome}
+												subheader={t.analytics.expenseIncomeSub}
+												height={340}
+											>
 												{activeHistoryData.labels.length > 0 ? (
 													<Line data={activeHistoryData} options={areaChartOptions} />
 												) : (
 													<EmptyChart />
 												)}
 											</ChartCard>
-											<ChartCard title={t.analytics.projectRanking} subheader={t.analytics.projectRankingSub} height={340}>
+											<ChartCard
+												title={t.analytics.projectRanking}
+												subheader={t.analytics.projectRankingSub}
+												height={340}
+											>
 												{topBudgetProjects.length > 0 ? (
 													<Bar data={projectRankingData} options={horizontalBarOptions} />
 												) : (
@@ -966,14 +1038,22 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 											gap: 2,
 										}}
 									>
-										<ChartCard title={t.analytics.topExpenseClients} subheader={t.analytics.topExpenseClientsSub} height={280}>
+										<ChartCard
+											title={t.analytics.topExpenseClients}
+											subheader={t.analytics.topExpenseClientsSub}
+											height={280}
+										>
 											{topExpenseClients.length > 0 ? (
 												<Bar data={topExpenseClientsData} options={horizontalBarOptions} />
 											) : (
 												<EmptyChart />
 											)}
 										</ChartCard>
-										<ChartCard title={t.analytics.topRevenueClients} subheader={t.analytics.topRevenueClientsSub} height={280}>
+										<ChartCard
+											title={t.analytics.topRevenueClients}
+											subheader={t.analytics.topRevenueClientsSub}
+											height={280}
+										>
 											{topRevenueClients.length > 0 ? (
 												<Bar data={topRevenueClientsData} options={horizontalBarOptions} />
 											) : (

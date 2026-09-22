@@ -152,7 +152,12 @@ export const projectSchema = z.object({
 	description: optionalTextField(1, 2000),
 	budget_total: z.preprocess(
 		(val) => (val === undefined || val === null ? '' : String(val)),
-		z.string().nonempty({ error: INPUT_REQUIRED }),
+		z
+			.string()
+			.nonempty({ error: INPUT_REQUIRED })
+			.refine((value) => Number(value.replace(',', '.')) > 0, {
+				error: () => getT().validation.budgetPositive,
+			}),
 	),
 	date_debut: requiredDateField(() => getT().projects.dateDebut),
 	date_fin: requiredDateField(() => getT().projects.dateFin),

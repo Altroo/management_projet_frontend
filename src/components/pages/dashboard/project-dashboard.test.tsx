@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
 import { store } from '@/store/store';
-import ProjectDashboardClient from './project-dashboard';
+import ProjectDashboardClient, { makeRealBudgetStageData } from './project-dashboard';
 import type { AppSession } from '@/types/_initTypes';
 
 jest.mock('next/navigation', () => ({
@@ -98,6 +98,28 @@ const mockSession: AppSession = {
 };
 
 describe('ProjectDashboardClient', () => {
+	it('plots stage margin percentages on a separate axis', () => {
+		const { translations } = jest.requireActual('@/translations');
+		const chart = makeRealBudgetStageData(
+			[
+				{
+					stage: 'Design',
+					total_revenue: '15000.00',
+					total_cost: '9000.00',
+					profit: '6000.00',
+					margin: 40,
+				},
+			],
+			translations.fr,
+		);
+
+		expect(chart.datasets[2]).toMatchObject({
+			label: 'Marge réelle',
+			data: [40],
+			yAxisID: 'yMargin',
+		});
+	});
+
 	it('renders the dashboard component', () => {
 		render(
 			<Provider store={store}>
@@ -264,6 +286,32 @@ describe('ProjectDashboardClient', () => {
 		);
 
 		expect(screen.getAllByTestId('bar-chart').length).toBeGreaterThan(0);
+	});
+
+	it('shows budget unavailable instead of within budget when the budget is zero', () => {
+		const { useGetMultiProjectDashboardQuery } = jest.requireMock('@/store/services/project');
+		(useGetMultiProjectDashboardQuery as jest.Mock).mockReturnValue({
+			data: {
+				total_projects: 1,
+				total_budget: '0',
+				total_revenue: '1000',
+				total_expenses: '500',
+				total_profit: '500',
+				total_margin: 50,
+				budget_utilisation: null,
+				projects: [],
+			},
+			isLoading: false,
+		});
+
+		render(
+			<Provider store={store}>
+				<ProjectDashboardClient session={mockSession} />
+			</Provider>,
+		);
+
+		expect(screen.getAllByText('Budget non renseigné').length).toBeGreaterThanOrEqual(1);
+		expect(screen.queryByText('Dans le budget')).not.toBeInTheDocument();
 	});
 
 	it('renders protected wrapper', () => {

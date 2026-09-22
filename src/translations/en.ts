@@ -234,6 +234,7 @@ export const en: TranslationDictionary = {
 		invalidDateFormat: 'Invalid date format (expected YYYY-MM-DD).',
 		serviceFeePositive: 'Service fee value must be greater than 0.',
 		serviceFeePercentageMax: 'Service fee percentage must be less than or equal to 100.',
+		budgetPositive: 'Total budget must be greater than 0.',
 	},
 	errors: {
 		errorOccurred: 'An error occurred',
@@ -774,6 +775,7 @@ export const en: TranslationDictionary = {
 		realRevenue: 'Real revenue',
 		realMargin: 'Real margin',
 		budgetGap: 'Budget gap',
+		budgetUnavailable: 'Budget not provided',
 		realBudgetByStage: 'Real budget by stage',
 		realBudgetByStageSub: 'Revenue, charges, and margin by stage',
 		noDataAvailable: 'No data available',

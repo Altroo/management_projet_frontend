@@ -1,12 +1,5 @@
 export type ProjectStatusType =
-	| 'Complété'
-	| 'En cours'
-	| 'Pas commencé'
-	| 'En attente'
-	| 'En pause'
-	| 'Annulé'
-	| 'En attente de démarrage'
-	| 'Livré';
+	'Complété' | 'En cours' | 'Pas commencé' | 'En attente' | 'En pause' | 'Annulé' | 'En attente de démarrage' | 'Livré';
 export type ServiceFeeType = 'percentage' | 'fixed';
 
 export interface CategoryType {
@@ -343,7 +336,7 @@ export interface ProjectDashboardType {
 	depenses_totales: string;
 	benefice: string;
 	marge: number;
-	budget_utilisation: number;
+	budget_utilisation: number | null;
 	service_fees?: string;
 	revenue_reelle?: string;
 	budget_initial?: string;
@@ -386,7 +379,7 @@ export interface MultiProjectDashboardType {
 	total_expenses: string;
 	total_profit: string;
 	total_margin: number;
-	budget_utilisation: number;
+	budget_utilisation: number | null;
 	total_service_fees?: string;
 	total_revenue_reelle?: string;
 	budget_initial?: string;

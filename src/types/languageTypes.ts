@@ -234,6 +234,7 @@ export type TranslationDictionary = {
 		invalidDateFormat: string;
 		serviceFeePositive: string;
 		serviceFeePercentageMax: string;
+		budgetPositive: string;
 	};
 	errors: {
 		errorOccurred: string;
@@ -708,6 +709,7 @@ export type TranslationDictionary = {
 		realRevenue: string;
 		realMargin: string;
 		budgetGap: string;
+		budgetUnavailable: string;
 		realBudgetByStage: string;
 		realBudgetByStageSub: string;
 		noDataAvailable: string;
