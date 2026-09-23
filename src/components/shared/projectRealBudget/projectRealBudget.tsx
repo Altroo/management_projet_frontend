@@ -31,6 +31,7 @@ import {
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
+import { useDataGridPagination } from '@/components/shared/paginatedDataGrid/useDataGridPagination';
 import { DataGrid } from '@mui/x-data-grid';
 import { frFR } from '@mui/x-data-grid/locales';
 import { format, parseISO } from 'date-fns';
@@ -190,7 +191,7 @@ const ProjectRealBudgetCard = React.forwardRef<ProjectRealBudgetCardHandle, Proj
 		const [montantClient, setMontantClient] = useState('');
 		const [montantFournisseur, setMontantFournisseur] = useState('');
 		const [isPending, setIsPending] = useState(false);
-		const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 5 });
+		const [paginationModel, setPaginationModel] = useDataGridPagination(5, 'real_budget');
 		const [draftValidationAttempted, setDraftValidationAttempted] = useState(false);
 
 		const sortedRows = useMemo(() => [...data].sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id), [data]);
@@ -344,6 +345,7 @@ const ProjectRealBudgetCard = React.forwardRef<ProjectRealBudgetCardHandle, Proj
 				projectId,
 				refetch,
 				setQueuedEntries,
+				setPaginationModel,
 				t.realBudget.entryAddError,
 				t.realBudget.entryAddedSuccess,
 			],

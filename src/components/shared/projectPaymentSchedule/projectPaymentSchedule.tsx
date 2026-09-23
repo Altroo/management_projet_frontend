@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, EventAvailable as EventAvailableIcon } from '@mui/icons-material';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
+import { useDataGridPagination } from '@/components/shared/paginatedDataGrid/useDataGridPagination';
 import { DataGrid } from '@mui/x-data-grid';
 import { frFR } from '@mui/x-data-grid/locales';
 import {
@@ -96,7 +97,7 @@ const ProjectPaymentScheduleCard: React.FC<ProjectPaymentScheduleCardProps> = ({
 	const [description, setDescription] = useState('');
 	const [notes, setNotes] = useState('');
 	const [isPending, setIsPending] = useState(false);
-	const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 5 });
+	const [paginationModel, setPaginationModel] = useDataGridPagination(5, 'payment_schedule');
 
 	const sortedRows = useMemo(
 		() => [...data].sort((a, b) => a.due_date.localeCompare(b.due_date) || a.id - b.id),

@@ -84,7 +84,7 @@ const ClientFormContent: React.FC<{ token: string | undefined; id?: number }> = 
 
 	return (
 		<Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
-			<Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => router.push(CLIENTS_LIST)} sx={{ alignSelf: 'flex-start' }}>
+			<Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => router.back()} sx={{ alignSelf: 'flex-start' }}>
 				{t.clients.clientsList}
 			</Button>
 			{showValidationAlert && (

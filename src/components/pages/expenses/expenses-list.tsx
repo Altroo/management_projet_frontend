@@ -17,6 +17,7 @@ import type { ExpenseType } from '@/types/projectTypes';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import PaginatedDataGrid from '@/components/shared/paginatedDataGrid/paginatedDataGrid';
+import { useDataGridPagination } from '@/components/shared/paginatedDataGrid/useDataGridPagination';
 import ActionModals from '@/components/htmlElements/modals/actionModal/actionModals';
 import { Protected } from '@/components/layouts/protected/protected';
 import MobileActionsMenu from '@/components/shared/mobileActionsMenu/mobileActionsMenu';
@@ -46,7 +47,7 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 	const { onSuccess, onError } = useToast();
 	const token = useInitAccessToken(session);
 
-	const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+	const [paginationModel, setPaginationModel] = useDataGridPagination();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [filterModel, setFilterModel] = useState<GridFilterModel>({
 		items: [],

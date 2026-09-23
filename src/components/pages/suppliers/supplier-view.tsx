@@ -77,7 +77,7 @@ const SupplierViewClient: React.FC<SessionProps & { id: number }> = ({ session, 
 				<Protected permission="can_view">
 					<Stack spacing={3} sx={{ p: { xs: 2, md: 3 }, mt: 2 }}>
 						<Stack direction={isMobile ? 'column' : 'row'} spacing={2} sx={{ justifyContent: 'space-between' }}>
-							<Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => router.push(SUPPLIERS_LIST)}>
+							<Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => router.back()}>
 								{t.suppliers.suppliersList}
 							</Button>
 							{supplier && (
