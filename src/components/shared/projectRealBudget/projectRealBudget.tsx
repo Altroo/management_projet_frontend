@@ -766,7 +766,7 @@ const ProjectRealBudgetCard = ({
 
 				<ThemeProvider theme={getDefaultTheme()}>
 					<Box sx={{ width: '100%', height: hasRows ? 430 : 320 }}>
-						<DataGrid
+						<DataGrid<RealBudgetGridRow>
 							rows={gridRows}
 							columns={columns}
 							loading={isLoading}
