@@ -1,7 +1,19 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Box, Card, CardContent, Divider, InputAdornment, LinearProgress, Stack, Typography } from '@mui/material';
+import { runAsyncWithErrorHandler } from '@/utils/runWithCleanup';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useEffect, useRef, useState, type FC } from 'react';
+import {
+	Alert,
+	Box,
+	Card,
+	CardContent,
+	Divider,
+	InputAdornment,
+	LinearProgress,
+	Stack,
+	Typography,
+} from '@mui/material';
 import { CalendarMonth as CalendarMonthIcon, PictureAsPdf as PictureAsPdfIcon } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -9,7 +21,6 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { SessionProps } from '@/types/_initTypes';
-import type { DropDownType } from '@/types/accountTypes';
 import type { ProjectListType } from '@/types/projectTypes';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import { Protected } from '@/components/layouts/protected/protected';
@@ -49,11 +60,11 @@ export const defaultReportStartDate = (
 	);
 };
 
-const ReportsClient: React.FC<SessionProps> = ({ session }) => {
+const ReportsClient: FC<SessionProps> = ({ session }) => {
 	const { t } = useLanguage();
 	const { onError } = useToast();
 	const token = useInitAccessToken(session);
-	const initialPeriod = useMemo(currentYearPeriod, []);
+	const [initialPeriod] = useState(currentYearPeriod);
 	const [dateFrom, setDateFrom] = useState(initialPeriod.dateFrom);
 	const [dateTo, setDateTo] = useState(initialPeriod.dateTo);
 	const [projectId, setProjectId] = useState<number | ''>('');
@@ -66,16 +77,13 @@ const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 		{ with_pagination: false },
 		{ skip: !token },
 	);
-	const projects = useMemo(
-		() => (Array.isArray(projectsData) ? projectsData : (projectsData?.results ?? [])),
-		[projectsData],
-	);
-	const projectItems = useMemo<DropDownType[]>(() => {
+	const projects = Array.isArray(projectsData) ? projectsData : (projectsData?.results ?? []);
+	const projectItems = (() => {
 		return [
 			{ code: '', value: t.reports.allProjects },
 			...projects.map((project) => ({ code: String(project.id), value: project.nom })),
 		];
-	}, [projects, t.reports.allProjects]);
+	})();
 	const selectedProject = projectItems.find((project) => project.code === String(projectId)) ?? projectItems[0];
 	const periodIsValid = Boolean(dateFrom && dateTo && dateFrom <= dateTo);
 	const isGenerating = generationStage !== null;
@@ -84,10 +92,14 @@ const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 
 	useEffect(() => {
 		if (projectsData !== undefined && !projectsLoading && !startDateInitialized.current) {
-			setDateFrom(defaultReportStartDate(projects, projectId, initialPeriod.dateFrom));
-			startDateInitialized.current = true;
+			const availableProjects = Array.isArray(projectsData) ? projectsData : (projectsData?.results ?? []);
+			queueMicrotask(() => {
+				if (startDateInitialized.current) return;
+				setDateFrom(defaultReportStartDate(availableProjects, projectId, initialPeriod.dateFrom));
+				startDateInitialized.current = true;
+			});
 		}
-	}, [initialPeriod.dateFrom, projectId, projects, projectsData, projectsLoading]);
+	}, [initialPeriod.dateFrom, projectId, projectsData, projectsLoading]);
 
 	const generateReport = async (language: PdfLanguage) => {
 		if (!token || !periodIsValid) return;
@@ -95,24 +107,32 @@ const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 		setGenerationError('');
 		setGeneratingLanguage(language);
 		setGenerationStage('preparing');
-		try {
-			await downloadFileBlob(
-				REPORTS_DOWNLOAD(language, {
-					dateFrom,
-					dateTo,
-					projectId: projectId || undefined,
-					projectName: projectId ? selectedProject?.value : undefined,
-				}),
-				{ onResponseReady: () => setGenerationStage('downloading') },
-			);
-		} catch (error) {
-			const message = extractApiErrorMessage(error, t.reports.generationError);
-			setGenerationError(message);
-			onError(message);
-		} finally {
-			setGenerationStage(null);
-			setGeneratingLanguage(null);
-		}
+		await runWithCleanup(
+			async () => {
+				await runAsyncWithErrorHandler(
+					async () => {
+						await downloadFileBlob(
+							REPORTS_DOWNLOAD(language, {
+								dateFrom,
+								dateTo,
+								projectId: projectId || undefined,
+								projectName: projectId ? selectedProject?.value : undefined,
+							}),
+							{ onResponseReady: () => setGenerationStage('downloading') },
+						);
+					},
+					async (error) => {
+						const message = extractApiErrorMessage(error, t.reports.generationError);
+						setGenerationError(message);
+						onError(message);
+					},
+				);
+			},
+			() => {
+				setGenerationStage(null);
+				setGeneratingLanguage(null);
+			},
+		);
 	};
 
 	return (
@@ -201,9 +221,7 @@ const ReportsClient: React.FC<SessionProps> = ({ session }) => {
 											{t.reports.preparingReport}: {generatingLanguageLabel}
 										</Typography>
 										<Typography variant="body2">
-											{generationStage === 'preparing'
-												? t.reports.translatingAndGenerating
-												: t.reports.downloadingFile}
+											{generationStage === 'preparing' ? t.reports.translatingAndGenerating : t.reports.downloadingFile}
 										</Typography>
 										<LinearProgress aria-label={t.reports.generationProgress} />
 										<Typography variant="caption" color="text.secondary">

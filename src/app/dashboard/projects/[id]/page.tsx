@@ -1,3 +1,4 @@
+import type { NumericIdPageProps } from '@/types/routeTypes';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { AUTH_LOGIN, PROJECTS_LIST } from '@/utils/routes';
@@ -10,11 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
 	return { title: t.metadata.projectDetailsTitle, description: t.metadata.projectDetailsDescription };
 }
 
-interface Props {
-	params: Promise<{ id: string }>;
-}
-
-const ProjectDetailPage = async ({ params }: Props) => {
+const ProjectDetailPage = async ({ params }: NumericIdPageProps) => {
 	const session = await auth();
 	const { id } = await params;
 

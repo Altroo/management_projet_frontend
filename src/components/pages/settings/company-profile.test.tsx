@@ -1,4 +1,4 @@
-import React from 'react';
+import { type ReactNode } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import CompanyProfileClient from './company-profile';
 
@@ -28,10 +28,10 @@ jest.mock('@/components/formikElements/customSquareImageUploading/customSquareIm
 
 jest.mock('@/components/layouts/navigationBar/navigationBar', () => ({
 	__esModule: true,
-	default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+	default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 jest.mock('@/components/layouts/protected/protected', () => ({
-	Protected: ({ children, permission }: { children: React.ReactNode; permission?: string }) => (
+	Protected: ({ children, permission }: { children: ReactNode; permission?: string }) => (
 		<div data-testid="company-profile-protected" data-permission={permission}>
 			{children}
 		</div>
@@ -52,10 +52,24 @@ jest.mock('@/utils/hooks', () => ({
 		t: {
 			common: { save: 'Enregistrer' },
 			companyProfile: {
-				title: 'Profil société', description: 'Description', identity: 'Identité visuelle', contact: 'Coordonnées',
-				legal: 'Informations légales', name: 'Raison sociale', logo: 'Logo', chooseLogo: 'Choisir un logo',
-				removeLogo: 'Supprimer le logo', address: 'Adresse', phone: 'Téléphone', email: 'Email', website: 'Site web',
-				commercialRegister: 'Registre de commerce', bankAccount: 'RIB Compte', fiscalId: 'Identifiant fiscal', saveSuccess: 'Profil enregistré', saveError: 'Erreur',
+				title: 'Profil société',
+				description: 'Description',
+				identity: 'Identité visuelle',
+				contact: 'Coordonnées',
+				legal: 'Informations légales',
+				name: 'Raison sociale',
+				logo: 'Logo',
+				chooseLogo: 'Choisir un logo',
+				removeLogo: 'Supprimer le logo',
+				address: 'Adresse',
+				phone: 'Téléphone',
+				email: 'Email',
+				website: 'Site web',
+				commercialRegister: 'Registre de commerce',
+				bankAccount: 'RIB Compte',
+				fiscalId: 'Identifiant fiscal',
+				saveSuccess: 'Profil enregistré',
+				saveError: 'Erreur',
 			},
 		},
 	}),

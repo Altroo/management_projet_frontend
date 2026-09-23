@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useState, type Dispatch, type FC, type SetStateAction } from 'react';
 import {
 	Box,
 	Button,
@@ -44,7 +45,7 @@ type ProjectPaymentScheduleCardProps = {
 	projectId?: number;
 	editable?: boolean;
 	queuedSchedules?: QueuedPaymentSchedule[];
-	setQueuedSchedules?: React.Dispatch<React.SetStateAction<QueuedPaymentSchedule[]>>;
+	setQueuedSchedules?: Dispatch<SetStateAction<QueuedPaymentSchedule[]>>;
 };
 
 type ScheduleGridRow = {
@@ -81,7 +82,7 @@ export const buildPaymentSchedulePayload = (
 	notes: schedule.notes ?? '',
 });
 
-const ProjectPaymentScheduleCard: React.FC<ProjectPaymentScheduleCardProps> = ({
+const ProjectPaymentScheduleCard: FC<ProjectPaymentScheduleCardProps> = ({
 	projectId,
 	editable = false,
 	queuedSchedules = [],
@@ -99,20 +100,16 @@ const ProjectPaymentScheduleCard: React.FC<ProjectPaymentScheduleCardProps> = ({
 	const [isPending, setIsPending] = useState(false);
 	const [paginationModel, setPaginationModel] = useDataGridPagination(5, 'payment_schedule');
 
-	const sortedRows = useMemo(
-		() => [...data].sort((a, b) => a.due_date.localeCompare(b.due_date) || a.id - b.id),
-		[data],
-	);
+	const sortedRows = [...data].sort((a, b) => a.due_date.localeCompare(b.due_date) || a.id - b.id);
 
-	const sortedQueuedRows = useMemo(
-		() => [...queuedSchedules].sort((a, b) => a.due_date.localeCompare(b.due_date) || a.id.localeCompare(b.id)),
-		[queuedSchedules],
+	const sortedQueuedRows = [...queuedSchedules].sort(
+		(a, b) => a.due_date.localeCompare(b.due_date) || a.id.localeCompare(b.id),
 	);
 
 	const canSubmit = dueDate && expectedAmount && description.trim();
 	const hasRows = sortedRows.length > 0 || sortedQueuedRows.length > 0;
 
-	const gridRows = useMemo<ScheduleGridRow[]>(() => {
+	const gridRows = (() => {
 		const queuedRows = sortedQueuedRows.map((row) => ({
 			id: `queued-${row.id}`,
 			due_date: row.due_date,
@@ -138,7 +135,7 @@ const ProjectPaymentScheduleCard: React.FC<ProjectPaymentScheduleCardProps> = ({
 			variance: row.variance,
 		}));
 		return [...queuedRows, ...savedRows];
-	}, [sortedQueuedRows, sortedRows]);
+	})();
 
 	const resetFields = () => {
 		setDueDate('');
@@ -166,182 +163,176 @@ const ProjectPaymentScheduleCard: React.FC<ProjectPaymentScheduleCardProps> = ({
 		}
 
 		setIsPending(true);
-		try {
-			await createSchedule({
-				data: buildPaymentSchedulePayload(projectId, {
-					due_date: dueDate,
-					expected_amount: expectedAmount,
-					description,
-					notes,
-				}),
-			}).unwrap();
-			resetFields();
-			onSuccess(t.paymentSchedules.scheduleAddedSuccess);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.paymentSchedules.scheduleAddError));
-		} finally {
-			setIsPending(false);
-		}
+		await runWithCleanup(
+			async () => {
+				try {
+					await createSchedule({
+						data: buildPaymentSchedulePayload(projectId, {
+							due_date: dueDate,
+							expected_amount: expectedAmount,
+							description,
+							notes,
+						}),
+					}).unwrap();
+					resetFields();
+					onSuccess(t.paymentSchedules.scheduleAddedSuccess);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.paymentSchedules.scheduleAddError));
+				}
+			},
+			() => {
+				setIsPending(false);
+			},
+		);
 	};
 
-	const handleDelete = useCallback(
-		async (id: number) => {
-			if (!editable) return;
-			setIsPending(true);
-			try {
-				await deleteSchedule({ id }).unwrap();
-				onSuccess(t.paymentSchedules.scheduleDeletedSuccess);
-			} catch (err) {
-				onError(extractApiErrorMessage(err, t.paymentSchedules.scheduleDeleteError));
-			} finally {
+	const handleDelete = async (id: number) => {
+		if (!editable) return;
+		setIsPending(true);
+		await runWithCleanup(
+			async () => {
+				try {
+					await deleteSchedule({ id }).unwrap();
+					onSuccess(t.paymentSchedules.scheduleDeletedSuccess);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.paymentSchedules.scheduleDeleteError));
+				}
+			},
+			() => {
 				setIsPending(false);
-			}
-		},
-		[
-			deleteSchedule,
-			editable,
-			onError,
-			onSuccess,
-			t.paymentSchedules.scheduleDeleteError,
-			t.paymentSchedules.scheduleDeletedSuccess,
-		],
-	);
+			},
+		);
+	};
 
-	const handleRemoveQueued = useCallback(
-		(id: string) => {
-			setQueuedSchedules?.((current) => current.filter((row) => row.id !== id));
-		},
-		[setQueuedSchedules],
-	);
+	const handleRemoveQueued = (id: string) => {
+		setQueuedSchedules?.((current) => current.filter((row) => row.id !== id));
+	};
 
-	const columns = useMemo<GridColDef<ScheduleGridRow>[]>(
-		() => [
-			{
-				field: 'due_date',
-				headerName: t.common.dueDate,
-				minWidth: 130,
-				flex: 0.8,
-				renderCell: (params: GridRenderCellParams<ScheduleGridRow, string>) => formatDate(params.value ?? null),
-			},
-			{
-				field: 'description',
-				headerName: t.common.description,
-				minWidth: 220,
-				flex: 1.4,
-				renderCell: (params: GridRenderCellParams<ScheduleGridRow, string>) => (
-					<Stack direction="row" spacing={1} sx={{ alignItems: 'center', minWidth: 0 }}>
-						<Box sx={{ minWidth: 0 }}>
-							<Typography variant="body2" noWrap>
-								{params.value}
-							</Typography>
-							{params.row.notes ? (
-								<Typography variant="caption" color="text.secondary" noWrap>
-									{params.row.notes}
-								</Typography>
-							) : null}
-						</Box>
-						{params.row.isQueued ? (
-							<Chip size="small" color="warning" variant="outlined" label={t.paymentSchedules.pendingSave} />
-						) : null}
-					</Stack>
-				),
-			},
-			{
-				field: 'expected_amount',
-				headerName: t.common.expectedAmount,
-				minWidth: 150,
-				flex: 0.9,
-				align: 'right',
-				headerAlign: 'right',
-				renderCell: (params: GridRenderCellParams<ScheduleGridRow, string>) => formatMoney(params.value),
-			},
-			{
-				field: 'actual_amount',
-				headerName: t.common.actualAmount,
-				minWidth: 140,
-				flex: 0.85,
-				align: 'right',
-				headerAlign: 'right',
-				renderCell: (params: GridRenderCellParams<ScheduleGridRow, string>) =>
-					params.row.isQueued ? '-' : formatMoney(params.value),
-			},
-			{
-				field: 'expected_cumulative',
-				headerName: t.paymentSchedules.expectedCumulative,
-				minWidth: 150,
-				flex: 0.9,
-				align: 'right',
-				headerAlign: 'right',
-				renderCell: (params: GridRenderCellParams<ScheduleGridRow, string>) =>
-					params.row.isQueued ? '-' : formatMoney(params.value),
-			},
-			{
-				field: 'actual_cumulative',
-				headerName: t.paymentSchedules.actualCumulative,
-				minWidth: 145,
-				flex: 0.9,
-				align: 'right',
-				headerAlign: 'right',
-				renderCell: (params: GridRenderCellParams<ScheduleGridRow, string>) =>
-					params.row.isQueued ? '-' : formatMoney(params.value),
-			},
-			{
-				field: 'variance',
-				headerName: t.common.variance,
-				minWidth: 130,
-				flex: 0.8,
-				align: 'right',
-				headerAlign: 'right',
-				renderCell: (params: GridRenderCellParams<ScheduleGridRow, string>) =>
-					params.row.isQueued ? (
-						'-'
-					) : (
-						<Typography
-							component="span"
-							variant="body2"
-							color={Number(params.value) < 0 ? 'error.main' : 'success.main'}
-							sx={{ fontWeight: 700 }}
-						>
-							{formatMoney(params.value)}
+	const columns: GridColDef<ScheduleGridRow>[] = [
+		{
+			field: 'due_date',
+			headerName: t.common.dueDate,
+			minWidth: 130,
+			flex: 0.8,
+			renderCell: (params: GridRenderCellParams<ScheduleGridRow, string>) => formatDate(params.value ?? null),
+		},
+		{
+			field: 'description',
+			headerName: t.common.description,
+			minWidth: 220,
+			flex: 1.4,
+			renderCell: (params: GridRenderCellParams<ScheduleGridRow, string>) => (
+				<Stack direction="row" spacing={1} sx={{ alignItems: 'center', minWidth: 0 }}>
+					<Box sx={{ minWidth: 0 }}>
+						<Typography variant="body2" noWrap>
+							{params.value}
 						</Typography>
-					),
-			},
-			...(editable
-				? [
-						{
-							field: 'actions',
-							headerName: t.common.actions,
-							minWidth: 90,
-							sortable: false,
-							filterable: false,
-							align: 'right' as const,
-							headerAlign: 'right' as const,
-							renderCell: (params: GridRenderCellParams<ScheduleGridRow>) => (
-								<Tooltip title={t.common.delete}>
-									<IconButton
-										size="small"
-										color="error"
-										disabled={isPending}
-										onClick={() => {
-											if (params.row.isQueued) {
-												handleRemoveQueued(String(params.row.id).replace('queued-', ''));
-												return;
-											}
-											if (params.row.savedId) {
-												handleDelete(params.row.savedId);
-											}
-										}}
-									>
-										<DeleteIcon fontSize="small" />
-									</IconButton>
-								</Tooltip>
-							),
-						},
-					]
-				: []),
-		],
-		[editable, handleDelete, handleRemoveQueued, isPending, t],
-	);
+						{params.row.notes ? (
+							<Typography variant="caption" color="text.secondary" noWrap>
+								{params.row.notes}
+							</Typography>
+						) : null}
+					</Box>
+					{params.row.isQueued ? (
+						<Chip size="small" color="warning" variant="outlined" label={t.paymentSchedules.pendingSave} />
+					) : null}
+				</Stack>
+			),
+		},
+		{
+			field: 'expected_amount',
+			headerName: t.common.expectedAmount,
+			minWidth: 150,
+			flex: 0.9,
+			align: 'right',
+			headerAlign: 'right',
+			renderCell: (params: GridRenderCellParams<ScheduleGridRow, string>) => formatMoney(params.value),
+		},
+		{
+			field: 'actual_amount',
+			headerName: t.common.actualAmount,
+			minWidth: 140,
+			flex: 0.85,
+			align: 'right',
+			headerAlign: 'right',
+			renderCell: (params: GridRenderCellParams<ScheduleGridRow, string>) =>
+				params.row.isQueued ? '-' : formatMoney(params.value),
+		},
+		{
+			field: 'expected_cumulative',
+			headerName: t.paymentSchedules.expectedCumulative,
+			minWidth: 150,
+			flex: 0.9,
+			align: 'right',
+			headerAlign: 'right',
+			renderCell: (params: GridRenderCellParams<ScheduleGridRow, string>) =>
+				params.row.isQueued ? '-' : formatMoney(params.value),
+		},
+		{
+			field: 'actual_cumulative',
+			headerName: t.paymentSchedules.actualCumulative,
+			minWidth: 145,
+			flex: 0.9,
+			align: 'right',
+			headerAlign: 'right',
+			renderCell: (params: GridRenderCellParams<ScheduleGridRow, string>) =>
+				params.row.isQueued ? '-' : formatMoney(params.value),
+		},
+		{
+			field: 'variance',
+			headerName: t.common.variance,
+			minWidth: 130,
+			flex: 0.8,
+			align: 'right',
+			headerAlign: 'right',
+			renderCell: (params: GridRenderCellParams<ScheduleGridRow, string>) =>
+				params.row.isQueued ? (
+					'-'
+				) : (
+					<Typography
+						component="span"
+						variant="body2"
+						color={Number(params.value) < 0 ? 'error.main' : 'success.main'}
+						sx={{ fontWeight: 700 }}
+					>
+						{formatMoney(params.value)}
+					</Typography>
+				),
+		},
+		...(editable
+			? [
+					{
+						field: 'actions',
+						headerName: t.common.actions,
+						minWidth: 90,
+						sortable: false,
+						filterable: false,
+						align: 'right' as const,
+						headerAlign: 'right' as const,
+						renderCell: (params: GridRenderCellParams<ScheduleGridRow>) => (
+							<Tooltip title={t.common.delete}>
+								<IconButton
+									size="small"
+									color="error"
+									disabled={isPending}
+									onClick={() => {
+										if (params.row.isQueued) {
+											handleRemoveQueued(String(params.row.id).replace('queued-', ''));
+											return;
+										}
+										if (params.row.savedId) {
+											handleDelete(params.row.savedId);
+										}
+									}}
+								>
+									<DeleteIcon fontSize="small" />
+								</IconButton>
+							</Tooltip>
+						),
+					},
+				]
+			: []),
+	];
 
 	return (
 		<Card elevation={2} sx={{ borderRadius: 2 }}>

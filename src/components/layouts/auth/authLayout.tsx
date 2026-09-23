@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ForwardedRef, forwardRef, useState } from 'react';
+import { useState, type ReactNode, type Ref } from 'react';
 import Styles from './authLayout.module.sass';
 import { Box, Stack } from '@mui/material';
 import Image from 'next/image';
@@ -12,7 +12,8 @@ import MilestoneSVG from '../../../../public/assets/images/auth_illu/milestone.s
 import { useLanguage } from '@/utils/hooks';
 
 type Props = {
-	children?: React.ReactNode;
+	children?: ReactNode;
+	ref?: Ref<HTMLElement>;
 };
 
 export type svgImageType = {
@@ -21,7 +22,7 @@ export type svgImageType = {
 	width: number;
 };
 
-const AuthLayout = forwardRef<HTMLAnchorElement, Props>((props: Props, ref: ForwardedRef<HTMLAnchorElement>) => {
+const AuthLayout = ({ ref, ...props }: Props) => {
 	const { t } = useLanguage();
 	const [authIlluRandom] = useState<{ image: svgImageType; color: string }>(() => {
 		const availableAuthBgImages: Array<{ image: svgImageType; color: string }> = [
@@ -71,7 +72,7 @@ const AuthLayout = forwardRef<HTMLAnchorElement, Props>((props: Props, ref: Forw
 			</Stack>
 		</main>
 	);
-});
+};
 AuthLayout.displayName = 'AuthLayout';
 
 export default AuthLayout;

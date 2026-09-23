@@ -1,4 +1,4 @@
-import React from 'react';
+import { type ChangeEvent, type FC } from 'react';
 import { TextField } from '@mui/material';
 import { GridFilterInputValueProps, GridFilterItem, GridFilterOperator } from '@mui/x-data-grid';
 import { useLanguage } from '@/utils/hooks';
@@ -9,11 +9,11 @@ const parseNumeric = (value: number | string | null | undefined): number | null 
 	return isFinite(n) ? n : null;
 };
 
-const NumericFilterInput: React.FC<GridFilterInputValueProps> = (props) => {
+const NumericFilterInput: FC<GridFilterInputValueProps> = (props) => {
 	const { item, applyValue } = props;
 	const { t } = useLanguage();
 
-	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+	const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
 		applyValue({ ...item, value: event.target.value });
 	};
 

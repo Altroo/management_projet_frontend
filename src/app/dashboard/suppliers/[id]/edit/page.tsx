@@ -1,3 +1,4 @@
+import type { NumericIdPageProps } from '@/types/routeTypes';
 import { redirect } from 'next/navigation';
 import { type Metadata } from 'next';
 import { auth } from '@/auth';
@@ -10,11 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
 	return { title: t.metadata.editSupplierTitle, description: t.metadata.editSupplierDescription };
 }
 
-interface Props {
-	params: Promise<{ id: string }>;
-}
-
-const SupplierEditPage = async ({ params }: Props) => {
+const SupplierEditPage = async ({ params }: NumericIdPageProps) => {
 	const session = await auth();
 	const { id } = await params;
 	if (!session) redirect(AUTH_LOGIN);

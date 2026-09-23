@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import { useState, type FC, Fragment } from 'react';
 import diff from 'fast-diff';
 import {
 	Alert,
@@ -50,14 +50,14 @@ type DiffTextProps = {
 	variant: 'original' | 'suggestion';
 };
 
-const DiffText: React.FC<DiffTextProps> = ({ changes, variant }) => (
+const DiffText: FC<DiffTextProps> = ({ changes, variant }) => (
 	<>
 		{changes.map(([operation, text], index) => {
 			const isChanged = variant === 'original' ? operation === diff.DELETE : operation === diff.INSERT;
 			const isVisible = operation === diff.EQUAL || isChanged;
 
 			if (!isVisible) return null;
-			if (!isChanged) return <React.Fragment key={`${operation}-${index}`}>{text}</React.Fragment>;
+			if (!isChanged) return <Fragment key={`${operation}-${index}`}>{text}</Fragment>;
 
 			return (
 				<Box
@@ -77,7 +77,7 @@ const DiffText: React.FC<DiffTextProps> = ({ changes, variant }) => (
 	</>
 );
 
-const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
+const EnabledAiAssistantControl: FC<AiAssistantControlProps> = ({
 	value,
 	onApply,
 	context,
@@ -92,7 +92,7 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 	const [lastRequest, setLastRequest] = useState<AiAssistRequest | null>(null);
 	const [error, setError] = useState('');
 	const [translationDialogOpen, setTranslationDialogOpen] = useState(false);
-	const changes = useMemo(() => (result ? diff(result.original_text, result.suggested_text) : []), [result]);
+	const changes = result ? diff(result.original_text, result.suggested_text) : [];
 
 	const handleResponse = (request: AiAssistRequest, response: AiAssistResponse) => {
 		const isUnchanged = normalizeForComparison(request.text) === normalizeForComparison(response.suggested_text);
@@ -313,7 +313,7 @@ const EnabledAiAssistantControl: React.FC<AiAssistantControlProps> = ({
 	);
 };
 
-const AiAssistantControl: React.FC<AiAssistantControlProps> = (props) => {
+const AiAssistantControl: FC<AiAssistantControlProps> = (props) => {
 	if (!isEnabled()) return null;
 	return <EnabledAiAssistantControl {...props} />;
 };

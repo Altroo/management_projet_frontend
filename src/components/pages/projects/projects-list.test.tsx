@@ -1,4 +1,4 @@
-import React from 'react';
+import { type ReactNode } from 'react';
 import { render, screen, cleanup, fireEvent, act, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
@@ -75,12 +75,12 @@ jest.mock('@/store/services/project', () => ({
 
 // Mock Protected
 jest.mock('@/components/layouts/protected/protected', () => ({
-	Protected: ({ children }: { children: React.ReactNode }) => <div data-testid="protected">{children}</div>,
+	Protected: ({ children }: { children: ReactNode }) => <div data-testid="protected">{children}</div>,
 }));
 
 // Mock NavigationBar
 jest.mock('@/components/layouts/navigationBar/navigationBar', () => {
-	const Mock = ({ children }: { children: React.ReactNode }) => <div data-testid="navigation-bar">{children}</div>;
+	const Mock = ({ children }: { children: ReactNode }) => <div data-testid="navigation-bar">{children}</div>;
 	Mock.displayName = 'NavigationBar';
 	return { __esModule: true, default: Mock };
 });
@@ -95,7 +95,7 @@ jest.mock('@/components/shared/paginatedDataGrid/paginatedDataGrid', () => ({
 		columns: Array<{
 			field: string;
 			headerName: string;
-			renderCell?: (params: { value: unknown; row: Record<string, unknown>; field: string }) => React.ReactNode;
+			renderCell?: (params: { value: unknown; row: Record<string, unknown>; field: string }) => ReactNode;
 		}>;
 		data?: { results?: Array<Record<string, unknown>> };
 		isLoading?: boolean;
@@ -173,7 +173,7 @@ jest.mock('@/components/shared/mobileActionsMenu/mobileActionsMenu', () => ({
 
 jest.mock('@/components/htmlElements/tooltip/darkTooltip/darkTooltip', () => ({
 	__esModule: true,
-	default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+	default: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
 jest.mock('@/components/shared/chipSelectFilter/chipSelectFilterBar', () => ({
@@ -205,7 +205,6 @@ jest.mock('@/utils/rawData', () => ({
 	]),
 	STATUS_CHIP_COLORS: {} as Record<string, string>,
 }));
-
 import ProjectsListClient from './projects-list';
 
 describe('ProjectsListClient', () => {
@@ -282,23 +281,33 @@ describe('ProjectsListClient', () => {
 
 		it('opens delete modal', async () => {
 			render(<ProjectsListClient />);
-			await act(async () => { fireEvent.click(screen.getAllByText('Supprimer')[0]); });
+			await act(async () => {
+				fireEvent.click(screen.getAllByText('Supprimer')[0]);
+			});
 			expect(screen.getByTestId('action-modal')).toBeInTheDocument();
 			expect(screen.getByText('Supprimer ce projet ?')).toBeInTheDocument();
 		});
 
 		it('closes delete modal on Annuler', async () => {
 			render(<ProjectsListClient />);
-			await act(async () => { fireEvent.click(screen.getAllByText('Supprimer')[0]); });
-			await act(async () => { fireEvent.click(screen.getByText('Annuler')); });
+			await act(async () => {
+				fireEvent.click(screen.getAllByText('Supprimer')[0]);
+			});
+			await act(async () => {
+				fireEvent.click(screen.getByText('Annuler'));
+			});
 			expect(screen.queryByTestId('action-modal')).not.toBeInTheDocument();
 		});
 
 		it('deletes project on confirm', async () => {
 			render(<ProjectsListClient />);
-			await act(async () => { fireEvent.click(screen.getAllByText('Supprimer')[0]); });
+			await act(async () => {
+				fireEvent.click(screen.getAllByText('Supprimer')[0]);
+			});
 			const btns = screen.getAllByText('Supprimer');
-			await act(async () => { fireEvent.click(btns[btns.length - 1]); });
+			await act(async () => {
+				fireEvent.click(btns[btns.length - 1]);
+			});
 			await waitFor(() => {
 				expect(mockDeleteProject).toHaveBeenCalled();
 				expect(mockOnSuccess).toHaveBeenCalledWith('Projet supprimé avec succès');
@@ -308,9 +317,13 @@ describe('ProjectsListClient', () => {
 		it('handles delete error', async () => {
 			mockDeleteProject.mockReturnValueOnce({ unwrap: () => Promise.reject(new Error('fail')) });
 			render(<ProjectsListClient />);
-			await act(async () => { fireEvent.click(screen.getAllByText('Supprimer')[0]); });
+			await act(async () => {
+				fireEvent.click(screen.getAllByText('Supprimer')[0]);
+			});
 			const btns = screen.getAllByText('Supprimer');
-			await act(async () => { fireEvent.click(btns[btns.length - 1]); });
+			await act(async () => {
+				fireEvent.click(btns[btns.length - 1]);
+			});
 			await waitFor(() => {
 				expect(mockOnError).toHaveBeenCalledWith('Erreur lors de la suppression du projet');
 			});
@@ -320,7 +333,16 @@ describe('ProjectsListClient', () => {
 	describe('Column headers', () => {
 		it('renders all expected column headers', () => {
 			render(<ProjectsListClient />);
-			for (const h of ['Nom du projet', 'Statut', 'Budget', 'Date de début', 'Date de fin', 'Chef de projet', 'Créé par', 'Actions']) {
+			for (const h of [
+				'Nom du projet',
+				'Statut',
+				'Budget',
+				'Date de début',
+				'Date de fin',
+				'Chef de projet',
+				'Créé par',
+				'Actions',
+			]) {
 				expect(screen.getByText(h)).toBeInTheDocument();
 			}
 		});
@@ -328,13 +350,21 @@ describe('ProjectsListClient', () => {
 
 	describe('Loading and empty states', () => {
 		it('renders grid when loading', () => {
-			mockUseGetProjectsListQuery.mockReturnValueOnce({ data: { results: [], count: 0, next: null, previous: null }, isLoading: true, refetch: mockRefetch });
+			mockUseGetProjectsListQuery.mockReturnValueOnce({
+				data: { results: [], count: 0, next: null, previous: null },
+				isLoading: true,
+				refetch: mockRefetch,
+			});
 			render(<ProjectsListClient />);
 			expect(screen.getByTestId('paginated-data-grid')).toBeInTheDocument();
 		});
 
 		it('renders grid when empty', () => {
-			mockUseGetProjectsListQuery.mockReturnValueOnce({ data: { results: [], count: 0, next: null, previous: null }, isLoading: false, refetch: mockRefetch });
+			mockUseGetProjectsListQuery.mockReturnValueOnce({
+				data: { results: [], count: 0, next: null, previous: null },
+				isLoading: false,
+				refetch: mockRefetch,
+			});
 			render(<ProjectsListClient />);
 			expect(screen.getByTestId('paginated-data-grid')).toBeInTheDocument();
 		});

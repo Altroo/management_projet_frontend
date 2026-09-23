@@ -1,4 +1,6 @@
-import type { AccountGenderCodeValueType } from '@/types/accountTypes';
+import type { AccountGenderCodeValueType, PasswordResetCodeField } from '@/types/accountTypes';
+
+export const fields: PasswordResetCodeField[] = ['one', 'two', 'three', 'four', 'five', 'six'];
 import type { TranslationDictionary } from '@/types/languageTypes';
 import type { ProjectStatusType } from '@/types/projectTypes';
 
@@ -58,3 +60,84 @@ export const PROJECT_COLORS = [
 ];
 
 export const CHART_OPTS = { responsive: true, maintainAspectRatio: false } as const;
+
+export const doughnutPalette = ['#1d4ed8', '#047857', '#b91c1c', '#c2410c', '#6d28d9', '#0f766e', '#be123c', '#4d7c0f'];
+
+export const ALL_PROJECTS_CODE = '__all_projects__';
+
+export const doughnutOptions = {
+	...CHART_OPTS,
+	cutout: '62%',
+	plugins: {
+		legend: {
+			position: 'bottom' as const,
+			labels: { boxWidth: 10, padding: 12 },
+		},
+	},
+};
+
+export const horizontalBarOptions = {
+	...CHART_OPTS,
+	indexAxis: 'y' as const,
+	plugins: { legend: { display: false } },
+	scales: {
+		x: { beginAtZero: true },
+		y: { grid: { display: false } },
+	},
+};
+
+export const areaChartOptions = {
+	...CHART_OPTS,
+	interaction: { mode: 'index' as const, intersect: false },
+	plugins: { legend: { position: 'top' as const } },
+	scales: {
+		x: { grid: { color: 'rgba(0, 0, 0, 0.04)' } },
+		y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.06)' } },
+	},
+};
+
+export const groupedBarOptions = {
+	...CHART_OPTS,
+	plugins: { legend: { position: 'top' as const } },
+	scales: {
+		x: { grid: { display: false } },
+		y: {
+			beginAtZero: true,
+			position: 'left' as const,
+			grid: { color: 'rgba(0, 0, 0, 0.06)' },
+		},
+		yMargin: {
+			beginAtZero: true,
+			position: 'right' as const,
+			grid: { drawOnChartArea: false },
+			ticks: { callback: (value: string | number) => `${value}%` },
+		},
+	},
+};
+
+export const ITEM_HEIGHT = 48;
+
+export const ITEM_PADDING_TOP = 8;
+
+export const MenuProps = {
+	slotProps: {
+		paper: {
+			style: {
+				maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+				width: 250,
+			},
+		},
+	},
+};
+
+export const fileInputSx = {
+	clip: 'rect(0 0 0 0)',
+	clipPath: 'inset(50%)',
+	height: 1,
+	overflow: 'hidden',
+	position: 'absolute',
+	bottom: 0,
+	left: 0,
+	whiteSpace: 'nowrap',
+	width: 1,
+} as const;

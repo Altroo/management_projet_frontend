@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useState, type FC } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import {
@@ -22,7 +23,6 @@ import ActionModals from '@/components/htmlElements/modals/actionModal/actionMod
 import { Protected } from '@/components/layouts/protected/protected';
 import MobileActionsMenu from '@/components/shared/mobileActionsMenu/mobileActionsMenu';
 import DarkTooltip from '@/components/htmlElements/tooltip/darkTooltip/darkTooltip';
-import type { ChipFilterConfig } from '@/components/shared/chipSelectFilter/chipSelectFilterBar';
 import ChipSelectFilterBar from '@/components/shared/chipSelectFilter/chipSelectFilterBar';
 import { createDateRangeFilterOperator } from '@/components/shared/dateRangeFilter/dateRangeFilterOperator';
 import { createNumericFilterOperators } from '@/components/shared/numericFilter/numericFilterOperator';
@@ -39,7 +39,7 @@ import {
 } from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
 
-const RevenuesListClient: React.FC<SessionProps> = ({ session }) => {
+const RevenuesListClient: FC<SessionProps> = ({ session }) => {
 	const router = useRouter();
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
@@ -57,14 +57,14 @@ const RevenuesListClient: React.FC<SessionProps> = ({ session }) => {
 	const { data: revenues, isLoading } = useGetRevenuesQuery({}, { skip: !token });
 	const { data: projectsData } = useGetProjectsListQuery({}, { skip: !token });
 
-	const projectOptions = useMemo(() => {
+	const projectOptions = (() => {
 		const projects = Array.isArray(projectsData)
 			? projectsData
 			: projectsData && 'results' in projectsData
 				? projectsData.results
 				: [];
 		return projects.map((p) => ({ id: String(p.id), nom: p.nom }));
-	}, [projectsData]);
+	})();
 
 	const [deleteRevenue] = useDeleteRevenueMutation();
 	const [bulkDeleteRevenues] = useBulkDeleteRevenuesMutation();
@@ -74,15 +74,15 @@ const RevenuesListClient: React.FC<SessionProps> = ({ session }) => {
 	const [selectedIds, setSelectedIds] = useState<number[]>([]);
 	const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
-	const createdByOptions = useMemo(() => {
+	const createdByOptions = (() => {
 		const nameMap = new Map<string, string>();
 		(revenues ?? []).forEach((r) => {
 			if (r.created_by_user_name) nameMap.set(r.created_by_user_name, r.created_by_user_name);
 		});
 		return Array.from(nameMap.values()).map((name) => ({ value: name, label: name }));
-	}, [revenues]);
+	})();
 
-	const filteredRevenues = useMemo(() => {
+	const filteredRevenues = (() => {
 		let result = revenues ?? [];
 
 		const projectParam = chipFilterParams['project'];
@@ -136,27 +136,32 @@ const RevenuesListClient: React.FC<SessionProps> = ({ session }) => {
 		}
 
 		return result;
-	}, [revenues, chipFilterParams, searchTerm, customFilterParams]);
+	})();
 
-	const paginatedData = useMemo(() => {
+	const paginatedData = (() => {
 		const start = paginationModel.page * paginationModel.pageSize;
 		return {
 			count: filteredRevenues.length,
 			results: filteredRevenues.slice(start, start + paginationModel.pageSize),
 		};
-	}, [filteredRevenues, paginationModel]);
+	})();
 
 	const totalAmount = filteredRevenues.reduce((sum, r) => sum + Number(r.montant), 0);
 
 	const deleteHandler = async () => {
-		try {
-			await deleteRevenue({ id: selectedId! }).unwrap();
-			onSuccess(t.revenues.revenueDeletedSuccess);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.revenues.revenueDeleteError));
-		} finally {
-			setShowDeleteModal(false);
-		}
+		await runWithCleanup(
+			async () => {
+				try {
+					await deleteRevenue({ id: selectedId! }).unwrap();
+					onSuccess(t.revenues.revenueDeletedSuccess);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.revenues.revenueDeleteError));
+				}
+			},
+			() => {
+				setShowDeleteModal(false);
+			},
+		);
 	};
 
 	const deleteModalActions = [
@@ -177,15 +182,20 @@ const RevenuesListClient: React.FC<SessionProps> = ({ session }) => {
 	];
 
 	const bulkDeleteHandler = async () => {
-		try {
-			await bulkDeleteRevenues({ ids: selectedIds }).unwrap();
-			onSuccess(t.revenues.bulkRevenuesDeletedSuccess(selectedIds.length));
-			setSelectedIds([]);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.revenues.bulkRevenuesDeleteError));
-		} finally {
-			setShowBulkDeleteModal(false);
-		}
+		await runWithCleanup(
+			async () => {
+				try {
+					await bulkDeleteRevenues({ ids: selectedIds }).unwrap();
+					onSuccess(t.revenues.bulkRevenuesDeletedSuccess(selectedIds.length));
+					setSelectedIds([]);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.revenues.bulkRevenuesDeleteError));
+				}
+			},
+			() => {
+				setShowBulkDeleteModal(false);
+			},
+		);
 	};
 
 	const bulkDeleteModalActions = [
@@ -205,17 +215,14 @@ const RevenuesListClient: React.FC<SessionProps> = ({ session }) => {
 		},
 	];
 
-	const chipFilters = useMemo<ChipFilterConfig[]>(
-		() => [
-			{
-				key: 'project',
-				label: t.common.project,
-				paramName: 'project',
-				options: projectOptions,
-			},
-		],
-		[t, projectOptions],
-	);
+	const chipFilters = [
+		{
+			key: 'project',
+			label: t.common.project,
+			paramName: 'project',
+			options: projectOptions,
+		},
+	];
 
 	const columns: GridColDef[] = [
 		{

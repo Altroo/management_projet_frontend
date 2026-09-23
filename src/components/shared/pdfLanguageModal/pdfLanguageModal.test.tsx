@@ -1,15 +1,24 @@
-import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import PdfLanguageModal from './pdfLanguageModal';
 
 jest.mock('@/components/htmlElements/modals/actionModal/actionModals', () => ({
 	__esModule: true,
-	default: ({ title, body, actions }: { title: string; body: string; actions: Array<{ text: string; active: boolean; onClick: () => void }> }) => (
+	default: ({
+		title,
+		body,
+		actions,
+	}: {
+		title: string;
+		body: string;
+		actions: Array<{ text: string; active: boolean; onClick: () => void }>;
+	}) => (
 		<div>
 			<h1>{title}</h1>
 			<p>{body}</p>
 			{actions.map((action) => (
-				<button key={action.text} aria-pressed={action.active} onClick={action.onClick}>{action.text}</button>
+				<button key={action.text} aria-pressed={action.active} onClick={action.onClick}>
+					{action.text}
+				</button>
 			))}
 		</div>
 	),
@@ -40,7 +49,9 @@ describe('PdfLanguageModal', () => {
 		render(<PdfLanguageModal onClose={onClose} onSelectLanguage={onSelectLanguage} />);
 
 		expect(screen.getByText('Génération du PDF')).toBeInTheDocument();
-		expect(screen.getByText('Choisissez la langue dans laquelle vous souhaitez générer le document PDF.')).toBeInTheDocument();
+		expect(
+			screen.getByText('Choisissez la langue dans laquelle vous souhaitez générer le document PDF.'),
+		).toBeInTheDocument();
 		fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
 		fireEvent.click(screen.getByRole('button', { name: 'Français' }));
 		fireEvent.click(screen.getByRole('button', { name: 'English' }));

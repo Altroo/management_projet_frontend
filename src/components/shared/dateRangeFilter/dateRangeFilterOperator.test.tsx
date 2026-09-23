@@ -4,11 +4,11 @@ import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { createDateRangeFilterOperator } from './dateRangeFilterOperator';
-import React from 'react';
+import { type RefObject } from 'react';
 
 describe('dateRangeFilterOperator', () => {
 	let mockColumn: GridColDef;
-	const mockApiRef = { current: null } as unknown as React.RefObject<GridApiCommunity>;
+	const mockApiRef = { current: null } as unknown as RefObject<GridApiCommunity>;
 
 	beforeEach(() => {
 		mockColumn = { field: 'date', headerName: 'Date' };
@@ -179,7 +179,9 @@ describe('dateRangeFilterOperator', () => {
 			};
 
 			if (InputComponent) {
-				const { container } = render(<InputComponent item={mockItem} applyValue={mockApplyValue} apiRef={mockApiRef} />);
+				const { container } = render(
+					<InputComponent item={mockItem} applyValue={mockApplyValue} apiRef={mockApiRef} />,
+				);
 
 				// Component renders without error
 				expect(container).toBeInTheDocument();
@@ -212,7 +214,9 @@ describe('dateRangeFilterOperator', () => {
 			};
 
 			if (InputComponent) {
-				const { container } = render(<InputComponent item={mockItem} applyValue={mockApplyValue} apiRef={mockApiRef} />);
+				const { container } = render(
+					<InputComponent item={mockItem} applyValue={mockApplyValue} apiRef={mockApiRef} />,
+				);
 
 				// Both date pickers are rendered
 				expect(container).toBeInTheDocument();
@@ -230,7 +234,9 @@ describe('dateRangeFilterOperator', () => {
 			};
 
 			if (InputComponent) {
-				const { container } = render(<InputComponent item={mockItem} applyValue={mockApplyValue} apiRef={mockApiRef} />);
+				const { container } = render(
+					<InputComponent item={mockItem} applyValue={mockApplyValue} apiRef={mockApiRef} />,
+				);
 
 				// Both date pickers are rendered
 				expect(container).toBeInTheDocument();
@@ -248,7 +254,9 @@ describe('dateRangeFilterOperator', () => {
 			};
 
 			if (InputComponent) {
-				const { container } = render(<InputComponent item={mockItem} applyValue={mockApplyValue} apiRef={mockApiRef} />);
+				const { container } = render(
+					<InputComponent item={mockItem} applyValue={mockApplyValue} apiRef={mockApiRef} />,
+				);
 
 				// InputComponent renders without calling applyValue on mount
 				expect(container).toBeInTheDocument();
@@ -265,7 +273,9 @@ describe('dateRangeFilterOperator', () => {
 			};
 
 			if (InputComponent) {
-				const { container } = render(<InputComponent item={mockItem} applyValue={mockApplyValue} apiRef={mockApiRef} />);
+				const { container } = render(
+					<InputComponent item={mockItem} applyValue={mockApplyValue} apiRef={mockApiRef} />,
+				);
 				expect(container).toBeInTheDocument();
 				// Component initializes with provided dates
 				expect(screen.getAllByText('De').length).toBeGreaterThan(0);

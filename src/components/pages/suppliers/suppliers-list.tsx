@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useState, type FC } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import {
@@ -24,10 +25,14 @@ import DarkTooltip from '@/components/htmlElements/tooltip/darkTooltip/darkToolt
 import { extractApiErrorMessage } from '@/utils/helpers';
 import { SUPPLIERS_ADD, SUPPLIERS_EDIT, SUPPLIERS_VIEW } from '@/utils/routes';
 import { useLanguage, useToast } from '@/utils/hooks';
-import { useBulkDeleteSuppliersMutation, useDeleteSupplierMutation, useGetSuppliersQuery } from '@/store/services/project';
+import {
+	useBulkDeleteSuppliersMutation,
+	useDeleteSupplierMutation,
+	useGetSuppliersQuery,
+} from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
 
-const SuppliersListClient: React.FC<SessionProps> = ({ session }) => {
+const SuppliersListClient: FC<SessionProps> = ({ session }) => {
 	const router = useRouter();
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
@@ -47,7 +52,7 @@ const SuppliersListClient: React.FC<SessionProps> = ({ session }) => {
 	const [deleteSupplier] = useDeleteSupplierMutation();
 	const [bulkDeleteSuppliers] = useBulkDeleteSuppliersMutation();
 
-	const filteredRows = useMemo(() => {
+	const filteredRows = (() => {
 		if (!searchTerm.trim()) return data;
 		const term = searchTerm.toLowerCase();
 		return data.filter(
@@ -56,47 +61,75 @@ const SuppliersListClient: React.FC<SessionProps> = ({ session }) => {
 				(row.contact ?? '').toLowerCase().includes(term) ||
 				(row.specialite ?? '').toLowerCase().includes(term),
 		);
-	}, [data, searchTerm]);
+	})();
 
-	const paginatedData = useMemo(() => {
+	const paginatedData = (() => {
 		const start = paginationModel.page * paginationModel.pageSize;
 		return {
 			count: filteredRows.length,
 			results: filteredRows.slice(start, start + paginationModel.pageSize),
 		};
-	}, [filteredRows, paginationModel]);
+	})();
 
 	const deleteHandler = async () => {
-		try {
-			await deleteSupplier({ id: selectedId! }).unwrap();
-			onSuccess(t.suppliers.supplierDeletedSuccess);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.suppliers.supplierDeleteError));
-		} finally {
-			setShowDeleteModal(false);
-		}
+		await runWithCleanup(
+			async () => {
+				try {
+					await deleteSupplier({ id: selectedId! }).unwrap();
+					onSuccess(t.suppliers.supplierDeletedSuccess);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.suppliers.supplierDeleteError));
+				}
+			},
+			() => {
+				setShowDeleteModal(false);
+			},
+		);
 	};
 
 	const bulkDeleteHandler = async () => {
-		try {
-			await bulkDeleteSuppliers({ ids: selectedIds }).unwrap();
-			onSuccess(t.suppliers.bulkSuppliersDeletedSuccess(selectedIds.length));
-			setSelectedIds([]);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.suppliers.bulkSuppliersDeleteError));
-		} finally {
-			setShowBulkDeleteModal(false);
-		}
+		await runWithCleanup(
+			async () => {
+				try {
+					await bulkDeleteSuppliers({ ids: selectedIds }).unwrap();
+					onSuccess(t.suppliers.bulkSuppliersDeletedSuccess(selectedIds.length));
+					setSelectedIds([]);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.suppliers.bulkSuppliersDeleteError));
+				}
+			},
+			() => {
+				setShowBulkDeleteModal(false);
+			},
+		);
 	};
 
 	const deleteModalActions = [
-		{ text: t.common.cancel, active: false, onClick: () => setShowDeleteModal(false), icon: <CloseIcon />, color: '#6B6B6B' },
+		{
+			text: t.common.cancel,
+			active: false,
+			onClick: () => setShowDeleteModal(false),
+			icon: <CloseIcon />,
+			color: '#6B6B6B',
+		},
 		{ text: t.common.delete, active: true, onClick: deleteHandler, icon: <DeleteIcon />, color: '#D32F2F' },
 	];
 
 	const bulkDeleteModalActions = [
-		{ text: t.common.cancel, active: false, onClick: () => setShowBulkDeleteModal(false), icon: <CloseIcon />, color: '#6B6B6B' },
-		{ text: `${t.common.delete} (${selectedIds.length})`, active: true, onClick: bulkDeleteHandler, icon: <DeleteIcon />, color: '#D32F2F' },
+		{
+			text: t.common.cancel,
+			active: false,
+			onClick: () => setShowBulkDeleteModal(false),
+			icon: <CloseIcon />,
+			color: '#6B6B6B',
+		},
+		{
+			text: `${t.common.delete} (${selectedIds.length})`,
+			active: true,
+			onClick: bulkDeleteHandler,
+			icon: <DeleteIcon />,
+			color: '#D32F2F',
+		},
 	];
 
 	const columns: GridColDef[] = [
@@ -137,8 +170,18 @@ const SuppliersListClient: React.FC<SessionProps> = ({ session }) => {
 			renderCell: (params) => (
 				<MobileActionsMenu
 					actions={[
-						{ label: t.common.view, icon: <VisibilityIcon />, onClick: () => router.push(SUPPLIERS_VIEW(params.row.id)), color: 'info' },
-						{ label: t.common.edit, icon: <EditIcon />, onClick: () => router.push(SUPPLIERS_EDIT(params.row.id)), color: 'primary' },
+						{
+							label: t.common.view,
+							icon: <VisibilityIcon />,
+							onClick: () => router.push(SUPPLIERS_VIEW(params.row.id)),
+							color: 'info',
+						},
+						{
+							label: t.common.edit,
+							icon: <EditIcon />,
+							onClick: () => router.push(SUPPLIERS_EDIT(params.row.id)),
+							color: 'primary',
+						},
 						{
 							label: t.common.delete,
 							icon: <DeleteIcon />,
@@ -159,12 +202,29 @@ const SuppliersListClient: React.FC<SessionProps> = ({ session }) => {
 			<NavigationBar title={t.suppliers.suppliersList}>
 				<Protected permission="can_view">
 					<>
-						<Box sx={{ display: 'flex', gap: 2, px: { xs: 1, sm: 2, md: 3 }, my: { xs: 1, sm: 2, md: 3 }, flexWrap: 'wrap' }}>
-							<Button variant="contained" onClick={() => router.push(SUPPLIERS_ADD)} startIcon={<AddIcon fontSize="small" />}>
+						<Box
+							sx={{
+								display: 'flex',
+								gap: 2,
+								px: { xs: 1, sm: 2, md: 3 },
+								my: { xs: 1, sm: 2, md: 3 },
+								flexWrap: 'wrap',
+							}}
+						>
+							<Button
+								variant="contained"
+								onClick={() => router.push(SUPPLIERS_ADD)}
+								startIcon={<AddIcon fontSize="small" />}
+							>
 								{t.suppliers.newSupplier}
 							</Button>
 							{selectedIds.length > 0 && (
-								<Button variant="outlined" color="error" onClick={() => setShowBulkDeleteModal(true)} startIcon={<DeleteIcon fontSize="small" />}>
+								<Button
+									variant="outlined"
+									color="error"
+									onClick={() => setShowBulkDeleteModal(true)}
+									startIcon={<DeleteIcon fontSize="small" />}
+								>
 									{t.common.delete} ({selectedIds.length})
 								</Button>
 							)}
@@ -183,7 +243,13 @@ const SuppliersListClient: React.FC<SessionProps> = ({ session }) => {
 							onSelectionChange={setSelectedIds}
 							selectedIds={selectedIds}
 						/>
-						{showDeleteModal && <ActionModals title={t.suppliers.deleteSupplier} body={t.suppliers.deleteSupplierConfirm} actions={deleteModalActions} />}
+						{showDeleteModal && (
+							<ActionModals
+								title={t.suppliers.deleteSupplier}
+								body={t.suppliers.deleteSupplierConfirm}
+								actions={deleteModalActions}
+							/>
+						)}
 						{showBulkDeleteModal && (
 							<ActionModals
 								title={t.suppliers.bulkDeleteSuppliers(selectedIds.length)}

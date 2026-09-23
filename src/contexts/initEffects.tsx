@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef, type FC } from 'react';
 import { useAppDispatch, useAppSelector } from '@/utils/hooks';
 import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -10,7 +10,7 @@ import { useGetProfilQuery } from '@/store/services/account';
 import { accountSetProfilAction } from '@/store/actions/accountActions';
 import { DASHBOARD_PASSWORD } from '@/utils/routes';
 
-export const InitEffects: React.FC = () => {
+export const InitEffects: FC = () => {
 	const { data: session, status } = useSession();
 	const dispatch = useAppDispatch();
 	const router = useRouter();
@@ -33,8 +33,7 @@ export const InitEffects: React.FC = () => {
 
 	// Sync Redux tokens whenever the access token changes (covers initial login + every refresh)
 	useEffect(() => {
-		if (status === 'authenticated' && session?.accessToken &&
-			lastAccessTokenRef.current !== session.accessToken) {
+		if (status === 'authenticated' && session?.accessToken && lastAccessTokenRef.current !== session.accessToken) {
 			lastAccessTokenRef.current = session.accessToken;
 			dispatch(initAppSessionTokensAction(session));
 		}

@@ -1,7 +1,7 @@
 'use client';
 
 import type { ErrorInfo, ReactNode } from 'react';
-import React, { Component } from 'react';
+import { Component } from 'react';
 import { Box, Button, Paper, Typography } from '@mui/material';
 import ErrorOutlinedIcon from '@mui/icons-material/ErrorOutlined';
 import type { Language } from '@/types/languageTypes';

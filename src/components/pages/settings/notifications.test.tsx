@@ -1,4 +1,4 @@
-import React from 'react';
+import { type ChangeEvent, type ReactElement, type ReactNode } from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
@@ -26,7 +26,11 @@ jest.mock('@/utils/hooks', () => ({
 		onError: mockOnError,
 	}),
 	useAppSelector: jest.fn(() => null),
-	useLanguage: () => ({ language: 'fr' as const, setLanguage: jest.fn(), t: jest.requireActual('@/translations').translations.fr }),
+	useLanguage: () => ({
+		language: 'fr' as const,
+		setLanguage: jest.fn(),
+		t: jest.requireActual('@/translations').translations.fr,
+	}),
 }));
 
 jest.mock('@/store/selectors', () => ({
@@ -36,7 +40,7 @@ jest.mock('@/store/selectors', () => ({
 
 jest.mock('@/components/layouts/navigationBar/navigationBar', () => ({
 	__esModule: true,
-	default: ({ children, title }: { children: React.ReactNode; title: string }) => (
+	default: ({ children, title }: { children: ReactNode; title: string }) => (
 		<div data-testid="navigation-bar">
 			<h1 data-testid="nav-title">{title}</h1>
 			{children}
@@ -77,7 +81,17 @@ jest.mock('@/components/formikElements/apiLoading/apiProgress/apiProgress', () =
 
 jest.mock('@/components/formikElements/customTextInput/customTextInput', () => ({
 	__esModule: true,
-	default: ({ id, label, value, onChange }: { id: string; label: string; value: string; onChange: (event: React.ChangeEvent<HTMLInputElement>) => void }) => (
+	default: ({
+		id,
+		label,
+		value,
+		onChange,
+	}: {
+		id: string;
+		label: string;
+		value: string;
+		onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+	}) => (
 		<div data-testid={`custom-input-${id}`}>
 			<label htmlFor={id}>{label}</label>
 			<input id={id} value={value} onChange={onChange} />
@@ -104,10 +118,9 @@ jest.mock('@/styles/dashboard/settings/settings.module.sass', () => ({
 	main: 'main',
 	fixMobile: 'fixMobile',
 }));
-
 import NotificationsClient from './notifications';
 
-const renderWithProviders = (ui: React.ReactElement) => render(<Provider store={mockStore}>{ui}</Provider>);
+const renderWithProviders = (ui: ReactElement) => render(<Provider store={mockStore}>{ui}</Provider>);
 
 describe('NotificationsClient', () => {
 	beforeEach(() => {

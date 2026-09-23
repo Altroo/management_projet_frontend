@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { type FC } from 'react';
 import Image from 'next/image';
 import { Box, Chip, Divider, Paper, Stack, Typography } from '@mui/material';
 import BuildCircleOutlinedIcon from '@mui/icons-material/BuildCircleOutlined';
@@ -9,7 +9,7 @@ import { getWSMaintenanceState } from '@/store/selectors';
 import Logo from '../../../../public/assets/images/management-projet-logo.png';
 import IlluSVG from '../../../../public/assets/images/auth_illu/document.svg';
 
-const Maintenance: React.FC = () => {
+const Maintenance: FC = () => {
 	const maintenance = useAppSelector(getWSMaintenanceState);
 	const { t } = useLanguage();
 
@@ -18,7 +18,7 @@ const Maintenance: React.FC = () => {
 	}
 
 	return (
-        <Box
+		<Box
 			data-testid="maintenance-gate"
 			sx={{
 				position: 'fixed',
@@ -28,7 +28,7 @@ const Maintenance: React.FC = () => {
 				overflowY: 'auto',
 			}}
 		>
-            <Box
+			<Box
 				sx={{
 					display: 'grid',
 					gridTemplateColumns: {
@@ -48,19 +48,9 @@ const Maintenance: React.FC = () => {
 						overflow: 'hidden',
 					}}
 				>
-					<Image
-						src={Logo}
-						alt={t.common.appLogo}
-						priority
-						style={{ width: '150px', height: 'auto' }}
-					/>
+					<Image src={Logo} alt={t.common.appLogo} priority style={{ width: '150px', height: 'auto' }} />
 					<Box sx={{ width: '100%', maxWidth: 420 }}>
-						<Image
-							src={IlluSVG}
-							alt=""
-							priority
-							style={{ width: '100%', height: 'auto' }}
-						/>
+						<Image src={IlluSVG} alt="" priority style={{ width: '100%', height: 'auto' }} />
 					</Box>
 				</Box>
 
@@ -79,18 +69,14 @@ const Maintenance: React.FC = () => {
 					}}
 				>
 					<Stack
-                        direction="row"
-                        sx={{
-                            justifyContent: "center",
-                            display: { xs: 'flex', md: 'none' },
-                            mb: 4
-                        }}>
-						<Image
-							src={Logo}
-							alt={t.common.appLogo}
-							priority
-							style={{ width: '88px', height: 'auto' }}
-						/>
+						direction="row"
+						sx={{
+							justifyContent: 'center',
+							display: { xs: 'flex', md: 'none' },
+							mb: 4,
+						}}
+					>
+						<Image src={Logo} alt={t.common.appLogo} priority style={{ width: '88px', height: 'auto' }} />
 					</Stack>
 
 					<Paper
@@ -158,8 +144,8 @@ const Maintenance: React.FC = () => {
 					</Paper>
 				</Stack>
 			</Box>
-        </Box>
-    );
+		</Box>
+	);
 };
 
 export default Maintenance;

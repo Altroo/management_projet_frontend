@@ -1,6 +1,8 @@
-"use client";
+'use client';
 
-import React, { useMemo, useState } from 'react';
+import { runAsyncWithErrorHandler } from '@/utils/runWithCleanup';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useState, type FC, type ReactNode } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Stack } from '@mui/material';
 import { Close as CloseIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import type { Theme } from '@mui/material/styles';
@@ -15,7 +17,7 @@ type EntityPayload = Record<string, number | string>;
 
 type EntityCrudControlsProps = {
 	label: string;
-	icon: React.ReactNode;
+	icon: ReactNode;
 	inputTheme: Theme;
 	selectedItem: DropDownType | null;
 	addEntity: (args: { data: EntityPayload }) => Promise<unknown> & { unwrap?: () => Promise<unknown> };
@@ -46,7 +48,7 @@ const getMutationErrorMessage = (error: unknown, fallback: string): string => {
 	return fallback;
 };
 
-const EntityCrudControls: React.FC<EntityCrudControlsProps> = ({
+const EntityCrudControls: FC<EntityCrudControlsProps> = ({
 	label,
 	icon,
 	inputTheme,
@@ -69,11 +71,11 @@ const EntityCrudControls: React.FC<EntityCrudControlsProps> = ({
 	const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 	const [actionLoading, setActionLoading] = useState(false);
 
-	const selectedId = useMemo(() => {
+	const selectedId = (() => {
 		if (!selectedItem?.code) return null;
 		const parsed = Number(selectedItem.code);
 		return Number.isFinite(parsed) ? parsed : null;
-	}, [selectedItem]);
+	})();
 
 	const handleEditOpen = () => {
 		if (!selectedItem?.value) return;
@@ -85,39 +87,50 @@ const EntityCrudControls: React.FC<EntityCrudControlsProps> = ({
 	const handleEditSubmit = async () => {
 		if (!selectedId || !editName.trim()) return;
 		setActionLoading(true);
-		try {
-			const request = editEntity({
-				id: selectedId,
-				data: buildEditPayload ? buildEditPayload(editName.trim()) : { name: editName.trim() },
-			});
-			if (typeof request.unwrap === 'function') {
-				await request.unwrap();
-			} else {
-				await request;
-			}
-			setOpenEditDialog(false);
-		} catch (error) {
-			setEditError(getMutationErrorMessage(error, `${t.common.update} ${label}`));
-		} finally {
-			setActionLoading(false);
-		}
+		await runWithCleanup(
+			async () => {
+				await runAsyncWithErrorHandler(
+					async () => {
+						const request = editEntity({
+							id: selectedId,
+							data: buildEditPayload ? buildEditPayload(editName.trim()) : { name: editName.trim() },
+						});
+						if (typeof request.unwrap === 'function') {
+							await request.unwrap();
+						} else {
+							await request;
+						}
+						setOpenEditDialog(false);
+					},
+					async (error) => {
+						setEditError(getMutationErrorMessage(error, `${t.common.update} ${label}`));
+					},
+				);
+			},
+			() => {
+				setActionLoading(false);
+			},
+		);
 	};
 
 	const handleDeleteConfirm = async () => {
 		if (!selectedId) return;
 		setActionLoading(true);
-		try {
-			const request = deleteEntity({ id: selectedId });
-			if (typeof request.unwrap === 'function') {
-				await request.unwrap();
-			} else {
-				await request;
-			}
-			setOpenDeleteDialog(false);
-			onDeleteSuccess?.();
-		} finally {
-			setActionLoading(false);
-		}
+		await runWithCleanup(
+			async () => {
+				const request = deleteEntity({ id: selectedId });
+				if (typeof request.unwrap === 'function') {
+					await request.unwrap();
+				} else {
+					await request;
+				}
+				setOpenDeleteDialog(false);
+				onDeleteSuccess?.();
+			},
+			() => {
+				setActionLoading(false);
+			},
+		);
 	};
 
 	return (
@@ -139,7 +152,12 @@ const EntityCrudControls: React.FC<EntityCrudControlsProps> = ({
 						</IconButton>
 					</>
 				)}
-				<Button size="small" variant="outlined" onClick={() => setOpenAddModal(true)} disabled={disabled || addDisabled}>
+				<Button
+					size="small"
+					variant="outlined"
+					onClick={() => setOpenAddModal(true)}
+					disabled={disabled || addDisabled}
+				>
 					{t.common.add}
 				</Button>
 			</Stack>

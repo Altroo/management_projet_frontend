@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useEffect, useState, type FC } from 'react';
 import Styles from '@/styles/dashboard/settings/settings.module.sass';
 import CustomTextInput from '@/components/formikElements/customTextInput/customTextInput';
 import { Box, FormControlLabel, Stack, Switch, useMediaQuery, useTheme } from '@mui/material';
@@ -20,7 +21,7 @@ import type { NotificationPreferenceFormValues } from '@/types/managementNotific
 
 const inputTheme = textInputTheme();
 
-const FormikContent: React.FC = () => {
+const FormikContent: FC = () => {
 	const { onSuccess, onError } = useToast();
 	const { t } = useLanguage();
 	const { data: preferences, isLoading: isPreferencesLoading } = useGetNotificationPreferencesQuery();
@@ -41,23 +42,28 @@ const FormikContent: React.FC = () => {
 		enableReinitialize: true,
 		onSubmit: async (values, { setFieldError }) => {
 			setIsPending(true);
-			try {
-				await updatePreferences({
-					notify_budget_overrun: values.notify_budget_overrun,
-					notify_budget_threshold: values.notify_budget_threshold,
-					notify_deadline_approaching: values.notify_deadline_approaching,
-					notify_project_overdue: values.notify_project_overdue,
-					notify_status_change: values.notify_status_change,
-					budget_threshold_percent: values.budget_threshold_percent,
-					deadline_alert_days: values.deadline_alert_days,
-				}).unwrap();
-				onSuccess(t.settings.notificationUpdateSuccess);
-			} catch (e) {
-				onError(t.settings.notificationUpdateError);
-				setFormikAutoErrors({ e, setFieldError });
-			} finally {
-				setIsPending(false);
-			}
+			await runWithCleanup(
+				async () => {
+					try {
+						await updatePreferences({
+							notify_budget_overrun: values.notify_budget_overrun,
+							notify_budget_threshold: values.notify_budget_threshold,
+							notify_deadline_approaching: values.notify_deadline_approaching,
+							notify_project_overdue: values.notify_project_overdue,
+							notify_status_change: values.notify_status_change,
+							budget_threshold_percent: values.budget_threshold_percent,
+							deadline_alert_days: values.deadline_alert_days,
+						}).unwrap();
+						onSuccess(t.settings.notificationUpdateSuccess);
+					} catch (e) {
+						onError(t.settings.notificationUpdateError);
+						setFormikAutoErrors({ e, setFieldError });
+					}
+				},
+				() => {
+					setIsPending(false);
+				},
+			);
 		},
 	});
 
@@ -96,7 +102,7 @@ const FormikContent: React.FC = () => {
 								control={
 									<Switch
 										checked={formik.values.notify_budget_overrun}
-										onChange={(e) => formik.setFieldValue('notify_budget_overrun', e.target.checked)}
+										onChange={(e) => void formik.setFieldValue('notify_budget_overrun', e.target.checked)}
 									/>
 								}
 								label={t.settings.notifyBudgetOverrun}
@@ -105,7 +111,7 @@ const FormikContent: React.FC = () => {
 								control={
 									<Switch
 										checked={formik.values.notify_budget_threshold}
-										onChange={(e) => formik.setFieldValue('notify_budget_threshold', e.target.checked)}
+										onChange={(e) => void formik.setFieldValue('notify_budget_threshold', e.target.checked)}
 									/>
 								}
 								label={t.settings.notifyBudgetThreshold}
@@ -114,7 +120,7 @@ const FormikContent: React.FC = () => {
 								control={
 									<Switch
 										checked={formik.values.notify_deadline_approaching}
-										onChange={(e) => formik.setFieldValue('notify_deadline_approaching', e.target.checked)}
+										onChange={(e) => void formik.setFieldValue('notify_deadline_approaching', e.target.checked)}
 									/>
 								}
 								label={t.settings.notifyDeadlineApproaching}
@@ -123,7 +129,7 @@ const FormikContent: React.FC = () => {
 								control={
 									<Switch
 										checked={formik.values.notify_project_overdue}
-										onChange={(e) => formik.setFieldValue('notify_project_overdue', e.target.checked)}
+										onChange={(e) => void formik.setFieldValue('notify_project_overdue', e.target.checked)}
 									/>
 								}
 								label={t.settings.notifyProjectOverdue}
@@ -132,7 +138,7 @@ const FormikContent: React.FC = () => {
 								control={
 									<Switch
 										checked={formik.values.notify_status_change}
-										onChange={(e) => formik.setFieldValue('notify_status_change', e.target.checked)}
+										onChange={(e) => void formik.setFieldValue('notify_status_change', e.target.checked)}
 									/>
 								}
 								label={t.settings.notifyStatusChange}
@@ -143,7 +149,7 @@ const FormikContent: React.FC = () => {
 								type="number"
 								size="small"
 								value={String(formik.values.budget_threshold_percent)}
-								onChange={(e) => formik.setFieldValue('budget_threshold_percent', Number(e.target.value))}
+								onChange={(e) => void formik.setFieldValue('budget_threshold_percent', Number(e.target.value))}
 								slotProps={{ htmlInput: { min: 1, max: 100 } }}
 								fullWidth
 								theme={inputTheme}
@@ -154,7 +160,7 @@ const FormikContent: React.FC = () => {
 								type="number"
 								size="small"
 								value={String(formik.values.deadline_alert_days)}
-								onChange={(e) => formik.setFieldValue('deadline_alert_days', Number(e.target.value))}
+								onChange={(e) => void formik.setFieldValue('deadline_alert_days', Number(e.target.value))}
 								slotProps={{ htmlInput: { min: 1, max: 365 } }}
 								fullWidth
 								theme={inputTheme}
@@ -176,7 +182,7 @@ const FormikContent: React.FC = () => {
 	);
 };
 
-const NotificationsClient: React.FC = () => {
+const NotificationsClient: FC = () => {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 	const { t } = useLanguage();

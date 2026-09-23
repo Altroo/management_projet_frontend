@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useRef, useState } from 'react';
+import { useRef, useState, type ChangeEvent, type FC, type MouseEvent, type SubmitEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Alert, Box, Button, Card, CardContent, Divider, InputAdornment, Stack, Typography } from '@mui/material';
 import {
@@ -59,6 +59,8 @@ import {
 } from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
 import { projectStatusItemsList } from '@/utils/rawData';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { runAsyncWithErrorHandler } from '@/utils/runWithCleanup';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
 
 const inputTheme = textInputTheme();
@@ -68,7 +70,7 @@ type FormikContentProps = {
 	id?: number;
 };
 
-const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
+const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
 	const isEditMode = id !== undefined;
@@ -88,13 +90,13 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	const [realBudgetDraftState, setRealBudgetDraftState] = useState({ hasInput: false, isComplete: false });
 	const realBudgetCardRef = useRef<ProjectRealBudgetCardHandle>(null);
 
-	const handleRealBudgetDraftStateChange = useCallback((nextState: { hasInput: boolean; isComplete: boolean }) => {
+	const handleRealBudgetDraftStateChange = (nextState: { hasInput: boolean; isComplete: boolean }) => {
 		setRealBudgetDraftState((currentState) =>
 			currentState.hasInput === nextState.hasInput && currentState.isComplete === nextState.isComplete
 				? currentState
 				: nextState,
 		);
-	}, []);
+	};
 
 	const baseStatusItems: DropDownType[] = projectStatusItemsList(t).map((s) => ({ code: s.code, value: s.value }));
 	const statusItems: DropDownType[] =
@@ -134,50 +136,59 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 				...fields,
 				client: fields.client === '' ? null : fields.client,
 			};
-			try {
-				const realBudgetDraftResult = await realBudgetCardRef.current?.submitDraft();
-				if (realBudgetDraftResult?.status === 'invalid') {
-					onError(t.users.fixValidationErrors);
-					return;
-				}
-				if (realBudgetDraftResult?.status === 'failed') {
-					return;
-				}
-				const realBudgetEntriesToCreate =
-					realBudgetDraftResult?.status === 'queued'
-						? [...queuedRealBudgetEntries, realBudgetDraftResult.entry]
-						: queuedRealBudgetEntries;
+			await runWithCleanup(
+				async () => {
+					await runAsyncWithErrorHandler(
+						async () => {
+							const realBudgetDraftResult = await realBudgetCardRef.current?.submitDraft();
+							if (realBudgetDraftResult?.status === 'invalid') {
+								onError(t.users.fixValidationErrors);
+								return;
+							}
+							if (realBudgetDraftResult?.status === 'failed') {
+								return;
+							}
+							const realBudgetEntriesToCreate =
+								realBudgetDraftResult?.status === 'queued'
+									? [...queuedRealBudgetEntries, realBudgetDraftResult.entry]
+									: queuedRealBudgetEntries;
 
-				if (isEditMode) {
-					await updateProject({ id: id!, data: payload }).unwrap();
-					onSuccess(t.projects.projectUpdatedSuccess);
-				} else {
-					const createdProject = (await createProject({ data: payload }).unwrap()) as ProjectType;
-					if (queuedAttachments.length > 0) {
-						await Promise.all(
-							queuedAttachments.map((attachment) =>
-								uploadProjectAttachment({ id: createdProject.id, data: buildAttachmentFormData(attachment) }).unwrap(),
-							),
-						);
-						setQueuedAttachments([]);
-					}
-					if (realBudgetEntriesToCreate.length > 0) {
-						await Promise.all(
-							realBudgetEntriesToCreate.map((entry) =>
-								createRealBudgetEntry({ data: buildRealBudgetEntryPayload(createdProject.id, entry) }).unwrap(),
-							),
-						);
-						setQueuedRealBudgetEntries([]);
-					}
-					onSuccess(t.projects.projectAddedSuccess);
-				}
-				router.push(PROJECTS_LIST);
-			} catch (e) {
-				setFormikAutoErrors({ e, setFieldError });
-				onError(isEditMode ? t.projects.projectUpdateError : t.projects.projectAddError);
-			} finally {
-				setIsPending(false);
-			}
+							if (isEditMode) {
+								await updateProject({ id: id!, data: payload }).unwrap();
+								onSuccess(t.projects.projectUpdatedSuccess);
+							} else {
+								const createdProject = (await createProject({ data: payload }).unwrap()) as ProjectType;
+								if (queuedAttachments.length > 0) {
+									await Promise.all(
+										queuedAttachments.map((attachment) =>
+											uploadProjectAttachment({
+												id: createdProject.id,
+												data: buildAttachmentFormData(attachment),
+											}).unwrap(),
+										),
+									);
+									setQueuedAttachments([]);
+								}
+								if (realBudgetEntriesToCreate.length > 0) {
+									await Promise.all(
+										realBudgetEntriesToCreate.map((entry) =>
+											createRealBudgetEntry({ data: buildRealBudgetEntryPayload(createdProject.id, entry) }).unwrap(),
+										),
+									);
+									setQueuedRealBudgetEntries([]);
+								}
+								onSuccess(t.projects.projectAddedSuccess);
+							}
+							router.push(PROJECTS_LIST);
+						},
+						async (e) => {
+							setFormikAutoErrors({ e, setFieldError });
+							onError(isEditMode ? t.projects.projectUpdateError : t.projects.projectAddError);
+						},
+					);
+				},
+				() => setIsPending(false),
+			);
 		},
 	});
 
@@ -201,7 +212,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 		window.scrollTo({ top: 0, behavior: 'smooth' });
 	};
 
-	const handleFormSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
+	const handleFormSubmit = (event: SubmitEvent<HTMLFormElement>) => {
 		setSubmitAttempted(true);
 		if (hasRealBudgetValidationError) {
 			event.preventDefault();
@@ -326,9 +337,9 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 											size="small"
 											label={`${t.projects.budget} *`}
 											value={formik.values.budget_total}
-											onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+											onChange={(e: ChangeEvent<HTMLInputElement>) => {
 												if (/^(0|[1-9]\d*)?([.,]\d*)?$/.test(e.target.value))
-													formik.setFieldValue('budget_total', e.target.value);
+													void formik.setFieldValue('budget_total', e.target.value);
 											}}
 											onBlur={formik.handleBlur('budget_total')}
 											error={formik.submitCount > 0 && Boolean(formik.errors.budget_total)}
@@ -347,7 +358,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 											value={selectedStatus}
 											fullWidth
 											onChange={(_, newVal) => {
-												formik.setFieldValue('status', newVal ? newVal.code : '');
+												void formik.setFieldValue('status', newVal ? newVal.code : '');
 											}}
 											onBlur={formik.handleBlur('status')}
 											error={formik.submitCount > 0 && Boolean(formik.errors.status)}
@@ -359,7 +370,9 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										<DatePicker
 											label={`${t.projects.dateDebut} *`}
 											value={formik.values.date_debut ? parseISO(formik.values.date_debut) : null}
-											onChange={(date) => formik.setFieldValue('date_debut', date ? format(date, 'yyyy-MM-dd') : '')}
+											onChange={(date) =>
+												void formik.setFieldValue('date_debut', date ? format(date, 'yyyy-MM-dd') : '')
+											}
 											disabled={isLoading}
 											slotProps={{
 												textField: {
@@ -383,7 +396,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										<DatePicker
 											label={`${t.projects.dateFin} *`}
 											value={formik.values.date_fin ? parseISO(formik.values.date_fin) : null}
-											onChange={(date) => formik.setFieldValue('date_fin', date ? format(date, 'yyyy-MM-dd') : '')}
+											onChange={(date) => void formik.setFieldValue('date_fin', date ? format(date, 'yyyy-MM-dd') : '')}
 											disabled={isLoading}
 											slotProps={{
 												textField: {
@@ -457,12 +470,12 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										fullWidth
 										onChange={(_, newVal) => {
 											const selected = clientsData?.find((client) => String(client.id) === newVal?.code);
-											formik.setFieldValue('client', selected ? selected.id : '');
+											void formik.setFieldValue('client', selected ? selected.id : '');
 											if (selected) {
-												formik.setFieldValue('nom_client', selected.nom);
-												formik.setFieldValue('telephone_client', selected.telephone ?? '');
-												formik.setFieldValue('email_client', selected.email ?? '');
-												formik.setFieldValue('ville_client', selected.ville ?? '');
+												void formik.setFieldValue('nom_client', selected.nom);
+												void formik.setFieldValue('telephone_client', selected.telephone ?? '');
+												void formik.setFieldValue('email_client', selected.email ?? '');
+												void formik.setFieldValue('ville_client', selected.ville ?? '');
 											}
 										}}
 										onBlur={formik.handleBlur('client')}
@@ -602,7 +615,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 								active={!isPending}
 								type="submit"
 								startIcon={isEditMode ? <EditIcon /> : <AddIcon />}
-								onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+								onClick={(e: MouseEvent<HTMLButtonElement>) => {
 									setSubmitAttempted(true);
 									if (!formik.isValid || hasRealBudgetValidationError) {
 										e.preventDefault();
@@ -624,7 +637,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	);
 };
 
-const ProjectFormClient: React.FC<SessionProps & { id?: number }> = ({ session, id }) => {
+const ProjectFormClient: FC<SessionProps & { id?: number }> = ({ session, id }) => {
 	const token = useInitAccessToken(session);
 	const { t } = useLanguage();
 	const title = id !== undefined ? t.projects.editProject : t.projects.newProject;

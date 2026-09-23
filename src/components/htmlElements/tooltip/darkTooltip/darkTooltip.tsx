@@ -1,4 +1,6 @@
 import { Tooltip, tooltipClasses, TooltipProps } from '@mui/material';
+const tooltipKey = `& .${tooltipClasses.tooltip}`;
+const arrowKey = `& .${tooltipClasses.arrow}`;
 
 const DarkTooltip = (props: TooltipProps) => (
 	<Tooltip
@@ -6,14 +8,14 @@ const DarkTooltip = (props: TooltipProps) => (
 		arrow
 		placement="bottom-end"
 		sx={{
-			[`& .${tooltipClasses.tooltip}`]: {
+			[tooltipKey]: {
 				backgroundColor: '#000 !important',
 				color: '#fff !important',
 				fontSize: '0.75rem !important',
 				borderRadius: '4px !important',
 				boxShadow: '1px !important',
 			},
-			[`& .${tooltipClasses.arrow}`]: {
+			[arrowKey]: {
 				color: '#000 !important',
 			},
 		}}

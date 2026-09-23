@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useEffect, useRef, useState, type FC } from 'react';
 import Styles from '@/styles/auth/auth.module.sass';
 import { Divider, Stack } from '@mui/material';
 import CustomTextInput from '@/components/formikElements/customTextInput/customTextInput';
@@ -54,24 +55,29 @@ const LoginPageContent = () => {
 		onSubmit: async (values, { setFieldError }) => {
 			setIsPending(true);
 			const url = `${process.env.NEXT_PUBLIC_ACCOUNT_LOGIN}`;
-			try {
-				const instance = allowAnyInstance();
-				const response: AccountPostLoginResponseType = await postApi(url, instance, {
-					email: values.email,
-					password: values.password,
-				});
-				if (response.status === 200) {
-					await signIn('credentials', {
-						email: values.email,
-						password: values.password,
-						redirect: false,
-					});
-				}
-			} catch (e) {
-				setFormikAutoErrors({ e, setFieldError });
-			} finally {
-				setIsPending(false);
-			}
+			await runWithCleanup(
+				async () => {
+					try {
+						const instance = allowAnyInstance();
+						const response: AccountPostLoginResponseType = await postApi(url, instance, {
+							email: values.email,
+							password: values.password,
+						});
+						if (response.status === 200) {
+							await signIn('credentials', {
+								email: values.email,
+								password: values.password,
+								redirect: false,
+							});
+						}
+					} catch (e) {
+						setFormikAutoErrors({ e, setFieldError });
+					}
+				},
+				() => {
+					setIsPending(false);
+				},
+			);
 		},
 	});
 
@@ -148,7 +154,7 @@ const LoginPageContent = () => {
 	);
 };
 
-const LoginClient: React.FC = () => {
+const LoginClient: FC = () => {
 	const { data: session, status } = useSession();
 	const dispatch = useAppDispatch();
 	const router = useRouter();

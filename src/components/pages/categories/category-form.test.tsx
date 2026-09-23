@@ -1,4 +1,4 @@
-import React from 'react';
+import { type ReactElement, type ReactNode } from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
@@ -10,8 +10,7 @@ const mockStore = configureStore({
 		_init: () => ({}),
 		project: () => ({}),
 	},
-	middleware: (getDefaultMiddleware) =>
-		getDefaultMiddleware({ serializableCheck: false }),
+	middleware: (getDefaultMiddleware) => getDefaultMiddleware({ serializableCheck: false }),
 });
 
 const mockPush = jest.fn();
@@ -44,18 +43,17 @@ const mockUpdateCategory = jest.fn();
 
 jest.mock('@/store/services/project', () => ({
 	__esModule: true,
-	useGetCategoryQuery: (params: { id: number }, options: { skip: boolean }) =>
-		mockUseGetCategoryQuery(params, options),
+	useGetCategoryQuery: (params: { id: number }, options: { skip: boolean }) => mockUseGetCategoryQuery(params, options),
 	useCreateCategoryMutation: () => [mockCreateCategory, { isLoading: false, error: undefined }],
 	useUpdateCategoryMutation: () => [mockUpdateCategory, { isLoading: false, error: undefined }],
 }));
 
 jest.mock('@/components/layouts/protected/protected', () => ({
-	Protected: ({ children }: { children: React.ReactNode }) => <div data-testid="protected">{children}</div>,
+	Protected: ({ children }: { children: ReactNode }) => <div data-testid="protected">{children}</div>,
 }));
 
 jest.mock('@/components/layouts/navigationBar/navigationBar', () => {
-	const Mock = ({ children }: { children: React.ReactNode }) => <div data-testid="navigation-bar">{children}</div>;
+	const Mock = ({ children }: { children: ReactNode }) => <div data-testid="navigation-bar">{children}</div>;
 	Mock.displayName = 'NavigationBar';
 	return { __esModule: true, default: Mock };
 });
@@ -103,7 +101,6 @@ jest.mock('zod-formik-adapter', () => ({
 jest.mock('@/utils/routes', () => ({
 	CATEGORIES_LIST: '/dashboard/categories',
 }));
-
 import CategoryFormClient from './category-form';
 
 const mockSession: AppSession = {
@@ -123,7 +120,7 @@ const mockSession: AppSession = {
 	},
 };
 
-const renderWithProviders = (ui: React.ReactElement) => {
+const renderWithProviders = (ui: ReactElement) => {
 	return render(<Provider store={mockStore}>{ui}</Provider>);
 };
 

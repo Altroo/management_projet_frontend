@@ -1,4 +1,4 @@
-import React from 'react';
+import { type ChangeEvent, type ReactNode } from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { format } from 'date-fns';
 import ReportsClient from './reports';
@@ -28,14 +28,14 @@ jest.mock('@mui/x-date-pickers/DatePicker', () => ({
 	),
 }));
 jest.mock('@mui/x-date-pickers/LocalizationProvider', () => ({
-	LocalizationProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+	LocalizationProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 jest.mock('@/components/layouts/navigationBar/navigationBar', () => ({
 	__esModule: true,
-	default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+	default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 jest.mock('@/components/layouts/protected/protected', () => ({
-	Protected: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+	Protected: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 jest.mock('@/components/shared/pdfLanguageModal/pdfLanguageModal', () => ({
 	__esModule: true,
@@ -57,7 +57,7 @@ jest.mock('@/components/formikElements/customAutoCompleteSelect/customAutoComple
 		label: string;
 		items: { code: string; value: string }[];
 		value: { code: string; value: string };
-		onChange: (event: React.ChangeEvent<HTMLSelectElement>, value: { code: string; value: string } | null) => void;
+		onChange: (event: ChangeEvent<HTMLSelectElement>, value: { code: string; value: string } | null) => void;
 	}) => (
 		<select
 			aria-label={label}

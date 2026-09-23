@@ -1,4 +1,4 @@
-import React from 'react';
+import { type ReactElement, type ReactNode } from 'react';
 import { render, screen, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
@@ -66,11 +66,11 @@ jest.mock('@/store/services/project', () => ({
 }));
 
 jest.mock('@/components/layouts/protected/protected', () => ({
-	Protected: ({ children }: { children: React.ReactNode }) => <div data-testid="protected">{children}</div>,
+	Protected: ({ children }: { children: ReactNode }) => <div data-testid="protected">{children}</div>,
 }));
 
 jest.mock('@/components/layouts/navigationBar/navigationBar', () => {
-	const Mock = ({ children }: { children: React.ReactNode }) => <div data-testid="navigation-bar">{children}</div>;
+	const Mock = ({ children }: { children: ReactNode }) => <div data-testid="navigation-bar">{children}</div>;
 	Mock.displayName = 'NavigationBar';
 	return { __esModule: true, default: Mock };
 });
@@ -138,7 +138,7 @@ jest.mock('@mui/x-date-pickers/DatePicker', () => ({
 }));
 
 jest.mock('@mui/x-date-pickers/LocalizationProvider', () => ({
-	LocalizationProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+	LocalizationProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
 jest.mock('@mui/x-date-pickers/AdapterDateFns', () => ({
@@ -153,7 +153,6 @@ jest.mock('date-fns', () => ({
 jest.mock('date-fns/locale', () => ({
 	fr: {},
 }));
-
 import ExpenseFormClient from './expense-form';
 
 const mockSession: AppSession = {
@@ -173,7 +172,7 @@ const mockSession: AppSession = {
 	},
 };
 
-const renderWithProviders = (ui: React.ReactElement) => {
+const renderWithProviders = (ui: ReactElement) => {
 	return render(<Provider store={mockStore}>{ui}</Provider>);
 };
 

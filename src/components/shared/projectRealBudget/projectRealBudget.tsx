@@ -1,6 +1,19 @@
 'use client';
 
-import React, { useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import {
+	useEffect,
+	useImperativeHandle,
+	useState,
+	type ChangeEvent,
+	type Dispatch,
+	type FC,
+	type HTMLAttributes,
+	type MouseEvent,
+	type ReactNode,
+	type Ref,
+	type SetStateAction,
+} from 'react';
 import {
 	Box,
 	Button,
@@ -64,8 +77,9 @@ type ProjectRealBudgetCardProps = {
 	editable?: boolean;
 	validationAttempted?: boolean;
 	queuedEntries?: QueuedRealBudgetEntry[];
-	setQueuedEntries?: React.Dispatch<React.SetStateAction<QueuedRealBudgetEntry[]>>;
+	setQueuedEntries?: Dispatch<SetStateAction<QueuedRealBudgetEntry[]>>;
 	onDraftStateChange?: (state: { hasInput: boolean; isComplete: boolean }) => void;
+	ref?: Ref<ProjectRealBudgetCardHandle>;
 };
 
 export type ProjectRealBudgetDraftSubmitResult =
@@ -131,7 +145,7 @@ export const buildRealBudgetEntryPayload = (
 	notes: entry.notes ?? '',
 });
 
-const SummaryBox: React.FC<{ icon: React.ReactNode; label: string; value: string; tone: string }> = ({
+const SummaryBox: FC<{ icon: ReactNode; label: string; value: string; tone: string }> = ({
 	icon,
 	label,
 	value,
@@ -162,161 +176,150 @@ const SummaryBox: React.FC<{ icon: React.ReactNode; label: string; value: string
 	</Box>
 );
 
-const ProjectRealBudgetCard = React.forwardRef<ProjectRealBudgetCardHandle, ProjectRealBudgetCardProps>(
-	(
-		{
-			projectId,
-			budgetInitial = 0,
-			editable = false,
-			validationAttempted = false,
-			queuedEntries = [],
-			setQueuedEntries,
-			onDraftStateChange,
-		},
-		ref,
-	) => {
-		const { t } = useLanguage();
-		const { onSuccess, onError } = useToast();
-		const {
-			data = [],
-			isLoading,
-			refetch,
-		} = useGetRealBudgetEntriesQuery({ project: projectId }, { skip: !projectId, refetchOnMountOrArgChange: true });
-		const [createEntry] = useCreateRealBudgetEntryMutation();
-		const [deleteEntry] = useDeleteRealBudgetEntryMutation();
-		const [date, setDate] = useState(today());
-		const [stage, setStage] = useState('');
-		const [description, setDescription] = useState('');
-		const [notes, setNotes] = useState('');
-		const [montantClient, setMontantClient] = useState('');
-		const [montantFournisseur, setMontantFournisseur] = useState('');
-		const [isPending, setIsPending] = useState(false);
-		const [paginationModel, setPaginationModel] = useDataGridPagination(5, 'real_budget');
-		const [draftValidationAttempted, setDraftValidationAttempted] = useState(false);
+const ProjectRealBudgetCard = ({
+	projectId,
+	budgetInitial = 0,
+	editable = false,
+	validationAttempted = false,
+	queuedEntries = [],
+	setQueuedEntries,
+	onDraftStateChange,
+	ref,
+}: ProjectRealBudgetCardProps) => {
+	const { t } = useLanguage();
+	const { onSuccess, onError } = useToast();
+	const {
+		data = [],
+		isLoading,
+		refetch,
+	} = useGetRealBudgetEntriesQuery({ project: projectId }, { skip: !projectId, refetchOnMountOrArgChange: true });
+	const [createEntry] = useCreateRealBudgetEntryMutation();
+	const [deleteEntry] = useDeleteRealBudgetEntryMutation();
+	const [date, setDate] = useState(today());
+	const [stage, setStage] = useState('');
+	const [description, setDescription] = useState('');
+	const [notes, setNotes] = useState('');
+	const [montantClient, setMontantClient] = useState('');
+	const [montantFournisseur, setMontantFournisseur] = useState('');
+	const [isPending, setIsPending] = useState(false);
+	const [paginationModel, setPaginationModel] = useDataGridPagination(5, 'real_budget');
+	const [draftValidationAttempted, setDraftValidationAttempted] = useState(false);
 
-		const sortedRows = useMemo(() => [...data].sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id), [data]);
+	const sortedRows = [...data].sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
 
-		const sortedQueuedRows = useMemo(
-			() => [...queuedEntries].sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id)),
-			[queuedEntries],
-		);
+	const sortedQueuedRows = [...queuedEntries].sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id));
 
-		const hasDraftInput = Boolean(
-			stage.trim() || description.trim() || notes.trim() || montantClient || montantFournisseur,
-		);
-		const canSubmit = Boolean(date && stage.trim() && montantClient && montantFournisseur);
-		const shouldShowDraftErrors = validationAttempted || draftValidationAttempted;
-		const draftErrors = useMemo(
-			() => ({
-				date: shouldShowDraftErrors && !date,
-				stage: shouldShowDraftErrors && !stage.trim(),
-				montantClient: shouldShowDraftErrors && !montantClient,
-				montantFournisseur: shouldShowDraftErrors && !montantFournisseur,
-			}),
-			[date, montantClient, montantFournisseur, shouldShowDraftErrors, stage],
-		);
+	const hasDraftInput = Boolean(
+		stage.trim() || description.trim() || notes.trim() || montantClient || montantFournisseur,
+	);
+	const canSubmit = Boolean(date && stage.trim() && montantClient && montantFournisseur);
+	const shouldShowDraftErrors = validationAttempted || draftValidationAttempted;
+	const draftErrors = {
+		date: shouldShowDraftErrors && !date,
+		stage: shouldShowDraftErrors && !stage.trim(),
+		montantClient: shouldShowDraftErrors && !montantClient,
+		montantFournisseur: shouldShowDraftErrors && !montantFournisseur,
+	};
 
-		const savedAndQueuedRows = useMemo<RealBudgetGridRow[]>(() => {
-			const queuedRows = sortedQueuedRows.map((row) => {
-				const benefice = toNumber(row.montant_client) - toNumber(row.montant_fournisseur);
-				const marge = toNumber(row.montant_client) ? (benefice / toNumber(row.montant_client)) * 100 : 0;
-				return {
-					id: `queued-${row.id}`,
-					date: row.date,
-					stage: row.stage,
-					description: row.description,
-					montant_client: row.montant_client,
-					montant_fournisseur: row.montant_fournisseur,
-					benefice: String(benefice),
-					marge,
-					isQueued: true,
-				};
-			});
-			const savedRows = sortedRows.map((row) => ({
-				id: row.id,
-				savedId: row.id,
+	const savedAndQueuedRows = (() => {
+		const queuedRows = sortedQueuedRows.map((row) => {
+			const benefice = toNumber(row.montant_client) - toNumber(row.montant_fournisseur);
+			const marge = toNumber(row.montant_client) ? (benefice / toNumber(row.montant_client)) * 100 : 0;
+			return {
+				id: `queued-${row.id}`,
 				date: row.date,
 				stage: row.stage,
-				description: row.description ?? '',
+				description: row.description,
 				montant_client: row.montant_client,
 				montant_fournisseur: row.montant_fournisseur,
-				benefice: row.benefice,
-				marge: row.marge,
-			}));
-			return [...queuedRows, ...savedRows];
-		}, [sortedQueuedRows, sortedRows]);
+				benefice: String(benefice),
+				marge,
+				isQueued: true,
+			};
+		});
+		const savedRows = sortedRows.map((row) => ({
+			id: row.id,
+			savedId: row.id,
+			date: row.date,
+			stage: row.stage,
+			description: row.description ?? '',
+			montant_client: row.montant_client,
+			montant_fournisseur: row.montant_fournisseur,
+			benefice: row.benefice,
+			marge: row.marge,
+		}));
+		return [...queuedRows, ...savedRows];
+	})();
 
-		const gridRows = useMemo<RealBudgetGridRow[]>(() => {
-			if (!editable) return savedAndQueuedRows;
+	const gridRows = (() => {
+		if (!editable) return savedAndQueuedRows;
 
-			const draftBenefice = toNumber(montantClient) - toNumber(montantFournisseur);
-			const draftMarge = toNumber(montantClient) ? (draftBenefice / toNumber(montantClient)) * 100 : 0;
-			return [
-				{
-					id: 'draft-real-budget-entry',
-					date,
-					stage,
-					description,
-					montant_client: montantClient,
-					montant_fournisseur: montantFournisseur,
-					benefice: String(draftBenefice),
-					marge: draftMarge,
-					isDraft: true,
-				},
-				...savedAndQueuedRows,
-			];
-		}, [date, description, editable, montantClient, montantFournisseur, savedAndQueuedRows, stage]);
-
-		const hasRows = gridRows.length > 0;
-
-		const summary = useMemo(() => {
-			const totalRevenue = savedAndQueuedRows.reduce((sum, row) => sum + toNumber(row.montant_client), 0);
-			const totalCost = savedAndQueuedRows.reduce((sum, row) => sum + toNumber(row.montant_fournisseur), 0);
-			const profit = totalRevenue - totalCost;
-			const margin = totalRevenue ? (profit / totalRevenue) * 100 : 0;
-			const gap = toNumber(budgetInitial) - totalCost;
-			return { totalRevenue, totalCost, profit, margin, gap };
-		}, [budgetInitial, savedAndQueuedRows]);
-
-		const resetFields = () => {
-			setDate(today());
-			setStage('');
-			setDescription('');
-			setNotes('');
-			setMontantClient('');
-			setMontantFournisseur('');
-		};
-
-		const buildDraftEntry = useCallback(
-			(): QueuedRealBudgetEntry => ({
-				id: makeQueuedEntryId(),
+		const draftBenefice = toNumber(montantClient) - toNumber(montantFournisseur);
+		const draftMarge = toNumber(montantClient) ? (draftBenefice / toNumber(montantClient)) * 100 : 0;
+		return [
+			{
+				id: 'draft-real-budget-entry',
 				date,
-				stage: stage.trim(),
-				description: description.trim(),
+				stage,
+				description,
 				montant_client: montantClient,
 				montant_fournisseur: montantFournisseur,
-				notes,
-			}),
-			[date, description, montantClient, montantFournisseur, notes, stage],
-		);
+				benefice: String(draftBenefice),
+				marge: draftMarge,
+				isDraft: true,
+			},
+			...savedAndQueuedRows,
+		];
+	})();
 
-		const handleAdd = useCallback(
-			async (options: { silent?: boolean } = {}): Promise<ProjectRealBudgetDraftSubmitResult> => {
-				setDraftValidationAttempted(true);
-				if (!editable || !hasDraftInput) return { status: 'empty' };
-				if (!canSubmit) return { status: 'invalid' };
+	const hasRows = gridRows.length > 0;
 
-				const entry = buildDraftEntry();
+	const summary = (() => {
+		const totalRevenue = savedAndQueuedRows.reduce((sum, row) => sum + toNumber(row.montant_client), 0);
+		const totalCost = savedAndQueuedRows.reduce((sum, row) => sum + toNumber(row.montant_fournisseur), 0);
+		const profit = totalRevenue - totalCost;
+		const margin = totalRevenue ? (profit / totalRevenue) * 100 : 0;
+		const gap = toNumber(budgetInitial) - totalCost;
+		return { totalRevenue, totalCost, profit, margin, gap };
+	})();
 
-				if (!projectId) {
-					setQueuedEntries?.((current) => [...current, entry]);
-					setPaginationModel((current) => ({ ...current, page: 0 }));
-					resetFields();
-					setDraftValidationAttempted(false);
-					return { status: 'queued', entry };
-				}
+	const resetFields = () => {
+		setDate(today());
+		setStage('');
+		setDescription('');
+		setNotes('');
+		setMontantClient('');
+		setMontantFournisseur('');
+	};
 
-				setIsPending(true);
+	const buildDraftEntry = (): QueuedRealBudgetEntry => ({
+		id: makeQueuedEntryId(),
+		date,
+		stage: stage.trim(),
+		description: description.trim(),
+		montant_client: montantClient,
+		montant_fournisseur: montantFournisseur,
+		notes,
+	});
+
+	const handleAdd = async (options: { silent?: boolean } = {}): Promise<ProjectRealBudgetDraftSubmitResult> => {
+		setDraftValidationAttempted(true);
+		if (!editable || !hasDraftInput) return { status: 'empty' };
+		if (!canSubmit) return { status: 'invalid' };
+
+		const entry = buildDraftEntry();
+
+		if (!projectId) {
+			setQueuedEntries?.((current) => [...current, entry]);
+			setPaginationModel((current) => ({ ...current, page: 0 }));
+			resetFields();
+			setDraftValidationAttempted(false);
+			return { status: 'queued', entry };
+		}
+
+		setIsPending(true);
+		return await runWithCleanup(
+			async () => {
 				try {
 					await createEntry({ data: buildRealBudgetEntryPayload(projectId, entry) }).unwrap();
 					await refetch();
@@ -330,525 +333,479 @@ const ProjectRealBudgetCard = React.forwardRef<ProjectRealBudgetCardHandle, Proj
 				} catch (err) {
 					onError(extractApiErrorMessage(err, t.realBudget.entryAddError));
 					return { status: 'failed' };
-				} finally {
-					setIsPending(false);
 				}
 			},
-			[
-				buildDraftEntry,
-				canSubmit,
-				createEntry,
-				editable,
-				hasDraftInput,
-				onError,
-				onSuccess,
-				projectId,
-				refetch,
-				setQueuedEntries,
-				setPaginationModel,
-				t.realBudget.entryAddError,
-				t.realBudget.entryAddedSuccess,
-			],
+			() => setIsPending(false),
 		);
+	};
 
-		useImperativeHandle(
-			ref,
-			() => ({
-				submitDraft: () => handleAdd({ silent: true }),
-			}),
-			[handleAdd],
-		);
+	useImperativeHandle(ref, () => ({
+		submitDraft: () => handleAdd({ silent: true }),
+	}));
 
-		useEffect(() => {
-			onDraftStateChange?.({ hasInput: hasDraftInput, isComplete: canSubmit });
-		}, [canSubmit, hasDraftInput, onDraftStateChange]);
+	useEffect(() => {
+		onDraftStateChange?.({ hasInput: hasDraftInput, isComplete: canSubmit });
+	}, [canSubmit, hasDraftInput, onDraftStateChange]);
 
-		const handleDelete = useCallback(
-			async (id: number) => {
-				if (!editable) return;
-				setIsPending(true);
+	const handleDelete = async (id: number) => {
+		if (!editable) return;
+		setIsPending(true);
+		await runWithCleanup(
+			async () => {
 				try {
 					await deleteEntry({ id }).unwrap();
 					await refetch();
 					onSuccess(t.realBudget.entryDeletedSuccess);
 				} catch (err) {
 					onError(extractApiErrorMessage(err, t.realBudget.entryDeleteError));
-				} finally {
-					setIsPending(false);
 				}
 			},
-			[
-				deleteEntry,
-				editable,
-				onError,
-				onSuccess,
-				refetch,
-				t.realBudget.entryDeleteError,
-				t.realBudget.entryDeletedSuccess,
-			],
-		);
-
-		const handleRemoveQueued = useCallback(
-			(id: string) => {
-				setQueuedEntries?.((current) => current.filter((row) => row.id !== id));
+			() => {
+				setIsPending(false);
 			},
-			[setQueuedEntries],
 		);
+	};
 
-		const amountInput = useCallback(
-			(setter: React.Dispatch<React.SetStateAction<string>>) => (event: React.ChangeEvent<HTMLInputElement>) => {
-				if (/^(0|[1-9]\d*)?([.,]\d*)?$/.test(event.target.value)) setter(event.target.value);
+	const handleRemoveQueued = (id: string) => {
+		setQueuedEntries?.((current) => current.filter((row) => row.id !== id));
+	};
+
+	const amountInput = (setter: Dispatch<SetStateAction<string>>) => (event: ChangeEvent<HTMLInputElement>) => {
+		if (/^(0|[1-9]\d*)?([.,]\d*)?$/.test(event.target.value)) setter(event.target.value);
+	};
+
+	const columns: GridColDef<RealBudgetGridRow>[] = (() => {
+		const gridPlainInputSx = {
+			'& .MuiInputBase-root': {
+				fontFamily: 'Poppins',
+				fontSize: '14px',
 			},
-			[],
+			'& .MuiInputBase-input': {
+				py: 0,
+			},
+			'& .MuiInputBase-input::placeholder': {
+				opacity: 0.7,
+			},
+		};
+
+		const stopGridClick = (event: MouseEvent) => event.stopPropagation();
+
+		const draftTextInput = ({
+			value,
+			onChange,
+			placeholder,
+			icon,
+			inputMode,
+			align = 'left',
+			error = false,
+		}: {
+			value: string;
+			onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+			placeholder: string;
+			icon: ReactNode;
+			inputMode?: HTMLAttributes<HTMLInputElement>['inputMode'];
+			align?: 'left' | 'right';
+			error?: boolean;
+		}) => (
+			<TextField
+				variant="standard"
+				value={value}
+				onChange={onChange}
+				placeholder={placeholder}
+				error={error}
+				disabled={isPending || isLoading}
+				slotProps={{
+					input: {
+						disableUnderline: true,
+						startAdornment: (
+							<InputAdornment position="start" sx={{ color: error ? 'error.main' : 'text.secondary' }}>
+								{icon}
+							</InputAdornment>
+						),
+					},
+					htmlInput: { inputMode, style: { textAlign: align } },
+				}}
+				fullWidth
+				onClick={stopGridClick}
+				sx={{
+					...gridPlainInputSx,
+					'& .MuiInputBase-input': {
+						py: 0,
+						color: error ? 'error.main' : 'text.primary',
+					},
+					'& .MuiInputBase-input::placeholder': {
+						color: error ? 'error.main' : 'text.secondary',
+						opacity: error ? 0.65 : 0.7,
+					},
+				}}
+			/>
 		);
 
-		const columns = useMemo<GridColDef<RealBudgetGridRow>[]>(() => {
-			const gridPlainInputSx = {
-				'& .MuiInputBase-root': {
-					fontFamily: 'Poppins',
-					fontSize: '14px',
-				},
-				'& .MuiInputBase-input': {
-					py: 0,
-				},
-				'& .MuiInputBase-input::placeholder': {
-					opacity: 0.7,
-				},
-			};
-
-			const stopGridClick = (event: React.MouseEvent) => event.stopPropagation();
-
-			const draftTextInput = ({
-				value,
-				onChange,
-				placeholder,
-				icon,
-				inputMode,
-				align = 'left',
-				error = false,
-			}: {
-				value: string;
-				onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-				placeholder: string;
-				icon: React.ReactNode;
-				inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
-				align?: 'left' | 'right';
-				error?: boolean;
-			}) => (
-				<TextField
-					variant="standard"
-					value={value}
-					onChange={onChange}
-					placeholder={placeholder}
-					error={error}
-					disabled={isPending || isLoading}
-					slotProps={{
-						input: {
-							disableUnderline: true,
-							startAdornment: (
-								<InputAdornment position="start" sx={{ color: error ? 'error.main' : 'text.secondary' }}>
-									{icon}
-								</InputAdornment>
-							),
-						},
-						htmlInput: { inputMode, style: { textAlign: align } },
-					}}
-					fullWidth
-					onClick={stopGridClick}
-					sx={{
-						...gridPlainInputSx,
-						'& .MuiInputBase-input': {
-							py: 0,
-							color: error ? 'error.main' : 'text.primary',
-						},
-						'& .MuiInputBase-input::placeholder': {
-							color: error ? 'error.main' : 'text.secondary',
-							opacity: error ? 0.65 : 0.7,
-						},
-					}}
-				/>
-			);
-
-			return [
-				{
-					field: 'date',
-					headerName: t.common.date,
-					minWidth: 150,
-					flex: 0.8,
-					sortable: false,
-					filterable: false,
-					renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
-						params.row.isDraft ? (
-							<Box sx={{ width: '100%' }} onClick={stopGridClick}>
-								<ThemeProvider theme={inputTheme}>
-									<DatePicker
-										label={`${t.common.date} *`}
-										value={date ? parseISO(date) : null}
-										onChange={(nextDate) => setDate(nextDate ? format(nextDate, 'yyyy-MM-dd') : '')}
-										disabled={isPending || isLoading}
-										slotProps={{
-											textField: {
-												variant: 'standard',
-												fullWidth: true,
-												error: draftErrors.date,
-												slotProps: {
-													input: {
-														disableUnderline: true,
-														startAdornment: (
-															<InputAdornment
-																position="start"
-																sx={{ color: draftErrors.date ? 'error.main' : 'text.secondary' }}
-															>
-																<CalendarMonthIcon fontSize="small" />
-															</InputAdornment>
-														),
-													},
-												},
-												sx: {
-													...gridPlainInputSx,
-													'& .MuiFormLabel-root': {
-														color: draftErrors.date ? 'error.main' : 'text.secondary',
-													},
-													'& .MuiInputBase-input': {
-														py: 0,
-														color: draftErrors.date ? 'error.main' : 'text.primary',
-													},
+		return [
+			{
+				field: 'date',
+				headerName: t.common.date,
+				minWidth: 150,
+				flex: 0.8,
+				sortable: false,
+				filterable: false,
+				renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
+					params.row.isDraft ? (
+						<Box sx={{ width: '100%' }} onClick={stopGridClick}>
+							<ThemeProvider theme={inputTheme}>
+								<DatePicker
+									label={`${t.common.date} *`}
+									value={date ? parseISO(date) : null}
+									onChange={(nextDate) => setDate(nextDate ? format(nextDate, 'yyyy-MM-dd') : '')}
+									disabled={isPending || isLoading}
+									slotProps={{
+										textField: {
+											variant: 'standard',
+											fullWidth: true,
+											error: draftErrors.date,
+											slotProps: {
+												input: {
+													disableUnderline: true,
+													startAdornment: (
+														<InputAdornment
+															position="start"
+															sx={{ color: draftErrors.date ? 'error.main' : 'text.secondary' }}
+														>
+															<CalendarMonthIcon fontSize="small" />
+														</InputAdornment>
+													),
 												},
 											},
-										}}
-									/>
-								</ThemeProvider>
-							</Box>
-						) : (
-							formatDate(params.value ?? null)
-						),
-				},
-				{
-					field: 'stage',
-					headerName: t.realBudget.stage,
-					minWidth: 180,
-					flex: 0.95,
-					sortable: false,
-					filterable: false,
-					renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
-						params.row.isDraft ? (
-							draftTextInput({
-								value: stage,
-								onChange: (event) => setStage(event.target.value),
-								placeholder: `${t.realBudget.stage} *`,
-								icon: <AssignmentIcon fontSize="small" />,
-								error: draftErrors.stage,
-							})
-						) : (
-							<Stack direction="row" spacing={1} sx={{ alignItems: 'center', minWidth: 0 }}>
-								<Typography variant="body2" noWrap>
-									{params.value}
-								</Typography>
-								{params.row.isQueued ? (
-									<Chip size="small" color="warning" variant="outlined" label={t.realBudget.pendingSave} />
-								) : null}
-							</Stack>
-						),
-				},
-				{
-					field: 'description',
-					headerName: t.common.description,
-					minWidth: 220,
-					flex: 1.2,
-					sortable: false,
-					filterable: false,
-					renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
-						params.row.isDraft ? (
-							<Stack direction="row" spacing={0.25} sx={{ alignItems: 'center', width: '100%' }}>
-								{draftTextInput({
-									value: description,
-									onChange: (event) => setDescription(event.target.value),
-									placeholder: t.common.description,
-									icon: <NotesIcon fontSize="small" />,
-								})}
-								<AiAssistantControl value={description} onApply={setDescription} context="real_budget" compact />
-							</Stack>
-						) : (
-							<Typography variant="body2" noWrap>
-								{params.value || '-'}
-							</Typography>
-						),
-				},
-				{
-					field: 'montant_client',
-					headerName: t.realBudget.clientAmount,
-					minWidth: 170,
-					flex: 0.9,
-					align: 'right',
-					headerAlign: 'right',
-					sortable: false,
-					filterable: false,
-					renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
-						params.row.isDraft
-							? draftTextInput({
-									value: montantClient,
-									onChange: amountInput(setMontantClient),
-									placeholder: `${t.realBudget.clientAmount} *`,
-									icon: <AttachMoneyIcon fontSize="small" />,
-									inputMode: 'decimal',
-									align: 'right',
-									error: draftErrors.montantClient,
-								})
-							: formatMoney(params.value),
-				},
-				{
-					field: 'montant_fournisseur',
-					headerName: t.realBudget.supplierAmount,
-					minWidth: 180,
-					flex: 0.95,
-					align: 'right',
-					headerAlign: 'right',
-					sortable: false,
-					filterable: false,
-					renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
-						params.row.isDraft
-							? draftTextInput({
-									value: montantFournisseur,
-									onChange: amountInput(setMontantFournisseur),
-									placeholder: `${t.realBudget.supplierAmount} *`,
-									icon: <AttachMoneyIcon fontSize="small" />,
-									inputMode: 'decimal',
-									align: 'right',
-									error: draftErrors.montantFournisseur,
-								})
-							: formatMoney(params.value),
-				},
-				{
-					field: 'benefice',
-					headerName: t.realBudget.operationProfit,
-					minWidth: 145,
-					flex: 0.85,
-					align: 'right',
-					headerAlign: 'right',
-					sortable: false,
-					filterable: false,
-					renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
-						params.row.isDraft && (!montantClient || !montantFournisseur) ? (
-							<Typography variant="body2" color="text.secondary">
-								-
-							</Typography>
-						) : (
-							<Typography
-								component="span"
-								variant="body2"
-								color={toNumber(params.value) < 0 ? 'error.main' : 'success.main'}
-								sx={{ fontWeight: 700 }}
-							>
-								{formatMoney(params.value)}
-							</Typography>
-						),
-				},
-				{
-					field: 'marge',
-					headerName: t.projects.margin,
-					minWidth: 105,
-					flex: 0.6,
-					align: 'right',
-					headerAlign: 'right',
-					sortable: false,
-					filterable: false,
-					renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string | number>) =>
-						params.row.isDraft && (!montantClient || !montantFournisseur) ? '-' : formatPercent(params.value),
-				},
-				...(editable
-					? [
-							{
-								field: 'actions',
-								headerName: t.common.actions,
-								minWidth: 90,
-								sortable: false,
-								filterable: false,
-								disableColumnMenu: true,
-								align: 'right' as const,
-								headerAlign: 'right' as const,
-								renderCell: (params: GridRenderCellParams<RealBudgetGridRow>) => (
-									<Tooltip title={t.common.delete}>
-										<IconButton
-											size="small"
-											color="error"
-											disabled={isPending}
-											onClick={() => {
-												if (params.row.isDraft) {
-													resetFields();
-													return;
-												}
-												if (params.row.isQueued) {
-													handleRemoveQueued(String(params.row.id).replace('queued-', ''));
-													return;
-												}
-												if (params.row.savedId) {
-													handleDelete(params.row.savedId);
-												}
-											}}
-										>
-											<DeleteIcon fontSize="small" />
-										</IconButton>
-									</Tooltip>
-								),
-							},
-						]
-					: []),
-			];
-		}, [
-			amountInput,
-			date,
-			description,
-			draftErrors,
-			editable,
-			handleDelete,
-			handleRemoveQueued,
-			isLoading,
-			isPending,
-			montantClient,
-			montantFournisseur,
-			stage,
-			t,
-		]);
-
-		return (
-			<Card elevation={2} sx={{ borderRadius: 2 }}>
-				<CardContent sx={{ p: 3 }}>
-					<Stack
-						direction={{ xs: 'column', sm: 'row' }}
-						spacing={1.5}
-						sx={{ alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', mb: 2 }}
-					>
-						<Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-							<BudgetIcon color="primary" />
-							<Typography variant="h6" sx={{ fontWeight: 700 }}>
-								{t.realBudget.title}
-							</Typography>
-						</Stack>
-						{editable ? (
-							<Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-								{sortedQueuedRows.length > 0 ? (
-									<Chip
-										size="small"
-										color="warning"
-										variant="outlined"
-										label={`${sortedQueuedRows.length} ${t.realBudget.pendingSave}`}
-									/>
-								) : null}
-								<Button
-									variant="outlined"
-									size="small"
-									startIcon={<AddIcon />}
-									disabled={!canSubmit || isPending || isLoading}
-									onClick={() => {
-										void handleAdd();
+											sx: {
+												...gridPlainInputSx,
+												'& .MuiFormLabel-root': {
+													color: draftErrors.date ? 'error.main' : 'text.secondary',
+												},
+												'& .MuiInputBase-input': {
+													py: 0,
+													color: draftErrors.date ? 'error.main' : 'text.primary',
+												},
+											},
+										},
 									}}
-								>
-									{t.common.add}
-								</Button>
-							</Stack>
-						) : null}
+								/>
+							</ThemeProvider>
+						</Box>
+					) : (
+						formatDate(params.value ?? null)
+					),
+			},
+			{
+				field: 'stage',
+				headerName: t.realBudget.stage,
+				minWidth: 180,
+				flex: 0.95,
+				sortable: false,
+				filterable: false,
+				renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
+					params.row.isDraft ? (
+						draftTextInput({
+							value: stage,
+							onChange: (event) => setStage(event.target.value),
+							placeholder: `${t.realBudget.stage} *`,
+							icon: <AssignmentIcon fontSize="small" />,
+							error: draftErrors.stage,
+						})
+					) : (
+						<Stack direction="row" spacing={1} sx={{ alignItems: 'center', minWidth: 0 }}>
+							<Typography variant="body2" noWrap>
+								{params.value}
+							</Typography>
+							{params.row.isQueued ? (
+								<Chip size="small" color="warning" variant="outlined" label={t.realBudget.pendingSave} />
+							) : null}
+						</Stack>
+					),
+			},
+			{
+				field: 'description',
+				headerName: t.common.description,
+				minWidth: 220,
+				flex: 1.2,
+				sortable: false,
+				filterable: false,
+				renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
+					params.row.isDraft ? (
+						<Stack direction="row" spacing={0.25} sx={{ alignItems: 'center', width: '100%' }}>
+							{draftTextInput({
+								value: description,
+								onChange: (event) => setDescription(event.target.value),
+								placeholder: t.common.description,
+								icon: <NotesIcon fontSize="small" />,
+							})}
+							<AiAssistantControl value={description} onApply={setDescription} context="real_budget" compact />
+						</Stack>
+					) : (
+						<Typography variant="body2" noWrap>
+							{params.value || '-'}
+						</Typography>
+					),
+			},
+			{
+				field: 'montant_client',
+				headerName: t.realBudget.clientAmount,
+				minWidth: 170,
+				flex: 0.9,
+				align: 'right',
+				headerAlign: 'right',
+				sortable: false,
+				filterable: false,
+				renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
+					params.row.isDraft
+						? draftTextInput({
+								value: montantClient,
+								onChange: amountInput(setMontantClient),
+								placeholder: `${t.realBudget.clientAmount} *`,
+								icon: <AttachMoneyIcon fontSize="small" />,
+								inputMode: 'decimal',
+								align: 'right',
+								error: draftErrors.montantClient,
+							})
+						: formatMoney(params.value),
+			},
+			{
+				field: 'montant_fournisseur',
+				headerName: t.realBudget.supplierAmount,
+				minWidth: 180,
+				flex: 0.95,
+				align: 'right',
+				headerAlign: 'right',
+				sortable: false,
+				filterable: false,
+				renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
+					params.row.isDraft
+						? draftTextInput({
+								value: montantFournisseur,
+								onChange: amountInput(setMontantFournisseur),
+								placeholder: `${t.realBudget.supplierAmount} *`,
+								icon: <AttachMoneyIcon fontSize="small" />,
+								inputMode: 'decimal',
+								align: 'right',
+								error: draftErrors.montantFournisseur,
+							})
+						: formatMoney(params.value),
+			},
+			{
+				field: 'benefice',
+				headerName: t.realBudget.operationProfit,
+				minWidth: 145,
+				flex: 0.85,
+				align: 'right',
+				headerAlign: 'right',
+				sortable: false,
+				filterable: false,
+				renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string>) =>
+					params.row.isDraft && (!montantClient || !montantFournisseur) ? (
+						<Typography variant="body2" color="text.secondary">
+							-
+						</Typography>
+					) : (
+						<Typography
+							component="span"
+							variant="body2"
+							color={toNumber(params.value) < 0 ? 'error.main' : 'success.main'}
+							sx={{ fontWeight: 700 }}
+						>
+							{formatMoney(params.value)}
+						</Typography>
+					),
+			},
+			{
+				field: 'marge',
+				headerName: t.projects.margin,
+				minWidth: 105,
+				flex: 0.6,
+				align: 'right',
+				headerAlign: 'right',
+				sortable: false,
+				filterable: false,
+				renderCell: (params: GridRenderCellParams<RealBudgetGridRow, string | number>) =>
+					params.row.isDraft && (!montantClient || !montantFournisseur) ? '-' : formatPercent(params.value),
+			},
+			...(editable
+				? [
+						{
+							field: 'actions',
+							headerName: t.common.actions,
+							minWidth: 90,
+							sortable: false,
+							filterable: false,
+							disableColumnMenu: true,
+							align: 'right' as const,
+							headerAlign: 'right' as const,
+							renderCell: (params: GridRenderCellParams<RealBudgetGridRow>) => (
+								<Tooltip title={t.common.delete}>
+									<IconButton
+										size="small"
+										color="error"
+										disabled={isPending}
+										onClick={() => {
+											if (params.row.isDraft) {
+												resetFields();
+												return;
+											}
+											if (params.row.isQueued) {
+												handleRemoveQueued(String(params.row.id).replace('queued-', ''));
+												return;
+											}
+											if (params.row.savedId) {
+												handleDelete(params.row.savedId);
+											}
+										}}
+									>
+										<DeleteIcon fontSize="small" />
+									</IconButton>
+								</Tooltip>
+							),
+						},
+					]
+				: []),
+		];
+	})();
+
+	return (
+		<Card elevation={2} sx={{ borderRadius: 2 }}>
+			<CardContent sx={{ p: 3 }}>
+				<Stack
+					direction={{ xs: 'column', sm: 'row' }}
+					spacing={1.5}
+					sx={{ alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', mb: 2 }}
+				>
+					<Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+						<BudgetIcon color="primary" />
+						<Typography variant="h6" sx={{ fontWeight: 700 }}>
+							{t.realBudget.title}
+						</Typography>
 					</Stack>
-					<Divider sx={{ mb: 3 }} />
-
-					<Box
-						sx={{
-							display: 'grid',
-							gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(5, 1fr)' },
-							gap: 1.5,
-							mb: 2.5,
-						}}
-					>
-						<SummaryBox
-							icon={<BudgetIcon fontSize="small" />}
-							label={t.realBudget.initialBudget}
-							value={formatMoney(budgetInitial)}
-							tone="#ed6c02"
-						/>
-						<SummaryBox
-							icon={<CostIcon fontSize="small" />}
-							label={t.realBudget.realCost}
-							value={formatMoney(summary.totalCost)}
-							tone="#d32f2f"
-						/>
-						<SummaryBox
-							icon={<RevenueIcon fontSize="small" />}
-							label={t.realBudget.realRevenue}
-							value={formatMoney(summary.totalRevenue)}
-							tone="#2e7d32"
-						/>
-						<SummaryBox
-							icon={<ProfitIcon fontSize="small" />}
-							label={t.realBudget.globalMargin}
-							value={`${formatMoney(summary.profit)} (${formatPercent(summary.margin)})`}
-							tone={summary.profit >= 0 ? '#2e7d32' : '#d32f2f'}
-						/>
-						<SummaryBox
-							icon={<BudgetIcon fontSize="small" />}
-							label={t.realBudget.budgetGap}
-							value={formatMoney(summary.gap)}
-							tone={summary.gap >= 0 ? '#0288d1' : '#d32f2f'}
-						/>
-					</Box>
-
-					{isPending || isLoading ? <LinearProgress sx={{ mb: 2 }} /> : null}
-
 					{editable ? (
-						<Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', mb: 2 }}>
-							<TextField
+						<Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+							{sortedQueuedRows.length > 0 ? (
+								<Chip
+									size="small"
+									color="warning"
+									variant="outlined"
+									label={`${sortedQueuedRows.length} ${t.realBudget.pendingSave}`}
+								/>
+							) : null}
+							<Button
+								variant="outlined"
 								size="small"
-								label={t.common.notes}
-								value={notes}
-								onChange={(event) => setNotes(event.target.value)}
-								disabled={isPending || isLoading}
-								fullWidth
-							/>
-							<AiAssistantControl value={notes} onApply={setNotes} context="real_budget" compact />
+								startIcon={<AddIcon />}
+								disabled={!canSubmit || isPending || isLoading}
+								onClick={() => {
+									void handleAdd();
+								}}
+							>
+								{t.common.add}
+							</Button>
 						</Stack>
 					) : null}
+				</Stack>
+				<Divider sx={{ mb: 3 }} />
 
-					<ThemeProvider theme={getDefaultTheme()}>
-						<Box sx={{ width: '100%', height: hasRows ? 430 : 320 }}>
-							<DataGrid
-								rows={gridRows}
-								columns={columns}
-								loading={isLoading}
-								pagination
-								paginationModel={paginationModel}
-								onPaginationModelChange={setPaginationModel}
-								pageSizeOptions={[5, 10, 25]}
-								localeText={frFR.components.MuiDataGrid.defaultProps.localeText}
-								disableRowSelectionOnClick
-								showToolbar
-								slotProps={{
-									toolbar: {
-										showQuickFilter: true,
-										quickFilterProps: { debounceMs: 500 },
-									},
-								}}
-								getRowHeight={() => 64}
-								slots={{
-									noRowsOverlay: () => (
-										<Stack sx={{ height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-											<Typography color="text.secondary">{t.realBudget.noEntries}</Typography>
-										</Stack>
-									),
-								}}
-								sx={{
-									border: 'none',
-									'& .MuiDataGrid-columnHeaderTitle': { fontWeight: 700 },
-									'& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center' },
-									'& .MuiDataGrid-cell:focus, & .MuiDataGrid-columnHeader:focus': { outline: 'none' },
-									'& .MuiDataGrid-toolbarContainer': { px: 0, pt: 0, pb: 1 },
-									'& .MuiDataGrid-row:hover': { cursor: editable ? 'default' : 'inherit' },
-								}}
-							/>
-						</Box>
-					</ThemeProvider>
-				</CardContent>
-			</Card>
-		);
-	},
-);
+				<Box
+					sx={{
+						display: 'grid',
+						gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(5, 1fr)' },
+						gap: 1.5,
+						mb: 2.5,
+					}}
+				>
+					<SummaryBox
+						icon={<BudgetIcon fontSize="small" />}
+						label={t.realBudget.initialBudget}
+						value={formatMoney(budgetInitial)}
+						tone="#ed6c02"
+					/>
+					<SummaryBox
+						icon={<CostIcon fontSize="small" />}
+						label={t.realBudget.realCost}
+						value={formatMoney(summary.totalCost)}
+						tone="#d32f2f"
+					/>
+					<SummaryBox
+						icon={<RevenueIcon fontSize="small" />}
+						label={t.realBudget.realRevenue}
+						value={formatMoney(summary.totalRevenue)}
+						tone="#2e7d32"
+					/>
+					<SummaryBox
+						icon={<ProfitIcon fontSize="small" />}
+						label={t.realBudget.globalMargin}
+						value={`${formatMoney(summary.profit)} (${formatPercent(summary.margin)})`}
+						tone={summary.profit >= 0 ? '#2e7d32' : '#d32f2f'}
+					/>
+					<SummaryBox
+						icon={<BudgetIcon fontSize="small" />}
+						label={t.realBudget.budgetGap}
+						value={formatMoney(summary.gap)}
+						tone={summary.gap >= 0 ? '#0288d1' : '#d32f2f'}
+					/>
+				</Box>
+
+				{isPending || isLoading ? <LinearProgress sx={{ mb: 2 }} /> : null}
+
+				{editable ? (
+					<Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', mb: 2 }}>
+						<TextField
+							size="small"
+							label={t.common.notes}
+							value={notes}
+							onChange={(event) => setNotes(event.target.value)}
+							disabled={isPending || isLoading}
+							fullWidth
+						/>
+						<AiAssistantControl value={notes} onApply={setNotes} context="real_budget" compact />
+					</Stack>
+				) : null}
+
+				<ThemeProvider theme={getDefaultTheme()}>
+					<Box sx={{ width: '100%', height: hasRows ? 430 : 320 }}>
+						<DataGrid
+							rows={gridRows}
+							columns={columns}
+							loading={isLoading}
+							pagination
+							paginationModel={paginationModel}
+							onPaginationModelChange={setPaginationModel}
+							pageSizeOptions={[5, 10, 25]}
+							localeText={frFR.components.MuiDataGrid.defaultProps.localeText}
+							disableRowSelectionOnClick
+							showToolbar
+							slotProps={{
+								toolbar: {
+									showQuickFilter: true,
+									quickFilterProps: { debounceMs: 500 },
+								},
+							}}
+							getRowHeight={() => 64}
+							slots={{
+								noRowsOverlay: () => (
+									<Stack sx={{ height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+										<Typography color="text.secondary">{t.realBudget.noEntries}</Typography>
+									</Stack>
+								),
+							}}
+							sx={{
+								border: 'none',
+								'& .MuiDataGrid-columnHeaderTitle': { fontWeight: 700 },
+								'& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center' },
+								'& .MuiDataGrid-cell:focus, & .MuiDataGrid-columnHeader:focus': { outline: 'none' },
+								'& .MuiDataGrid-toolbarContainer': { px: 0, pt: 0, pb: 1 },
+								'& .MuiDataGrid-row:hover': { cursor: editable ? 'default' : 'inherit' },
+							}}
+						/>
+					</Box>
+				</ThemeProvider>
+			</CardContent>
+		</Card>
+	);
+};
 
 ProjectRealBudgetCard.displayName = 'ProjectRealBudgetCard';
 

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useState, type FC, type MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Alert, Box, Button, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import {
@@ -35,7 +36,7 @@ type FormikContentProps = {
 	id?: number;
 };
 
-const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
+const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
 	const isEditMode = id !== undefined;
@@ -59,21 +60,26 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 			setIsPending(true);
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const { globalError, ...fields } = data;
-			try {
-				if (isEditMode) {
-					await updateCategory({ id: id!, data: fields }).unwrap();
-					onSuccess(t.categories.categoryUpdatedSuccess);
-				} else {
-					await createCategory({ data: fields }).unwrap();
-					onSuccess(t.categories.categoryAddedSuccess);
-				}
-				router.push(CATEGORIES_LIST);
-			} catch (e) {
-				setFormikAutoErrors({ e, setFieldError });
-				onError(isEditMode ? t.categories.categoryUpdateError : t.categories.categoryAddError);
-			} finally {
-				setIsPending(false);
-			}
+			await runWithCleanup(
+				async () => {
+					try {
+						if (isEditMode) {
+							await updateCategory({ id: id!, data: fields }).unwrap();
+							onSuccess(t.categories.categoryUpdatedSuccess);
+						} else {
+							await createCategory({ data: fields }).unwrap();
+							onSuccess(t.categories.categoryAddedSuccess);
+						}
+						router.push(CATEGORIES_LIST);
+					} catch (e) {
+						setFormikAutoErrors({ e, setFieldError });
+						onError(isEditMode ? t.categories.categoryUpdateError : t.categories.categoryAddError);
+					}
+				},
+				() => {
+					setIsPending(false);
+				},
+			);
 		},
 	});
 
@@ -171,7 +177,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 							active={!isPending}
 							type="submit"
 							startIcon={isEditMode ? <EditIcon /> : <AddIcon />}
-							onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+							onClick={(e: MouseEvent<HTMLButtonElement>) => {
 								if (!formik.isValid) {
 									e.preventDefault();
 									formik.handleSubmit();
@@ -188,7 +194,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	);
 };
 
-const CategoryFormClient: React.FC<SessionProps & { id?: number }> = ({ session, id }) => {
+const CategoryFormClient: FC<SessionProps & { id?: number }> = ({ session, id }) => {
 	const token = useInitAccessToken(session);
 	const { t } = useLanguage();
 	const title = id !== undefined ? t.categories.editCategory : t.categories.newCategory;

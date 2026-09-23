@@ -1,6 +1,14 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import {
+	doughnutPalette,
+	ALL_PROJECTS_CODE,
+	doughnutOptions,
+	horizontalBarOptions,
+	areaChartOptions,
+	groupedBarOptions,
+} from '@/utils/rawData';
+import { useState, type FC, type ReactNode } from 'react';
 import {
 	Box,
 	Card,
@@ -52,7 +60,6 @@ import { useLanguage } from '@/utils/hooks';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
 import type { SessionProps } from '@/types/_initTypes';
 import type { DropDownType } from '@/types/accountTypes';
-import { CHART_OPTS } from '@/utils/rawData';
 import { formatNumber } from '@/utils/helpers';
 import { textInputTheme } from '@/utils/themes';
 import type {
@@ -80,7 +87,7 @@ const inputTheme = textInputTheme();
 
 /* ── KPI Card with left accent bar ─────────────────────────────────────────── */
 interface KpiCardProps {
-	icon: React.ReactNode;
+	icon: ReactNode;
 	label: string;
 	value: string;
 	sub?: string;
@@ -88,7 +95,7 @@ interface KpiCardProps {
 	tooltip?: string;
 }
 
-const KpiCard: React.FC<KpiCardProps> = ({ icon, label, value, sub, color, tooltip }) => (
+const KpiCard: FC<KpiCardProps> = ({ icon, label, value, sub, color, tooltip }) => (
 	<Card
 		elevation={2}
 		sx={{
@@ -169,11 +176,11 @@ interface ChartCardProps {
 	title: string;
 	subheader?: string;
 	infoTooltip?: string;
-	children: React.ReactNode;
+	children: ReactNode;
 	height?: number;
 }
 
-const ChartCard: React.FC<ChartCardProps> = ({ title, subheader, infoTooltip, children, height = 300 }) => (
+const ChartCard: FC<ChartCardProps> = ({ title, subheader, infoTooltip, children, height = 300 }) => (
 	<Card elevation={2} sx={{ overflow: 'hidden' }}>
 		<CardHeader
 			title={
@@ -210,7 +217,7 @@ const ChartCard: React.FC<ChartCardProps> = ({ title, subheader, infoTooltip, ch
 	</Card>
 );
 
-const EmptyChart: React.FC<{ message?: string }> = ({ message }) => {
+const EmptyChart: FC<{ message?: string }> = ({ message }) => {
 	const { t } = useLanguage();
 	return (
 		<Box
@@ -247,10 +254,6 @@ const EmptyChart: React.FC<{ message?: string }> = ({ message }) => {
 		</Box>
 	);
 };
-
-const doughnutPalette = ['#1d4ed8', '#047857', '#b91c1c', '#c2410c', '#6d28d9', '#0f766e', '#be123c', '#4d7c0f'];
-
-const ALL_PROJECTS_CODE = '__all_projects__';
 
 const compactCurrency = (value: string | number) => `${formatNumber(value)} MAD`;
 
@@ -298,56 +301,6 @@ const buildCumulativeHistoryData = (
 			},
 		],
 	};
-};
-
-const doughnutOptions = {
-	...CHART_OPTS,
-	cutout: '62%',
-	plugins: {
-		legend: {
-			position: 'bottom' as const,
-			labels: { boxWidth: 10, padding: 12 },
-		},
-	},
-};
-
-const horizontalBarOptions = {
-	...CHART_OPTS,
-	indexAxis: 'y' as const,
-	plugins: { legend: { display: false } },
-	scales: {
-		x: { beginAtZero: true },
-		y: { grid: { display: false } },
-	},
-};
-
-const areaChartOptions = {
-	...CHART_OPTS,
-	interaction: { mode: 'index' as const, intersect: false },
-	plugins: { legend: { position: 'top' as const } },
-	scales: {
-		x: { grid: { color: 'rgba(0, 0, 0, 0.04)' } },
-		y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.06)' } },
-	},
-};
-
-const groupedBarOptions = {
-	...CHART_OPTS,
-	plugins: { legend: { position: 'top' as const } },
-	scales: {
-		x: { grid: { display: false } },
-		y: {
-			beginAtZero: true,
-			position: 'left' as const,
-			grid: { color: 'rgba(0, 0, 0, 0.06)' },
-		},
-		yMargin: {
-			beginAtZero: true,
-			position: 'right' as const,
-			grid: { drawOnChartArea: false },
-			ticks: { callback: (value: string | number) => `${value}%` },
-		},
-	},
 };
 
 const makeDoughnutData = (labels: string[], values: number[], colors = doughnutPalette) => ({
@@ -408,7 +361,7 @@ interface ProjectDashboardClientProps extends SessionProps {
 	clientFacing?: boolean;
 }
 
-const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session, clientFacing = false }) => {
+const ProjectDashboardClient: FC<ProjectDashboardClientProps> = ({ session, clientFacing = false }) => {
 	const { t } = useLanguage();
 	const token = useInitAccessToken(session);
 
@@ -421,16 +374,13 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 	const data = clientFacing ? clientData : internalData;
 	const isLoading = clientFacing ? isClientLoading : isInternalLoading;
 
-	const projects = useMemo(() => data?.projects ?? [], [data?.projects]);
+	const projects = data?.projects ?? [];
 	const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-	const allProjectsOption = useMemo<DropDownType>(
-		() => ({ code: ALL_PROJECTS_CODE, value: t.analytics.allProjects }),
-		[t.analytics.allProjects],
-	);
-	const projectOptions: DropDownType[] = useMemo(
-		() => [allProjectsOption, ...projects.map((project) => ({ code: String(project.id), value: project.nom }))],
-		[allProjectsOption, projects],
-	);
+	const allProjectsOption = { code: ALL_PROJECTS_CODE, value: t.analytics.allProjects };
+	const projectOptions: DropDownType[] = [
+		allProjectsOption,
+		...projects.map((project) => ({ code: String(project.id), value: project.nom })),
+	];
 	const selectedProjectOption =
 		selectedProjectId === null
 			? allProjectsOption
@@ -472,20 +422,10 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 	const activeTopCategories = projectOverview?.top_categories ?? data?.top_categories ?? [];
 	const activeTopSubcategories = projectOverview?.top_subcategories ?? data?.top_subcategories ?? [];
 	const activeTopVendors = projectOverview?.top_vendors ?? data?.top_vendors ?? [];
-	const activeHistoryData = useMemo(
-		() =>
-			buildCumulativeHistoryData(
-				projectOverview?.expense_history ?? data?.expense_history ?? [],
-				projectOverview?.revenue_history ?? data?.revenue_history ?? [],
-				t,
-			),
-		[
-			data?.expense_history,
-			data?.revenue_history,
-			projectOverview?.expense_history,
-			projectOverview?.revenue_history,
-			t,
-		],
+	const activeHistoryData = buildCumulativeHistoryData(
+		projectOverview?.expense_history ?? data?.expense_history ?? [],
+		projectOverview?.revenue_history ?? data?.revenue_history ?? [],
+		t,
 	);
 
 	const categoryBreakdownData = makeDoughnutData(
@@ -504,10 +444,7 @@ const ProjectDashboardClient: React.FC<ProjectDashboardClientProps> = ({ session
 	);
 	const realBudgetStageData = makeRealBudgetStageData(activeRealBudgetByStage, t);
 
-	const topBudgetProjects = useMemo(
-		() => [...projects].sort((a, b) => Number(b.budget_total) - Number(a.budget_total)).slice(0, 10),
-		[projects],
-	);
+	const topBudgetProjects = [...projects].sort((a, b) => Number(b.budget_total) - Number(a.budget_total)).slice(0, 10);
 	const projectRankingData = makeHorizontalData(
 		topBudgetProjects.map((project) => project.nom),
 		topBudgetProjects.map((project) => Number(project.budget_total)),

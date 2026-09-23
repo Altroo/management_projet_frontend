@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useState, type FC } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import {
@@ -21,7 +22,6 @@ import ActionModals from '@/components/htmlElements/modals/actionModal/actionMod
 import { Protected } from '@/components/layouts/protected/protected';
 import MobileActionsMenu from '@/components/shared/mobileActionsMenu/mobileActionsMenu';
 import DarkTooltip from '@/components/htmlElements/tooltip/darkTooltip/darkTooltip';
-import type { ChipFilterConfig } from '@/components/shared/chipSelectFilter/chipSelectFilterBar';
 import ChipSelectFilterBar from '@/components/shared/chipSelectFilter/chipSelectFilterBar';
 import { createDateRangeFilterOperator } from '@/components/shared/dateRangeFilter/dateRangeFilterOperator';
 import { createNumericFilterOperators } from '@/components/shared/numericFilter/numericFilterOperator';
@@ -37,7 +37,7 @@ import {
 import { useInitAccessToken } from '@/contexts/InitContext';
 import { projectStatusItemsList, STATUS_CHIP_COLORS } from '@/utils/rawData';
 
-const ProjectsListClient: React.FC<SessionProps> = ({ session }) => {
+const ProjectsListClient: FC<SessionProps> = ({ session }) => {
 	const router = useRouter();
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
@@ -71,29 +71,34 @@ const ProjectsListClient: React.FC<SessionProps> = ({ session }) => {
 	const [selectedIds, setSelectedIds] = useState<number[]>([]);
 	const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
-	const paginatedData = useMemo(() => {
+	const paginatedData = (() => {
 		if (!projectsData) return { count: 0, results: [] };
 		if ('results' in projectsData) return projectsData;
 		return { count: projectsData.length, results: projectsData };
-	}, [projectsData]);
+	})();
 
-	const createdByOptions = useMemo(() => {
+	const createdByOptions = (() => {
 		const nameMap = new Map<string, string>();
 		(paginatedData.results ?? []).forEach((p) => {
 			if (p.created_by_user_name) nameMap.set(p.created_by_user_name, p.created_by_user_name);
 		});
 		return Array.from(nameMap.values()).map((name) => ({ value: name, label: name }));
-	}, [paginatedData.results]);
+	})();
 
 	const deleteHandler = async () => {
-		try {
-			await deleteProject({ id: selectedId! }).unwrap();
-			onSuccess(t.projects.projectDeletedSuccess);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.projects.projectDeleteError));
-		} finally {
-			setShowDeleteModal(false);
-		}
+		await runWithCleanup(
+			async () => {
+				try {
+					await deleteProject({ id: selectedId! }).unwrap();
+					onSuccess(t.projects.projectDeletedSuccess);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.projects.projectDeleteError));
+				}
+			},
+			() => {
+				setShowDeleteModal(false);
+			},
+		);
 	};
 
 	const deleteModalActions = [
@@ -114,15 +119,20 @@ const ProjectsListClient: React.FC<SessionProps> = ({ session }) => {
 	];
 
 	const bulkDeleteHandler = async () => {
-		try {
-			await bulkDeleteProjects({ ids: selectedIds }).unwrap();
-			onSuccess(t.projects.bulkProjectsDeletedSuccess(selectedIds.length));
-			setSelectedIds([]);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.projects.bulkProjectsDeleteError));
-		} finally {
-			setShowBulkDeleteModal(false);
-		}
+		await runWithCleanup(
+			async () => {
+				try {
+					await bulkDeleteProjects({ ids: selectedIds }).unwrap();
+					onSuccess(t.projects.bulkProjectsDeletedSuccess(selectedIds.length));
+					setSelectedIds([]);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.projects.bulkProjectsDeleteError));
+				}
+			},
+			() => {
+				setShowBulkDeleteModal(false);
+			},
+		);
 	};
 
 	const bulkDeleteModalActions = [
@@ -142,17 +152,14 @@ const ProjectsListClient: React.FC<SessionProps> = ({ session }) => {
 		},
 	];
 
-	const chipFilters = useMemo<ChipFilterConfig[]>(
-		() => [
-			{
-				key: 'status',
-				label: t.common.status,
-				paramName: 'status',
-				options: projectStatusItemsList(t).map((s) => ({ id: s.code, nom: s.value })),
-			},
-		],
-		[t],
-	);
+	const chipFilters = [
+		{
+			key: 'status',
+			label: t.common.status,
+			paramName: 'status',
+			options: projectStatusItemsList(t).map((s) => ({ id: s.code, nom: s.value })),
+		},
+	];
 
 	const columns: GridColDef[] = [
 		{

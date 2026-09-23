@@ -1,4 +1,4 @@
-import React, { ForwardedRef, forwardRef, useState } from 'react';
+import { useState, type ChangeEvent, type FocusEvent, type ReactNode, type Ref } from 'react';
 import { ThemeProvider, TextField, InputAdornment, IconButton } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 import { Visibility as VisibilityIcon, VisibilityOff as VisibilityOffIcon } from '@mui/icons-material';
@@ -7,9 +7,9 @@ import { useLanguage } from '@/utils/hooks';
 type Props = {
 	id: string;
 	value: string;
-	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 	theme: Theme;
-	onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
+	onBlur?: (e: FocusEvent<HTMLInputElement>) => void;
 	cssClass?: string;
 	helperText?: string;
 	error?: boolean;
@@ -18,11 +18,12 @@ type Props = {
 	fullWidth?: boolean;
 	size?: 'small' | 'medium';
 	disabled?: boolean;
-	startIcon?: React.ReactNode;
+	startIcon?: ReactNode;
 	onClick?: () => void;
+	ref?: Ref<HTMLInputElement>;
 };
 
-const CustomPasswordInput = forwardRef<HTMLInputElement, Props>((props: Props, ref: ForwardedRef<HTMLInputElement>) => {
+const CustomPasswordInput = ({ ref, ...props }: Props) => {
 	const { cssClass, theme, startIcon, ...restOfProps } = props;
 	const { t } = useLanguage();
 	const [showpassword, setshowpassword] = useState<boolean>(false);
@@ -34,7 +35,6 @@ const CustomPasswordInput = forwardRef<HTMLInputElement, Props>((props: Props, r
 	return (
 		<ThemeProvider theme={theme}>
 			<TextField
-				ref={ref}
 				{...restOfProps}
 				type={showpassword ? 'text' : 'password'}
 				id={props.id}
@@ -52,6 +52,7 @@ const CustomPasswordInput = forwardRef<HTMLInputElement, Props>((props: Props, r
 				color="primary"
 				disabled={props.disabled}
 				slotProps={{
+					htmlInput: { ref },
 					input: {
 						startAdornment: startIcon ? <InputAdornment position="start">{startIcon}</InputAdornment> : undefined,
 						endAdornment: (
@@ -71,7 +72,7 @@ const CustomPasswordInput = forwardRef<HTMLInputElement, Props>((props: Props, r
 			/>
 		</ThemeProvider>
 	);
-});
+};
 
 CustomPasswordInput.displayName = 'CustomPasswordInput';
 

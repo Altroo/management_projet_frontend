@@ -1,17 +1,17 @@
 'use client';
 
-import React from 'react';
+import { type FC, type ReactNode } from 'react';
 import { Box, Card, CardContent, Stack, Typography } from '@mui/material';
 
 interface SummaryKpiCardProps {
-	icon: React.ReactNode;
+	icon: ReactNode;
 	label: string;
 	value: string;
 	color: string;
 	testId?: string;
 }
 
-const SummaryKpiCard: React.FC<SummaryKpiCardProps> = ({ icon, label, value, color, testId }) => (
+const SummaryKpiCard: FC<SummaryKpiCardProps> = ({ icon, label, value, color, testId }) => (
 	<Card
 		elevation={2}
 		data-testid={testId}

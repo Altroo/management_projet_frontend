@@ -1,6 +1,8 @@
 import type { ResponseDataInterface, SagaPayloadType, TokenType } from '@/types/_initTypes';
 import type { UserClass } from '@/models/classes';
 
+export type PasswordResetCodeField = 'one' | 'two' | 'three' | 'four' | 'five' | 'six';
+
 //!- DropDown Type
 export type DropDownType = {
 	code: string;

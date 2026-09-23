@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import { useState, type FC, type SyntheticEvent } from 'react';
 import { Autocomplete, Box, Chip, TextField, Typography } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 import { ThemeProvider } from '@mui/material/styles';
@@ -21,31 +21,21 @@ export interface ChipSelectFilterProps {
 	theme?: Theme;
 }
 
-const ChipSelectFilter: React.FC<ChipSelectFilterProps> = ({
-	label,
-	options,
-	selectedIds,
-	onChange,
-	placeholder,
-	theme,
-}) => {
+const ChipSelectFilter: FC<ChipSelectFilterProps> = ({ label, options, selectedIds, onChange, placeholder, theme }) => {
 	const [inputValue, setInputValue] = useState('');
 	const { t } = useLanguage();
 
-	const appliedTheme = useMemo(() => theme ?? chipSelectFilterTheme(), [theme]);
+	const appliedTheme = theme ?? chipSelectFilterTheme();
 
-	const selectedOptions = useMemo(() => options.filter((opt) => selectedIds.includes(opt.id)), [options, selectedIds]);
+	const selectedOptions = options.filter((opt) => selectedIds.includes(opt.id));
 
-	const handleChange = useCallback(
-		(_event: React.SyntheticEvent, newValue: ChipSelectOption[]) => {
-			onChange(newValue.map((opt) => opt.id));
-		},
-		[onChange],
-	);
+	const handleChange = (_event: SyntheticEvent, newValue: ChipSelectOption[]) => {
+		onChange(newValue.map((opt) => opt.id));
+	};
 
-	const handleInputChange = useCallback((_event: React.SyntheticEvent, newInputValue: string) => {
+	const handleInputChange = (_event: SyntheticEvent, newInputValue: string) => {
 		setInputValue(newInputValue);
-	}, []);
+	};
 
 	return (
 		<ThemeProvider theme={appliedTheme}>

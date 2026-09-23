@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useState, type FC } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import {
@@ -27,7 +28,7 @@ import { useLanguage, useToast } from '@/utils/hooks';
 import { useBulkDeleteClientsMutation, useDeleteClientMutation, useGetClientsQuery } from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
 
-const ClientsListClient: React.FC<SessionProps> = ({ session }) => {
+const ClientsListClient: FC<SessionProps> = ({ session }) => {
 	const router = useRouter();
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
@@ -47,7 +48,7 @@ const ClientsListClient: React.FC<SessionProps> = ({ session }) => {
 	const [deleteClient] = useDeleteClientMutation();
 	const [bulkDeleteClients] = useBulkDeleteClientsMutation();
 
-	const filteredRows = useMemo(() => {
+	const filteredRows = (() => {
 		if (!searchTerm.trim()) return data;
 		const term = searchTerm.toLowerCase();
 		return data.filter(
@@ -58,47 +59,75 @@ const ClientsListClient: React.FC<SessionProps> = ({ session }) => {
 				(row.ville ?? '').toLowerCase().includes(term) ||
 				(row.adresse ?? '').toLowerCase().includes(term),
 		);
-	}, [data, searchTerm]);
+	})();
 
-	const paginatedData = useMemo(() => {
+	const paginatedData = (() => {
 		const start = paginationModel.page * paginationModel.pageSize;
 		return {
 			count: filteredRows.length,
 			results: filteredRows.slice(start, start + paginationModel.pageSize),
 		};
-	}, [filteredRows, paginationModel]);
+	})();
 
 	const deleteHandler = async () => {
-		try {
-			await deleteClient({ id: selectedId! }).unwrap();
-			onSuccess(t.clients.clientDeletedSuccess);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.clients.clientDeleteError));
-		} finally {
-			setShowDeleteModal(false);
-		}
+		await runWithCleanup(
+			async () => {
+				try {
+					await deleteClient({ id: selectedId! }).unwrap();
+					onSuccess(t.clients.clientDeletedSuccess);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.clients.clientDeleteError));
+				}
+			},
+			() => {
+				setShowDeleteModal(false);
+			},
+		);
 	};
 
 	const bulkDeleteHandler = async () => {
-		try {
-			await bulkDeleteClients({ ids: selectedIds }).unwrap();
-			onSuccess(t.clients.bulkClientsDeletedSuccess(selectedIds.length));
-			setSelectedIds([]);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.clients.bulkClientsDeleteError));
-		} finally {
-			setShowBulkDeleteModal(false);
-		}
+		await runWithCleanup(
+			async () => {
+				try {
+					await bulkDeleteClients({ ids: selectedIds }).unwrap();
+					onSuccess(t.clients.bulkClientsDeletedSuccess(selectedIds.length));
+					setSelectedIds([]);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.clients.bulkClientsDeleteError));
+				}
+			},
+			() => {
+				setShowBulkDeleteModal(false);
+			},
+		);
 	};
 
 	const deleteModalActions = [
-		{ text: t.common.cancel, active: false, onClick: () => setShowDeleteModal(false), icon: <CloseIcon />, color: '#6B6B6B' },
+		{
+			text: t.common.cancel,
+			active: false,
+			onClick: () => setShowDeleteModal(false),
+			icon: <CloseIcon />,
+			color: '#6B6B6B',
+		},
 		{ text: t.common.delete, active: true, onClick: deleteHandler, icon: <DeleteIcon />, color: '#D32F2F' },
 	];
 
 	const bulkDeleteModalActions = [
-		{ text: t.common.cancel, active: false, onClick: () => setShowBulkDeleteModal(false), icon: <CloseIcon />, color: '#6B6B6B' },
-		{ text: `${t.common.delete} (${selectedIds.length})`, active: true, onClick: bulkDeleteHandler, icon: <DeleteIcon />, color: '#D32F2F' },
+		{
+			text: t.common.cancel,
+			active: false,
+			onClick: () => setShowBulkDeleteModal(false),
+			icon: <CloseIcon />,
+			color: '#6B6B6B',
+		},
+		{
+			text: `${t.common.delete} (${selectedIds.length})`,
+			active: true,
+			onClick: bulkDeleteHandler,
+			icon: <DeleteIcon />,
+			color: '#D32F2F',
+		},
 	];
 
 	const columns: GridColDef[] = [
@@ -140,8 +169,18 @@ const ClientsListClient: React.FC<SessionProps> = ({ session }) => {
 			renderCell: (params) => (
 				<MobileActionsMenu
 					actions={[
-						{ label: t.common.view, icon: <VisibilityIcon />, onClick: () => router.push(CLIENTS_VIEW(params.row.id)), color: 'info' },
-						{ label: t.common.edit, icon: <EditIcon />, onClick: () => router.push(CLIENTS_EDIT(params.row.id)), color: 'primary' },
+						{
+							label: t.common.view,
+							icon: <VisibilityIcon />,
+							onClick: () => router.push(CLIENTS_VIEW(params.row.id)),
+							color: 'info',
+						},
+						{
+							label: t.common.edit,
+							icon: <EditIcon />,
+							onClick: () => router.push(CLIENTS_EDIT(params.row.id)),
+							color: 'primary',
+						},
 						{
 							label: t.common.delete,
 							icon: <DeleteIcon />,
@@ -162,12 +201,29 @@ const ClientsListClient: React.FC<SessionProps> = ({ session }) => {
 			<NavigationBar title={t.clients.clientsList}>
 				<Protected permission="can_view">
 					<>
-						<Box sx={{ display: 'flex', gap: 2, px: { xs: 1, sm: 2, md: 3 }, my: { xs: 1, sm: 2, md: 3 }, flexWrap: 'wrap' }}>
-							<Button variant="contained" onClick={() => router.push(CLIENTS_ADD)} startIcon={<AddIcon fontSize="small" />}>
+						<Box
+							sx={{
+								display: 'flex',
+								gap: 2,
+								px: { xs: 1, sm: 2, md: 3 },
+								my: { xs: 1, sm: 2, md: 3 },
+								flexWrap: 'wrap',
+							}}
+						>
+							<Button
+								variant="contained"
+								onClick={() => router.push(CLIENTS_ADD)}
+								startIcon={<AddIcon fontSize="small" />}
+							>
 								{t.clients.newClient}
 							</Button>
 							{selectedIds.length > 0 && (
-								<Button variant="outlined" color="error" onClick={() => setShowBulkDeleteModal(true)} startIcon={<DeleteIcon fontSize="small" />}>
+								<Button
+									variant="outlined"
+									color="error"
+									onClick={() => setShowBulkDeleteModal(true)}
+									startIcon={<DeleteIcon fontSize="small" />}
+								>
 									{t.common.delete} ({selectedIds.length})
 								</Button>
 							)}
@@ -186,7 +242,13 @@ const ClientsListClient: React.FC<SessionProps> = ({ session }) => {
 							onSelectionChange={setSelectedIds}
 							selectedIds={selectedIds}
 						/>
-						{showDeleteModal && <ActionModals title={t.clients.deleteClient} body={t.clients.deleteClientConfirm} actions={deleteModalActions} />}
+						{showDeleteModal && (
+							<ActionModals
+								title={t.clients.deleteClient}
+								body={t.clients.deleteClientConfirm}
+								actions={deleteModalActions}
+							/>
+						)}
 						{showBulkDeleteModal && (
 							<ActionModals
 								title={t.clients.bulkDeleteClients(selectedIds.length)}

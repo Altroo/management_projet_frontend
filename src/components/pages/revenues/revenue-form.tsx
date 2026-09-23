@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useState, type ChangeEvent, type FC, type MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Alert, Box, Button, Card, CardContent, Divider, InputAdornment, Stack, Typography } from '@mui/material';
 import {
@@ -57,7 +58,7 @@ type FormikContentProps = {
 	id?: number;
 };
 
-const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
+const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
 	const isEditMode = id !== undefined;
@@ -67,14 +68,14 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 
 	const { data: projectsData } = useGetProjectsListQuery({}, { skip: !token });
 
-	const projectItems: DropDownType[] = useMemo(() => {
+	const projectItems: DropDownType[] = (() => {
 		const projects = Array.isArray(projectsData)
 			? projectsData
 			: projectsData && 'results' in projectsData
 				? projectsData.results
 				: [];
 		return projects.map((p) => ({ code: String(p.id), value: p.nom }));
-	}, [projectsData]);
+	})();
 
 	const [createRevenue, { isLoading: isCreateLoading }] = useCreateRevenueMutation();
 	const [updateRevenue, { isLoading: isUpdateLoading }] = useUpdateRevenueMutation();
@@ -98,29 +99,37 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 			setIsPending(true);
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const { globalError, ...fields } = data;
-			try {
-				if (isEditMode) {
-					await updateRevenue({ id: id!, data: fields }).unwrap();
-					onSuccess(t.revenues.revenueUpdatedSuccess);
-				} else {
-					const createdRevenue = (await createRevenue({ data: fields }).unwrap()) as RevenueType;
-					if (queuedAttachments.length > 0) {
-						await Promise.all(
-							queuedAttachments.map((attachment) =>
-								uploadRevenueAttachment({ id: createdRevenue.id, data: buildAttachmentFormData(attachment) }).unwrap(),
-							),
-						);
-						setQueuedAttachments([]);
+			await runWithCleanup(
+				async () => {
+					try {
+						if (isEditMode) {
+							await updateRevenue({ id: id!, data: fields }).unwrap();
+							onSuccess(t.revenues.revenueUpdatedSuccess);
+						} else {
+							const createdRevenue = (await createRevenue({ data: fields }).unwrap()) as RevenueType;
+							if (queuedAttachments.length > 0) {
+								await Promise.all(
+									queuedAttachments.map((attachment) =>
+										uploadRevenueAttachment({
+											id: createdRevenue.id,
+											data: buildAttachmentFormData(attachment),
+										}).unwrap(),
+									),
+								);
+								setQueuedAttachments([]);
+							}
+							onSuccess(t.revenues.revenueAddedSuccess);
+						}
+						router.push(REVENUES_LIST);
+					} catch (e) {
+						setFormikAutoErrors({ e, setFieldError });
+						onError(isEditMode ? t.revenues.revenueUpdateError : t.revenues.revenueAddError);
 					}
-					onSuccess(t.revenues.revenueAddedSuccess);
-				}
-				router.push(REVENUES_LIST);
-			} catch (e) {
-				setFormikAutoErrors({ e, setFieldError });
-				onError(isEditMode ? t.revenues.revenueUpdateError : t.revenues.revenueAddError);
-			} finally {
-				setIsPending(false);
-			}
+				},
+				() => {
+					setIsPending(false);
+				},
+			);
 		},
 	});
 
@@ -209,7 +218,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										value={selectedProject}
 										fullWidth
 										onChange={(_, newVal) => {
-											formik.setFieldValue('project', newVal ? Number(newVal.code) : '');
+											void formik.setFieldValue('project', newVal ? Number(newVal.code) : '');
 										}}
 										onBlur={formik.handleBlur('project')}
 										error={formik.submitCount > 0 && Boolean(formik.errors.project)}
@@ -243,9 +252,9 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 											size="small"
 											label={`${t.common.amount} (MAD) *`}
 											value={formik.values.montant}
-											onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+											onChange={(e: ChangeEvent<HTMLInputElement>) => {
 												if (/^(0|[1-9]\d*)?([.,]\d*)?$/.test(e.target.value))
-													formik.setFieldValue('montant', e.target.value);
+													void formik.setFieldValue('montant', e.target.value);
 											}}
 											onBlur={formik.handleBlur('montant')}
 											error={formik.submitCount > 0 && Boolean(formik.errors.montant)}
@@ -257,7 +266,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										<DatePicker
 											label={`${t.common.date} *`}
 											value={formik.values.date ? parseISO(formik.values.date) : null}
-											onChange={(date) => formik.setFieldValue('date', date ? format(date, 'yyyy-MM-dd') : '')}
+											onChange={(date) => void formik.setFieldValue('date', date ? format(date, 'yyyy-MM-dd') : '')}
 											disabled={isLoading}
 											slotProps={{
 												textField: {
@@ -317,7 +326,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 								active={!isPending}
 								type="submit"
 								startIcon={isEditMode ? <EditIcon /> : <AddIcon />}
-								onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+								onClick={(e: MouseEvent<HTMLButtonElement>) => {
 									if (!formik.isValid) {
 										e.preventDefault();
 										formik.handleSubmit();
@@ -335,7 +344,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	);
 };
 
-const RevenueFormClient: React.FC<SessionProps & { id?: number }> = ({ session, id }) => {
+const RevenueFormClient: FC<SessionProps & { id?: number }> = ({ session, id }) => {
 	const token = useInitAccessToken(session);
 	const { t } = useLanguage();
 	const title = id !== undefined ? t.revenues.editRevenue : t.revenues.newRevenue;

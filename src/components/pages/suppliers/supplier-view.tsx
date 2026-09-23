@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useState, type FC } from 'react';
 import { useRouter } from 'next/navigation';
 import {
 	Alert,
@@ -42,12 +43,12 @@ import { useLanguage, useToast } from '@/utils/hooks';
 
 const money = (value: string | number) => `${Number(value || 0).toLocaleString('fr-MA')} MAD`;
 
-const SupplierViewClient: React.FC<SessionProps & { id: number }> = ({ session, id }) => {
+const SupplierViewClient: FC<SessionProps & { id: number }> = ({ session, id }) => {
 	const { t } = useLanguage();
 	const router = useRouter();
 	const token = useInitAccessToken(session);
 	const { data: supplier, isLoading, error } = useGetSupplierQuery({ id }, { skip: !token });
-	const axiosError = useMemo(() => (error ? (error as ResponseDataInterface<ApiErrorResponseType>) : undefined), [error]);
+	const axiosError = error ? (error as ResponseDataInterface<ApiErrorResponseType>) : undefined;
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const [deleteSupplier] = useDeleteSupplierMutation();
@@ -55,19 +56,30 @@ const SupplierViewClient: React.FC<SessionProps & { id: number }> = ({ session, 
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
 
 	const handleDelete = async () => {
-		try {
-			await deleteSupplier({ id }).unwrap();
-			onSuccess(t.suppliers.supplierDeletedSuccess);
-			router.push(SUPPLIERS_LIST);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.suppliers.supplierDeleteError));
-		} finally {
-			setShowDeleteModal(false);
-		}
+		await runWithCleanup(
+			async () => {
+				try {
+					await deleteSupplier({ id }).unwrap();
+					onSuccess(t.suppliers.supplierDeletedSuccess);
+					router.push(SUPPLIERS_LIST);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.suppliers.supplierDeleteError));
+				}
+			},
+			() => {
+				setShowDeleteModal(false);
+			},
+		);
 	};
 
 	const deleteModalActions = [
-		{ text: t.common.cancel, active: false, onClick: () => setShowDeleteModal(false), icon: <ArrowBackIcon />, color: '#6B6B6B' },
+		{
+			text: t.common.cancel,
+			active: false,
+			onClick: () => setShowDeleteModal(false),
+			icon: <ArrowBackIcon />,
+			color: '#6B6B6B',
+		},
 		{ text: t.common.delete, active: true, onClick: handleDelete, icon: <DeleteIcon />, color: '#D32F2F' },
 	];
 
@@ -83,12 +95,23 @@ const SupplierViewClient: React.FC<SessionProps & { id: number }> = ({ session, 
 							{supplier && (
 								<Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
 									<Protected permission="can_edit">
-										<Button variant="outlined" size="small" startIcon={<EditIcon />} onClick={() => router.push(SUPPLIERS_EDIT(id))}>
+										<Button
+											variant="outlined"
+											size="small"
+											startIcon={<EditIcon />}
+											onClick={() => router.push(SUPPLIERS_EDIT(id))}
+										>
 											{t.common.edit}
 										</Button>
 									</Protected>
 									<Protected permission="can_delete">
-										<Button variant="outlined" color="error" size="small" startIcon={<DeleteIcon />} onClick={() => setShowDeleteModal(true)}>
+										<Button
+											variant="outlined"
+											color="error"
+											size="small"
+											startIcon={<DeleteIcon />}
+											onClick={() => setShowDeleteModal(true)}
+										>
 											{t.common.delete}
 										</Button>
 									</Protected>
@@ -113,9 +136,15 @@ const SupplierViewClient: React.FC<SessionProps & { id: number }> = ({ session, 
 										</Stack>
 										<Divider sx={{ mb: 2 }} />
 										<Stack spacing={1.5}>
-											<Typography><PersonIcon fontSize="small" /> {t.suppliers.contact}: {supplier.contact || '-'}</Typography>
-											<Typography><BuildIcon fontSize="small" /> {t.suppliers.speciality}: {supplier.specialite || '-'}</Typography>
-											<Typography sx={{ fontWeight: 700 }}><AttachMoneyIcon fontSize="small" /> {t.suppliers.totalPaid}: {money(supplier.total_paid)}</Typography>
+											<Typography>
+												<PersonIcon fontSize="small" /> {t.suppliers.contact}: {supplier.contact || '-'}
+											</Typography>
+											<Typography>
+												<BuildIcon fontSize="small" /> {t.suppliers.speciality}: {supplier.specialite || '-'}
+											</Typography>
+											<Typography sx={{ fontWeight: 700 }}>
+												<AttachMoneyIcon fontSize="small" /> {t.suppliers.totalPaid}: {money(supplier.total_paid)}
+											</Typography>
 										</Stack>
 									</CardContent>
 								</Card>
@@ -141,7 +170,12 @@ const SupplierViewClient: React.FC<SessionProps & { id: number }> = ({ session, 
 														</TableRow>
 													) : (
 														supplier.payments.map((payment) => (
-															<TableRow key={payment.id} hover sx={{ cursor: 'pointer' }} onClick={() => router.push(PROJECTS_VIEW(payment.project))}>
+															<TableRow
+																key={payment.id}
+																hover
+																sx={{ cursor: 'pointer' }}
+																onClick={() => router.push(PROJECTS_VIEW(payment.project))}
+															>
 																<TableCell>{formatDate(payment.date)}</TableCell>
 																<TableCell>{payment.project_name}</TableCell>
 																<TableCell>{payment.description}</TableCell>
@@ -160,7 +194,13 @@ const SupplierViewClient: React.FC<SessionProps & { id: number }> = ({ session, 
 				</Protected>
 			</NavigationBar>
 			{showDeleteModal && (
-				<ActionModals title={t.suppliers.deleteSupplier} body={t.suppliers.deleteSupplierConfirm} actions={deleteModalActions} titleIcon={<DeleteIcon />} titleIconColor="#D32F2F" />
+				<ActionModals
+					title={t.suppliers.deleteSupplier}
+					body={t.suppliers.deleteSupplierConfirm}
+					actions={deleteModalActions}
+					titleIcon={<DeleteIcon />}
+					titleIconColor="#D32F2F"
+				/>
 			)}
 		</Stack>
 	);

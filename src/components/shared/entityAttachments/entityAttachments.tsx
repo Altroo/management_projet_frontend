@@ -1,6 +1,18 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import { fileInputSx } from '@/utils/rawData';
+import { runAsyncWithErrorHandler } from '@/utils/runWithCleanup';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import {
+	useRef,
+	useState,
+	type ChangeEvent,
+	type Dispatch,
+	type DragEvent,
+	type FC,
+	type ReactNode,
+	type SetStateAction,
+} from 'react';
 import {
 	Box,
 	Button,
@@ -63,10 +75,10 @@ type EntityAttachmentsViewProps = {
 };
 
 type AttachmentRowProps = {
-	icon: React.ReactNode;
+	icon: ReactNode;
 	title: string;
 	subtitle: string;
-	actions: React.ReactNode;
+	actions: ReactNode;
 	status?: string;
 	statusColor?: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
 };
@@ -105,7 +117,7 @@ const getFileIcon = (filename: string, mimeType?: string) => {
 	return <InsertDriveFileIcon fontSize="small" />;
 };
 
-const AttachmentRow: React.FC<AttachmentRowProps> = ({ icon, title, subtitle, actions, status, statusColor = 'default' }) => {
+const AttachmentRow: FC<AttachmentRowProps> = ({ icon, title, subtitle, actions, status, statusColor = 'default' }) => {
 	return (
 		<Box
 			sx={(theme) => ({
@@ -149,7 +161,9 @@ const AttachmentRow: React.FC<AttachmentRowProps> = ({ icon, title, subtitle, ac
 					{subtitle}
 				</Typography>
 			</Box>
-			{status ? <Chip label={status} size="small" color={statusColor} variant="outlined" sx={{ flexShrink: 0 }} /> : null}
+			{status ? (
+				<Chip label={status} size="small" color={statusColor} variant="outlined" sx={{ flexShrink: 0 }} />
+			) : null}
 			<Stack direction="row" spacing={0.25} sx={{ flexShrink: 0 }}>
 				{actions}
 			</Stack>
@@ -157,19 +171,7 @@ const AttachmentRow: React.FC<AttachmentRowProps> = ({ icon, title, subtitle, ac
 	);
 };
 
-const fileInputSx = {
-	clip: 'rect(0 0 0 0)',
-	clipPath: 'inset(50%)',
-	height: 1,
-	overflow: 'hidden',
-	position: 'absolute',
-	bottom: 0,
-	left: 0,
-	whiteSpace: 'nowrap',
-	width: 1,
-} as const;
-
-const EntityAttachmentsForm: React.FC<EntityAttachmentsFormProps> = ({
+const EntityAttachmentsForm: FC<EntityAttachmentsFormProps> = ({
 	attachments,
 	queuedAttachments,
 	isLoading,
@@ -201,26 +203,34 @@ const EntityAttachmentsForm: React.FC<EntityAttachmentsFormProps> = ({
 		}
 
 		setIsPending(true);
-		try {
-			for (const item of selected) {
-				await onUpload(buildAttachmentFormData(item));
-			}
-			setLabel('');
-			onSuccess(t.attachments.attachmentUploadedSuccess);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.attachments.attachmentUploadError));
-		} finally {
-			setIsPending(false);
-		}
+		await runWithCleanup(
+			async () => {
+				await runAsyncWithErrorHandler(
+					async () => {
+						for (const item of selected) {
+							await onUpload(buildAttachmentFormData(item));
+						}
+						setLabel('');
+						onSuccess(t.attachments.attachmentUploadedSuccess);
+					},
+					async (err) => {
+						onError(extractApiErrorMessage(err, t.attachments.attachmentUploadError));
+					},
+				);
+			},
+			() => {
+				setIsPending(false);
+			},
+		);
 	};
 
-	const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+	const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
 		const files = Array.from(event.target.files ?? []);
 		event.target.value = '';
 		await handleSelectedFiles(files);
 	};
 
-	const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+	const handleDrop = async (event: DragEvent<HTMLDivElement>) => {
 		event.preventDefault();
 		setIsDragging(false);
 		await handleSelectedFiles(Array.from(event.dataTransfer.files ?? []));
@@ -229,14 +239,19 @@ const EntityAttachmentsForm: React.FC<EntityAttachmentsFormProps> = ({
 	const handleDelete = async (attachmentId: number) => {
 		if (!onDelete) return;
 		setIsPending(true);
-		try {
-			await onDelete(attachmentId);
-			onSuccess(t.attachments.attachmentDeletedSuccess);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.attachments.attachmentDeleteError));
-		} finally {
-			setIsPending(false);
-		}
+		await runWithCleanup(
+			async () => {
+				try {
+					await onDelete(attachmentId);
+					onSuccess(t.attachments.attachmentDeletedSuccess);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.attachments.attachmentDeleteError));
+				}
+			},
+			() => {
+				setIsPending(false);
+			},
+		);
 	};
 
 	const totalFiles = attachments.length + queuedAttachments.length;
@@ -280,13 +295,22 @@ const EntityAttachmentsForm: React.FC<EntityAttachmentsFormProps> = ({
 						</Box>
 					</Stack>
 					{queuedAttachments.length > 0 ? (
-						<Chip size="small" color="warning" variant="outlined" label={`${queuedAttachments.length} ${t.attachments.pendingUpload}`} />
+						<Chip
+							size="small"
+							color="warning"
+							variant="outlined"
+							label={`${queuedAttachments.length} ${t.attachments.pendingUpload}`}
+						/>
 					) : null}
 				</Stack>
 				<Divider />
 
 				<Stack spacing={2} sx={{ p: 3 }}>
-					<Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} sx={{ alignItems: { xs: 'stretch', md: 'center' } }}>
+					<Stack
+						direction={{ xs: 'column', md: 'row' }}
+						spacing={1.5}
+						sx={{ alignItems: { xs: 'stretch', md: 'center' } }}
+					>
 						<TextField
 							size="small"
 							label={t.attachments.label}
@@ -389,10 +413,7 @@ const EntityAttachmentsForm: React.FC<EntityAttachmentsFormProps> = ({
 									key={attachment.id}
 									icon={getFileIcon(attachment.file.name, attachment.file.type)}
 									title={attachment.label || attachment.file.name}
-									subtitle={[
-										attachment.label ? attachment.file.name : null,
-										formatFileSize(attachment.file.size),
-									]
+									subtitle={[attachment.label ? attachment.file.name : null, formatFileSize(attachment.file.size)]
 										.filter(Boolean)
 										.join(' · ')}
 									status={t.attachments.pendingUpload}
@@ -467,7 +488,7 @@ const EntityAttachmentsForm: React.FC<EntityAttachmentsFormProps> = ({
 	);
 };
 
-const EntityAttachmentsView: React.FC<EntityAttachmentsViewProps> = ({ attachments, isLoading }) => {
+const EntityAttachmentsView: FC<EntityAttachmentsViewProps> = ({ attachments, isLoading }) => {
 	const { t } = useLanguage();
 	const countLabel = `${attachments.length} ${attachments.length > 1 ? t.attachments.files : t.attachments.file}`;
 
@@ -560,14 +581,18 @@ const EntityAttachmentsView: React.FC<EntityAttachmentsViewProps> = ({ attachmen
 type FormSectionProps = {
 	id?: number;
 	queuedAttachments: QueuedAttachment[];
-	setQueuedAttachments: React.Dispatch<React.SetStateAction<QueuedAttachment[]>>;
+	setQueuedAttachments: Dispatch<SetStateAction<QueuedAttachment[]>>;
 };
 
 type ViewSectionProps = {
 	id: number;
 };
 
-export const ProjectAttachmentsFormSection: React.FC<FormSectionProps> = ({ id, queuedAttachments, setQueuedAttachments }) => {
+export const ProjectAttachmentsFormSection: FC<FormSectionProps> = ({
+	id,
+	queuedAttachments,
+	setQueuedAttachments,
+}) => {
 	const { data = [], isLoading } = useGetProjectAttachmentsQuery({ id: id! }, { skip: !id });
 	const [uploadAttachment] = useUploadProjectAttachmentMutation();
 	const [deleteAttachment] = useDeleteProjectAttachmentMutation();
@@ -587,7 +612,11 @@ export const ProjectAttachmentsFormSection: React.FC<FormSectionProps> = ({ id, 
 	);
 };
 
-export const ExpenseAttachmentsFormSection: React.FC<FormSectionProps> = ({ id, queuedAttachments, setQueuedAttachments }) => {
+export const ExpenseAttachmentsFormSection: FC<FormSectionProps> = ({
+	id,
+	queuedAttachments,
+	setQueuedAttachments,
+}) => {
 	const { data = [], isLoading } = useGetExpenseAttachmentsQuery({ id: id! }, { skip: !id });
 	const [uploadAttachment] = useUploadExpenseAttachmentMutation();
 	const [deleteAttachment] = useDeleteExpenseAttachmentMutation();
@@ -607,7 +636,11 @@ export const ExpenseAttachmentsFormSection: React.FC<FormSectionProps> = ({ id, 
 	);
 };
 
-export const RevenueAttachmentsFormSection: React.FC<FormSectionProps> = ({ id, queuedAttachments, setQueuedAttachments }) => {
+export const RevenueAttachmentsFormSection: FC<FormSectionProps> = ({
+	id,
+	queuedAttachments,
+	setQueuedAttachments,
+}) => {
 	const { data = [], isLoading } = useGetRevenueAttachmentsQuery({ id: id! }, { skip: !id });
 	const [uploadAttachment] = useUploadRevenueAttachmentMutation();
 	const [deleteAttachment] = useDeleteRevenueAttachmentMutation();
@@ -627,19 +660,19 @@ export const RevenueAttachmentsFormSection: React.FC<FormSectionProps> = ({ id, 
 	);
 };
 
-export const ProjectAttachmentsViewSection: React.FC<ViewSectionProps> = ({ id }) => {
+export const ProjectAttachmentsViewSection: FC<ViewSectionProps> = ({ id }) => {
 	const { data = [], isLoading } = useGetProjectAttachmentsQuery({ id }, { skip: !id });
 
 	return <EntityAttachmentsView attachments={data} isLoading={isLoading} />;
 };
 
-export const ExpenseAttachmentsViewSection: React.FC<ViewSectionProps> = ({ id }) => {
+export const ExpenseAttachmentsViewSection: FC<ViewSectionProps> = ({ id }) => {
 	const { data = [], isLoading } = useGetExpenseAttachmentsQuery({ id }, { skip: !id });
 
 	return <EntityAttachmentsView attachments={data} isLoading={isLoading} />;
 };
 
-export const RevenueAttachmentsViewSection: React.FC<ViewSectionProps> = ({ id }) => {
+export const RevenueAttachmentsViewSection: FC<ViewSectionProps> = ({ id }) => {
 	const { data = [], isLoading } = useGetRevenueAttachmentsQuery({ id }, { skip: !id });
 
 	return <EntityAttachmentsView attachments={data} isLoading={isLoading} />;

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { type FC } from 'react';
 import { Close as CloseIcon } from '@mui/icons-material';
 import ActionModals from '@/components/htmlElements/modals/actionModal/actionModals';
 import { LanguageFlag } from '@/components/shared/languageSwitcher/languageSwitcher';
@@ -11,7 +11,7 @@ interface PdfLanguageModalProps {
 	onClose: () => void;
 }
 
-const PdfLanguageModal: React.FC<PdfLanguageModalProps> = ({ onSelectLanguage, onClose }) => {
+const PdfLanguageModal: FC<PdfLanguageModalProps> = ({ onSelectLanguage, onClose }) => {
 	const { t } = useLanguage();
 
 	return (

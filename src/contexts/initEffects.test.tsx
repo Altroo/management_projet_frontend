@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, waitFor } from '@testing-library/react';
 import { InitEffects } from './initEffects';
 import { useSession } from 'next-auth/react';
@@ -15,7 +14,6 @@ jest.mock('next/navigation', () => ({
 	useRouter: jest.fn(),
 	usePathname: jest.fn(),
 }));
-
 import { useRouter, usePathname } from 'next/navigation';
 
 const mockDispatch = jest.fn();
@@ -50,9 +48,7 @@ describe('InitEffects', () => {
 		render(<InitEffects />);
 
 		await waitFor(() => {
-			expect(mockDispatch).toHaveBeenCalledWith(
-				expect.objectContaining({ type: 'INIT_APP_SESSION_TOKENS' }),
-			);
+			expect(mockDispatch).toHaveBeenCalledWith(expect.objectContaining({ type: 'INIT_APP_SESSION_TOKENS' }));
 		});
 	});
 
@@ -62,9 +58,7 @@ describe('InitEffects', () => {
 		render(<InitEffects />);
 
 		await waitFor(() => {
-			const initCalls = mockDispatch.mock.calls.filter(
-				([action]) => action?.type === 'INIT_APP_SESSION_TOKENS',
-			);
+			const initCalls = mockDispatch.mock.calls.filter(([action]) => action?.type === 'INIT_APP_SESSION_TOKENS');
 			expect(initCalls.length).toBe(0);
 		});
 	});

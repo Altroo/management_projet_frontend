@@ -1,6 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import { runAsyncWithErrorHandler } from '@/utils/runWithCleanup';
+import {
+	useState,
+	type ChangeEvent,
+	type FC,
+	type HTMLInputTypeAttribute,
+	type ReactNode,
+	type SubmitEvent,
+} from 'react';
 import {
 	AccountBalance as AccountBalanceIcon,
 	Badge as BadgeIcon,
@@ -57,7 +65,7 @@ const imageFileFromDataUrl = (dataUrl: string, filename: string): File => {
 	return new File([bytes], filename, { type: mimeType });
 };
 
-const CompanyProfileForm: React.FC<{ profile: CompanyProfileType }> = ({ profile }) => {
+const CompanyProfileForm: FC<{ profile: CompanyProfileType }> = ({ profile }) => {
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
 	const [updateCompanyProfile, { isLoading: isSaving }] = useUpdateCompanyProfileMutation();
@@ -65,32 +73,35 @@ const CompanyProfileForm: React.FC<{ profile: CompanyProfileType }> = ({ profile
 	const [logo, setLogo] = useState<string | ArrayBuffer | null>(profile.logo_url);
 	const [croppedLogo, setCroppedLogo] = useState<string | ArrayBuffer | null>(profile.logo_cropped_url);
 
-	const setField = (name: CompanyFieldName) => (event: React.ChangeEvent<HTMLInputElement>) => {
+	const setField = (name: CompanyFieldName) => (event: ChangeEvent<HTMLInputElement>) => {
 		setFields((current) => ({ ...current, [name]: event.target.value }));
 	};
 
-	const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
+	const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		const formData = new FormData();
 		Object.entries(fields).forEach(([key, value]) => formData.append(key, value));
-		try {
-			if (isNewImage(logo)) formData.append('logo', imageFileFromDataUrl(logo, 'company-logo.png'));
-			if (isNewImage(croppedLogo)) {
-				formData.append('logo_cropped', imageFileFromDataUrl(croppedLogo, 'company-logo-cropped.png'));
-			}
-			if (!logo && (profile.logo_url || profile.logo_cropped_url)) formData.append('remove_logo', 'true');
-			await updateCompanyProfile(formData).unwrap();
-			onSuccess(t.companyProfile.saveSuccess);
-		} catch (updateError) {
-			onError(extractApiErrorMessage(updateError, t.companyProfile.saveError));
-		}
+		await runAsyncWithErrorHandler(
+			async () => {
+				if (isNewImage(logo)) formData.append('logo', imageFileFromDataUrl(logo, 'company-logo.png'));
+				if (isNewImage(croppedLogo)) {
+					formData.append('logo_cropped', imageFileFromDataUrl(croppedLogo, 'company-logo-cropped.png'));
+				}
+				if (!logo && (profile.logo_url || profile.logo_cropped_url)) formData.append('remove_logo', 'true');
+				await updateCompanyProfile(formData).unwrap();
+				onSuccess(t.companyProfile.saveSuccess);
+			},
+			async (updateError) => {
+				onError(extractApiErrorMessage(updateError, t.companyProfile.saveError));
+			},
+		);
 	};
 
 	const field = (
 		name: CompanyFieldName,
 		label: string,
-		icon: React.ReactNode,
-		options: { type?: React.HTMLInputTypeAttribute; required?: boolean; multiline?: boolean } = {},
+		icon: ReactNode,
+		options: { type?: HTMLInputTypeAttribute; required?: boolean; multiline?: boolean } = {},
 	) => (
 		<CustomTextInput
 			theme={inputTheme}
@@ -108,11 +119,13 @@ const CompanyProfileForm: React.FC<{ profile: CompanyProfileType }> = ({ profile
 		/>
 	);
 
-	const sectionTitle = (icon: React.ReactNode, title: string) => (
+	const sectionTitle = (icon: ReactNode, title: string) => (
 		<>
 			<Stack direction="row" spacing={2} sx={{ alignItems: 'center', mb: 2 }}>
 				{icon}
-				<Typography variant="h6" sx={{ fontWeight: 700 }}>{title}</Typography>
+				<Typography variant="h6" sx={{ fontWeight: 700 }}>
+					{title}
+				</Typography>
 			</Stack>
 			<Divider sx={{ mb: 3 }} />
 		</>
@@ -127,7 +140,9 @@ const CompanyProfileForm: React.FC<{ profile: CompanyProfileType }> = ({ profile
 					<CardContent sx={{ p: 3 }}>
 						{sectionTitle(<BusinessIcon color="primary" />, t.companyProfile.identity)}
 						<Stack spacing={3}>
-							{field('raison_sociale', `${t.companyProfile.name}`, <BusinessIcon fontSize="small" />, { required: true })}
+							{field('raison_sociale', `${t.companyProfile.name}`, <BusinessIcon fontSize="small" />, {
+								required: true,
+							})}
 							<CustomSquareImageUploading
 								image={logo}
 								croppedImage={croppedLogo}
@@ -184,7 +199,7 @@ const CompanyProfileForm: React.FC<{ profile: CompanyProfileType }> = ({ profile
 	);
 };
 
-const CompanyProfileClient: React.FC<SessionProps> = ({ session }) => {
+const CompanyProfileClient: FC<SessionProps> = ({ session }) => {
 	const { t } = useLanguage();
 	const token = useInitAccessToken(session);
 	const { data, isLoading, error } = useGetCompanyProfileQuery(undefined, { skip: !token });

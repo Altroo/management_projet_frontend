@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useState, type ChangeEvent, type FC, type MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import {
 	Alert,
@@ -81,7 +82,7 @@ type FormikContentProps = {
 	id?: number;
 };
 
-const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
+const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
 	const isEditMode = id !== undefined;
@@ -93,30 +94,27 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	const { data: expenseTaxonomy } = useGetExpenseTaxonomyQuery(undefined, { skip: !token });
 	const { data: suppliersData } = useGetSuppliersQuery({}, { skip: !token });
 
-	const projectItems: DropDownType[] = useMemo(() => {
+	const projectItems: DropDownType[] = (() => {
 		const projects = Array.isArray(projectsData)
 			? projectsData
 			: projectsData && 'results' in projectsData
 				? projectsData.results
 				: [];
 		return projects.map((p) => ({ code: String(p.id), value: p.nom }));
-	}, [projectsData]);
+	})();
 
-	const categoryItems: DropDownType[] = useMemo(() => {
+	const categoryItems: DropDownType[] = (() => {
 		return (expenseTaxonomy ?? []).map((category) => ({ code: String(category.id), value: category.name }));
-	}, [expenseTaxonomy]);
+	})();
 
-	const supplierItems: DropDownType[] = useMemo(() => {
+	const supplierItems: DropDownType[] = (() => {
 		return (suppliersData ?? []).map((supplier) => ({ code: String(supplier.id), value: supplier.nom }));
-	}, [suppliersData]);
+	})();
 
-	const serviceFeeTypeItems: DropDownType[] = useMemo(
-		() => [
-			{ code: 'percentage', value: t.expenses.serviceFeePercent },
-			{ code: 'fixed', value: t.expenses.serviceFeeFixed },
-		],
-		[t],
-	);
+	const serviceFeeTypeItems: DropDownType[] = [
+		{ code: 'percentage', value: t.expenses.serviceFeePercent },
+		{ code: 'fixed', value: t.expenses.serviceFeeFixed },
+	];
 
 	const [createExpenseCategory] = useCreateExpenseCategoryMutation();
 	const [updateExpenseCategory] = useUpdateExpenseCategoryMutation();
@@ -159,29 +157,37 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 				frais_de_service_type: fields.frais_de_service ? fields.frais_de_service_type : 'fixed',
 				supplier: fields.supplier === '' ? null : fields.supplier,
 			};
-			try {
-				if (isEditMode) {
-					await updateExpense({ id: id!, data: payload }).unwrap();
-					onSuccess(t.expenses.expenseUpdatedSuccess);
-				} else {
-					const createdExpense = (await createExpense({ data: payload }).unwrap()) as ExpenseType;
-					if (queuedAttachments.length > 0) {
-						await Promise.all(
-							queuedAttachments.map((attachment) =>
-								uploadExpenseAttachment({ id: createdExpense.id, data: buildAttachmentFormData(attachment) }).unwrap(),
-							),
-						);
-						setQueuedAttachments([]);
+			await runWithCleanup(
+				async () => {
+					try {
+						if (isEditMode) {
+							await updateExpense({ id: id!, data: payload }).unwrap();
+							onSuccess(t.expenses.expenseUpdatedSuccess);
+						} else {
+							const createdExpense = (await createExpense({ data: payload }).unwrap()) as ExpenseType;
+							if (queuedAttachments.length > 0) {
+								await Promise.all(
+									queuedAttachments.map((attachment) =>
+										uploadExpenseAttachment({
+											id: createdExpense.id,
+											data: buildAttachmentFormData(attachment),
+										}).unwrap(),
+									),
+								);
+								setQueuedAttachments([]);
+							}
+							onSuccess(t.expenses.expenseAddedSuccess);
+						}
+						router.push(EXPENSES_LIST);
+					} catch (e) {
+						setFormikAutoErrors({ e, setFieldError });
+						onError(isEditMode ? t.expenses.expenseUpdateError : t.expenses.expenseAddError);
 					}
-					onSuccess(t.expenses.expenseAddedSuccess);
-				}
-				router.push(EXPENSES_LIST);
-			} catch (e) {
-				setFormikAutoErrors({ e, setFieldError });
-				onError(isEditMode ? t.expenses.expenseUpdateError : t.expenses.expenseAddError);
-			} finally {
-				setIsPending(false);
-			}
+				},
+				() => {
+					setIsPending(false);
+				},
+			);
 		},
 	});
 
@@ -189,13 +195,13 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	const selectedCategory = categoryItems.find((c) => c.code === String(formik.values.category)) ?? null;
 	const selectedSupplier = supplierItems.find((s) => s.code === String(formik.values.supplier)) ?? null;
 
-	const subCategoryItems: DropDownType[] = useMemo(() => {
+	const subCategoryItems: DropDownType[] = (() => {
 		const activeCategory = (expenseTaxonomy ?? []).find((category) => category.id === Number(formik.values.category));
 		return (activeCategory?.subcategories ?? []).map((subCategory) => ({
 			code: String(subCategory.id),
 			value: subCategory.name,
 		}));
-	}, [expenseTaxonomy, formik.values.category]);
+	})();
 
 	const selectedSubCategory = subCategoryItems.find((sc) => sc.code === String(formik.values.sous_categorie)) ?? null;
 	const selectedServiceFeeType =
@@ -285,7 +291,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										value={selectedProject}
 										fullWidth
 										onChange={(_, newVal) => {
-											formik.setFieldValue('project', newVal ? Number(newVal.code) : '');
+											void formik.setFieldValue('project', newVal ? Number(newVal.code) : '');
 										}}
 										onBlur={formik.handleBlur('project')}
 										error={formik.submitCount > 0 && Boolean(formik.errors.project)}
@@ -319,9 +325,9 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 											size="small"
 											label={`${t.common.amount} (MAD) *`}
 											value={formik.values.montant}
-											onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+											onChange={(e: ChangeEvent<HTMLInputElement>) => {
 												if (/^(0|[1-9]\d*)?([.,]\d*)?$/.test(e.target.value))
-													formik.setFieldValue('montant', e.target.value);
+													void formik.setFieldValue('montant', e.target.value);
 											}}
 											onBlur={formik.handleBlur('montant')}
 											error={formik.submitCount > 0 && Boolean(formik.errors.montant)}
@@ -333,7 +339,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										<DatePicker
 											label={`${t.common.date} *`}
 											value={formik.values.date ? parseISO(formik.values.date) : null}
-											onChange={(date) => formik.setFieldValue('date', date ? format(date, 'yyyy-MM-dd') : '')}
+											onChange={(date) => void formik.setFieldValue('date', date ? format(date, 'yyyy-MM-dd') : '')}
 											disabled={isLoading}
 											slotProps={{
 												textField: {
@@ -361,10 +367,10 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 												checked={formik.values.frais_de_service}
 												onChange={(e) => {
 													const checked = e.target.checked;
-													formik.setFieldValue('frais_de_service', checked);
+													void formik.setFieldValue('frais_de_service', checked);
 													if (!checked) {
-														formik.setFieldValue('frais_de_service_valeur', '');
-														formik.setFieldValue('frais_de_service_type', 'fixed');
+														void formik.setFieldValue('frais_de_service_valeur', '');
+														void formik.setFieldValue('frais_de_service_type', 'fixed');
 													}
 												}}
 											/>
@@ -380,9 +386,9 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 												size="small"
 												label={`${t.expenses.serviceFeeValue} *`}
 												value={formik.values.frais_de_service_valeur ?? ''}
-												onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+												onChange={(e: ChangeEvent<HTMLInputElement>) => {
 													if (/^(0|[1-9]\d*)?([.,]\d*)?$/.test(e.target.value))
-														formik.setFieldValue('frais_de_service_valeur', e.target.value);
+														void formik.setFieldValue('frais_de_service_valeur', e.target.value);
 												}}
 												onBlur={formik.handleBlur('frais_de_service_valeur')}
 												error={formik.submitCount > 0 && Boolean(formik.errors.frais_de_service_valeur)}
@@ -401,7 +407,10 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 												value={selectedServiceFeeType}
 												fullWidth
 												onChange={(_, newVal) => {
-													formik.setFieldValue('frais_de_service_type', (newVal?.code ?? 'fixed') as ServiceFeeType);
+													void formik.setFieldValue(
+														'frais_de_service_type',
+														(newVal?.code ?? 'fixed') as ServiceFeeType,
+													);
 												}}
 												onBlur={formik.handleBlur('frais_de_service_type')}
 												error={formik.submitCount > 0 && Boolean(formik.errors.frais_de_service_type)}
@@ -447,8 +456,8 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										value={selectedCategory}
 										fullWidth
 										onChange={(_, newVal) => {
-											formik.setFieldValue('category', newVal ? Number(newVal.code) : '');
-											formik.setFieldValue('sous_categorie', '');
+											void formik.setFieldValue('category', newVal ? Number(newVal.code) : '');
+											void formik.setFieldValue('sous_categorie', '');
 										}}
 										onBlur={formik.handleBlur('category')}
 										error={formik.submitCount > 0 && Boolean(formik.errors.category)}
@@ -468,12 +477,12 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 												buildAddPayload={(name) => ({ name })}
 												buildEditPayload={(name) => ({ name })}
 												onAddSuccess={(newId) => {
-													formik.setFieldValue('category', newId);
-													formik.setFieldValue('sous_categorie', '');
+													void formik.setFieldValue('category', newId);
+													void formik.setFieldValue('sous_categorie', '');
 												}}
 												onDeleteSuccess={() => {
-													formik.setFieldValue('category', '');
-													formik.setFieldValue('sous_categorie', '');
+													void formik.setFieldValue('category', '');
+													void formik.setFieldValue('sous_categorie', '');
 													onSuccess(t.categories.categoryDeletedSuccess);
 												}}
 											/>
@@ -489,7 +498,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										value={selectedSubCategory}
 										fullWidth
 										onChange={(_, newVal) => {
-											formik.setFieldValue('sous_categorie', newVal ? Number(newVal.code) : '');
+											void formik.setFieldValue('sous_categorie', newVal ? Number(newVal.code) : '');
 										}}
 										onBlur={formik.handleBlur('sous_categorie')}
 										error={formik.submitCount > 0 && Boolean(formik.errors.sous_categorie)}
@@ -524,10 +533,10 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 												addDisabled={!formik.values.category}
 												disabled={!formik.values.category}
 												onAddSuccess={(newId) => {
-													formik.setFieldValue('sous_categorie', newId);
+													void formik.setFieldValue('sous_categorie', newId);
 												}}
 												onDeleteSuccess={() => {
-													formik.setFieldValue('sous_categorie', '');
+													void formik.setFieldValue('sous_categorie', '');
 													onSuccess(t.expenses.subCategoryDeletedSuccess);
 												}}
 											/>
@@ -563,7 +572,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 										fullWidth
 										onChange={(_, newVal) => {
 											const selected = suppliersData?.find((supplier) => String(supplier.id) === newVal?.code);
-											formik.setFieldValue('supplier', selected ? selected.id : '');
+											void formik.setFieldValue('supplier', selected ? selected.id : '');
 										}}
 										onBlur={formik.handleBlur('supplier')}
 										error={formik.submitCount > 0 && Boolean(formik.errors.supplier)}
@@ -633,7 +642,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 								active={!isPending}
 								type="submit"
 								startIcon={isEditMode ? <EditIcon /> : <AddIcon />}
-								onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+								onClick={(e: MouseEvent<HTMLButtonElement>) => {
 									if (!formik.isValid) {
 										e.preventDefault();
 										formik.handleSubmit();
@@ -651,7 +660,7 @@ const FormikContent: React.FC<FormikContentProps> = ({ token, id }) => {
 	);
 };
 
-const ExpenseFormClient: React.FC<SessionProps & { id?: number }> = ({ session, id }) => {
+const ExpenseFormClient: FC<SessionProps & { id?: number }> = ({ session, id }) => {
 	const token = useInitAccessToken(session);
 	const { t } = useLanguage();
 	const title = id !== undefined ? t.expenses.editExpense : t.expenses.newExpense;

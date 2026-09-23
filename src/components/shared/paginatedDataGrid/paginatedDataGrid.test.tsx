@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import PaginatedDataGrid, { mapOperatorToParam, isDateRangeValue } from './paginatedDataGrid';
 import type { CustomFilterValue } from '@/components/shared/filterPanel/customFilterPanel';

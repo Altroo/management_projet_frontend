@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 import { renderToStaticMarkup } from 'react-dom/server';
-import React from 'react';
+import { type ReactElement } from 'react';
 
 type SessionUser = { pk: number; email: string };
 type Session = { user: SessionUser } | null;
@@ -22,8 +22,8 @@ jest.mock('@/components/pages/revenues/revenue-form', () => ({
 	__esModule: true,
 	default: (props: { session?: Session; id?: number }) => {
 		// eslint-disable-next-line @typescript-eslint/no-require-imports
-		const React = require('react');
-		return React.createElement(
+		const { createElement } = require('react');
+		return createElement(
 			'div',
 			null,
 			`REVENUE_FORM_CLIENT_MARKER:${JSON.stringify({ session: props?.session ?? null, id: props?.id ?? null })}`,
@@ -92,7 +92,7 @@ describe('RevenueEditPage server component', () => {
 		});
 
 		const result = await Page!({ params: Promise.resolve({ id: '18' }) });
-		const html = renderToStaticMarkup(result as unknown as React.ReactElement);
+		const html = renderToStaticMarkup(result as unknown as ReactElement);
 		const decoded = html.replace(/&quot;/g, '"');
 
 		expect(decoded).toContain('"pk":3');

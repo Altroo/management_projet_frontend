@@ -1,6 +1,7 @@
-"use client";
+'use client';
 
-import React, { useState } from 'react';
+import { runAsyncWithErrorHandler } from '@/utils/runWithCleanup';
+import { useState, type FC, type ReactNode } from 'react';
 import { Box, Button, Modal, Typography } from '@mui/material';
 import type { Theme } from '@mui/material/styles';
 import type { ApiErrorResponseType } from '@/types/_initTypes';
@@ -11,7 +12,7 @@ type AddEntityModalProps = {
 	open: boolean;
 	setOpen: (val: boolean) => void;
 	label: string;
-	icon: React.ReactNode;
+	icon: ReactNode;
 	inputTheme: Theme;
 	mutationFn: (args: {
 		data: Record<string, number | string>;
@@ -37,7 +38,7 @@ const getMutationErrorMessage = (error: unknown, fallback: string): string => {
 	return fallback;
 };
 
-const AddEntityModal: React.FC<AddEntityModalProps> = ({
+const AddEntityModal: FC<AddEntityModalProps> = ({
 	open,
 	setOpen,
 	label,
@@ -63,20 +64,23 @@ const AddEntityModal: React.FC<AddEntityModalProps> = ({
 			return;
 		}
 
-		try {
-			const request = mutationFn({ data: buildPayload ? buildPayload(newName.trim()) : { name: newName.trim() } });
-			const response = (typeof request.unwrap === 'function' ? await request.unwrap() : await request) as {
-				data?: { id?: number };
-				id?: number;
-			};
-			handleClose();
-			const newId = response?.data?.id ?? response?.id;
-			if (typeof newId === 'number') {
-				onSuccess?.(newId);
-			}
-		} catch (mutationError) {
-			setError(getMutationErrorMessage(mutationError, `${t.common.add} ${label}`));
-		}
+		await runAsyncWithErrorHandler(
+			async () => {
+				const request = mutationFn({ data: buildPayload ? buildPayload(newName.trim()) : { name: newName.trim() } });
+				const response = (typeof request.unwrap === 'function' ? await request.unwrap() : await request) as {
+					data?: { id?: number };
+					id?: number;
+				};
+				handleClose();
+				const newId = response?.data?.id ?? response?.id;
+				if (typeof newId === 'number') {
+					onSuccess?.(newId);
+				}
+			},
+			async (mutationError) => {
+				setError(getMutationErrorMessage(mutationError, `${t.common.add} ${label}`));
+			},
+		);
 	};
 
 	return (

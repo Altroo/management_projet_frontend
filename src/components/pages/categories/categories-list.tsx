@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useState, type FC } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { Add as AddIcon, Close as CloseIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
@@ -26,7 +27,7 @@ import {
 } from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
 
-const CategoriesListClient: React.FC<SessionProps> = ({ session }) => {
+const CategoriesListClient: FC<SessionProps> = ({ session }) => {
 	const router = useRouter();
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
@@ -50,15 +51,15 @@ const CategoriesListClient: React.FC<SessionProps> = ({ session }) => {
 	const [selectedIds, setSelectedIds] = useState<number[]>([]);
 	const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
-	const createdByOptions = useMemo(() => {
+	const createdByOptions = (() => {
 		const nameMap = new Map<string, string>();
 		(categories ?? []).forEach((c) => {
 			if (c.created_by_user_name) nameMap.set(c.created_by_user_name, c.created_by_user_name);
 		});
 		return Array.from(nameMap.values()).map((name) => ({ value: name, label: name }));
-	}, [categories]);
+	})();
 
-	const filteredCategories = useMemo(() => {
+	const filteredCategories = (() => {
 		let result = categories ?? [];
 
 		if (searchTerm.trim()) {
@@ -73,25 +74,30 @@ const CategoriesListClient: React.FC<SessionProps> = ({ session }) => {
 		}
 
 		return result;
-	}, [categories, searchTerm, customFilterParams]);
+	})();
 
-	const paginatedData = useMemo(() => {
+	const paginatedData = (() => {
 		const start = paginationModel.page * paginationModel.pageSize;
 		return {
 			count: filteredCategories.length,
 			results: filteredCategories.slice(start, start + paginationModel.pageSize),
 		};
-	}, [filteredCategories, paginationModel]);
+	})();
 
 	const deleteHandler = async () => {
-		try {
-			await deleteCategory({ id: selectedId! }).unwrap();
-			onSuccess(t.categories.categoryDeletedSuccess);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.categories.categoryDeleteError));
-		} finally {
-			setShowDeleteModal(false);
-		}
+		await runWithCleanup(
+			async () => {
+				try {
+					await deleteCategory({ id: selectedId! }).unwrap();
+					onSuccess(t.categories.categoryDeletedSuccess);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.categories.categoryDeleteError));
+				}
+			},
+			() => {
+				setShowDeleteModal(false);
+			},
+		);
 	};
 
 	const deleteModalActions = [
@@ -112,15 +118,20 @@ const CategoriesListClient: React.FC<SessionProps> = ({ session }) => {
 	];
 
 	const bulkDeleteHandler = async () => {
-		try {
-			await bulkDeleteCategories({ ids: selectedIds }).unwrap();
-			onSuccess(t.categories.bulkCategoriesDeletedSuccess(selectedIds.length));
-			setSelectedIds([]);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.categories.bulkCategoriesDeleteError));
-		} finally {
-			setShowBulkDeleteModal(false);
-		}
+		await runWithCleanup(
+			async () => {
+				try {
+					await bulkDeleteCategories({ ids: selectedIds }).unwrap();
+					onSuccess(t.categories.bulkCategoriesDeletedSuccess(selectedIds.length));
+					setSelectedIds([]);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.categories.bulkCategoriesDeleteError));
+				}
+			},
+			() => {
+				setShowBulkDeleteModal(false);
+			},
+		);
 	};
 
 	const bulkDeleteModalActions = [

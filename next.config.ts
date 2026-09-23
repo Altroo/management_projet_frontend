@@ -79,13 +79,6 @@ const nextConfig: NextConfig = {
 			headers: { key: string; value: string }[];
 		}[] = [];
 
-		if (isProd) {
-			headers.push({
-				source: '/_next/static/:path*',
-				headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
-			});
-		}
-
 		headers.push(
 			{
 				// Manifest file

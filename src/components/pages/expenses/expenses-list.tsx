@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useState, type FC } from 'react';
 import { useRouter } from 'next/navigation';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import {
@@ -22,7 +23,6 @@ import ActionModals from '@/components/htmlElements/modals/actionModal/actionMod
 import { Protected } from '@/components/layouts/protected/protected';
 import MobileActionsMenu from '@/components/shared/mobileActionsMenu/mobileActionsMenu';
 import DarkTooltip from '@/components/htmlElements/tooltip/darkTooltip/darkTooltip';
-import type { ChipFilterConfig } from '@/components/shared/chipSelectFilter/chipSelectFilterBar';
 import ChipSelectFilterBar from '@/components/shared/chipSelectFilter/chipSelectFilterBar';
 import { createDateRangeFilterOperator } from '@/components/shared/dateRangeFilter/dateRangeFilterOperator';
 import { createNumericFilterOperators } from '@/components/shared/numericFilter/numericFilterOperator';
@@ -41,7 +41,7 @@ import {
 } from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
 
-const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
+const ExpensesListClient: FC<SessionProps> = ({ session }) => {
 	const router = useRouter();
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
@@ -61,51 +61,41 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 	const { data: categoriesData } = useGetCategoriesQuery(undefined, { skip: !token });
 	const { data: suppliersData } = useGetSuppliersQuery({}, { skip: !token });
 
-	const projects = useMemo(
-		() =>
-			Array.isArray(projectsData)
-				? projectsData
-				: projectsData && 'results' in projectsData
-					? projectsData.results
-					: [],
-		[projectsData],
-	);
+	const projects = Array.isArray(projectsData)
+		? projectsData
+		: projectsData && 'results' in projectsData
+			? projectsData.results
+			: [];
 
-	const categories = useMemo(() => categoriesData ?? [], [categoriesData]);
+	const categories = categoriesData ?? [];
 
-	const projectChipOptions = useMemo(() => projects.map((p) => ({ id: p.id, nom: p.nom })), [projects]);
+	const projectChipOptions = projects.map((p) => ({ id: p.id, nom: p.nom }));
 
-	const categoryChipOptions = useMemo(() => categories.map((c) => ({ id: c.id, nom: c.name })), [categories]);
-	const supplierChipOptions = useMemo(
-		() => (suppliersData ?? []).map((supplier) => ({ id: supplier.id, nom: supplier.nom })),
-		[suppliersData],
-	);
+	const categoryChipOptions = categories.map((c) => ({ id: c.id, nom: c.name }));
+	const supplierChipOptions = (suppliersData ?? []).map((supplier) => ({ id: supplier.id, nom: supplier.nom }));
 
-	const chipFilters = useMemo<ChipFilterConfig[]>(
-		() => [
-			{
-				key: 'project',
-				label: t.common.project,
-				paramName: 'project',
-				options: projectChipOptions,
-			},
-			{
-				key: 'category',
-				label: t.common.category,
-				paramName: 'category',
-				options: categoryChipOptions,
-			},
-			{
-				key: 'supplier',
-				label: t.rawData.fieldLabels.expense.supplier,
-				paramName: 'supplier',
-				options: supplierChipOptions,
-			},
-		],
-		[t, projectChipOptions, categoryChipOptions, supplierChipOptions],
-	);
+	const chipFilters = [
+		{
+			key: 'project',
+			label: t.common.project,
+			paramName: 'project',
+			options: projectChipOptions,
+		},
+		{
+			key: 'category',
+			label: t.common.category,
+			paramName: 'category',
+			options: categoryChipOptions,
+		},
+		{
+			key: 'supplier',
+			label: t.rawData.fieldLabels.expense.supplier,
+			paramName: 'supplier',
+			options: supplierChipOptions,
+		},
+	];
 
-	const filteredExpenses = useMemo(() => {
+	const filteredExpenses = (() => {
 		let data = expenses ?? [];
 		if (chipFilterParams.project) {
 			const ids = chipFilterParams.project.split(',');
@@ -169,20 +159,17 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 		}
 
 		return data;
-	}, [expenses, chipFilterParams, searchTerm, customFilterParams]);
+	})();
 
-	const paginatedData = useMemo(() => {
+	const paginatedData = (() => {
 		const start = paginationModel.page * paginationModel.pageSize;
 		return {
 			count: filteredExpenses.length,
 			results: filteredExpenses.slice(start, start + paginationModel.pageSize),
 		};
-	}, [filteredExpenses, paginationModel]);
+	})();
 
-	const totalAmount = useMemo(
-		() => filteredExpenses.reduce((sum, e) => sum + Number(e.montant), 0),
-		[filteredExpenses],
-	);
+	const totalAmount = filteredExpenses.reduce((sum, e) => sum + Number(e.montant), 0);
 
 	const [deleteExpense] = useDeleteExpenseMutation();
 	const [bulkDeleteExpenses] = useBulkDeleteExpensesMutation();
@@ -193,36 +180,46 @@ const ExpensesListClient: React.FC<SessionProps> = ({ session }) => {
 
 	const deleteHandler = async () => {
 		if (selectedId === null) return;
-		try {
-			await deleteExpense({ id: selectedId }).unwrap();
-			onSuccess(t.expenses.expenseDeletedSuccess);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.expenses.expenseDeleteError));
-		} finally {
-			setShowDeleteModal(false);
-			setSelectedId(null);
-		}
+		await runWithCleanup(
+			async () => {
+				try {
+					await deleteExpense({ id: selectedId }).unwrap();
+					onSuccess(t.expenses.expenseDeletedSuccess);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.expenses.expenseDeleteError));
+				}
+			},
+			() => {
+				setShowDeleteModal(false);
+				setSelectedId(null);
+			},
+		);
 	};
 
 	const bulkDeleteHandler = async () => {
-		try {
-			await bulkDeleteExpenses({ ids: selectedIds }).unwrap();
-			onSuccess(t.expenses.expensesBulkDeletedSuccess(selectedIds.length));
-			setSelectedIds([]);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.expenses.expenseBulkDeleteError));
-		} finally {
-			setShowBulkDeleteModal(false);
-		}
+		await runWithCleanup(
+			async () => {
+				try {
+					await bulkDeleteExpenses({ ids: selectedIds }).unwrap();
+					onSuccess(t.expenses.expensesBulkDeletedSuccess(selectedIds.length));
+					setSelectedIds([]);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.expenses.expenseBulkDeleteError));
+				}
+			},
+			() => {
+				setShowBulkDeleteModal(false);
+			},
+		);
 	};
 
-	const createdByOptions = useMemo(() => {
+	const createdByOptions = (() => {
 		const nameMap = new Map<string, string>();
 		(expenses ?? []).forEach((e) => {
 			if (e.created_by_user_name) nameMap.set(e.created_by_user_name, e.created_by_user_name);
 		});
 		return Array.from(nameMap.values()).map((name) => ({ value: name, label: name }));
-	}, [expenses]);
+	})();
 
 	const deleteModalActions = [
 		{

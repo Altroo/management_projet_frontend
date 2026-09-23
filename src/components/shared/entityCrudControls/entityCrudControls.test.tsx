@@ -1,4 +1,4 @@
-import React from 'react';
+import { type ChangeEvent } from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { createTheme } from '@mui/material/styles';
@@ -29,7 +29,15 @@ jest.mock('@/utils/hooks', () => ({
 
 jest.mock('@/components/shared/addEntityModal/addEntityModal', () => ({
 	__esModule: true,
-	default: ({ open, onSuccess, setOpen }: { open: boolean; onSuccess?: (id: number) => void; setOpen: (v: boolean) => void }) =>
+	default: ({
+		open,
+		onSuccess,
+		setOpen,
+	}: {
+		open: boolean;
+		onSuccess?: (id: number) => void;
+		setOpen: (v: boolean) => void;
+	}) =>
 		open ? (
 			<div data-testid="add-entity-modal">
 				<button
@@ -46,7 +54,17 @@ jest.mock('@/components/shared/addEntityModal/addEntityModal', () => ({
 
 jest.mock('@/components/formikElements/customTextInput/customTextInput', () => ({
 	__esModule: true,
-	default: ({ id, value, onChange, label }: { id: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; label: string }) => (
+	default: ({
+		id,
+		value,
+		onChange,
+		label,
+	}: {
+		id: string;
+		value: string;
+		onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+		label: string;
+	}) => (
 		<label>
 			{label}
 			<input data-testid={id} value={value} onChange={onChange} />
@@ -56,7 +74,15 @@ jest.mock('@/components/formikElements/customTextInput/customTextInput', () => (
 
 jest.mock('@/components/htmlElements/modals/actionModal/actionModals', () => ({
 	__esModule: true,
-	default: ({ title, body, actions }: { title: string; body: string; actions: Array<{ text: string; onClick: () => void }> }) => (
+	default: ({
+		title,
+		body,
+		actions,
+	}: {
+		title: string;
+		body: string;
+		actions: Array<{ text: string; onClick: () => void }>;
+	}) => (
 		<div data-testid="action-modal">
 			<div>{title}</div>
 			<div>{body}</div>
@@ -75,7 +101,9 @@ describe('EntityCrudControls', () => {
 
 	it('uses id in code and label in value for edit and delete flows', async () => {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const editEntity = jest.fn((_args: { id: number; data: Record<string, number | string> }) => createMutationResult({}));
+		const editEntity = jest.fn((_args: { id: number; data: Record<string, number | string> }) =>
+			createMutationResult({}),
+		);
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const deleteEntity = jest.fn((_args: { id: number }) => createMutationResult({}));
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars

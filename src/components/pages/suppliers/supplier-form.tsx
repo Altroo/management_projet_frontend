@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useState, type FC } from 'react';
 import { useRouter } from 'next/navigation';
 import { Alert, Box, Button, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import {
@@ -32,7 +33,7 @@ import Styles from '@/styles/dashboard/dashboard.module.sass';
 
 const inputTheme = textInputTheme();
 
-const SupplierFormContent: React.FC<{ token: string | undefined; id?: number }> = ({ token, id }) => {
+const SupplierFormContent: FC<{ token: string | undefined; id?: number }> = ({ token, id }) => {
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
 	const router = useRouter();
@@ -56,21 +57,26 @@ const SupplierFormContent: React.FC<{ token: string | undefined; id?: number }> 
 			setIsPending(true);
 			const { globalError, ...fields } = data;
 			void globalError;
-			try {
-				if (isEditMode) {
-					await updateSupplier({ id: id!, data: fields }).unwrap();
-					onSuccess(t.suppliers.supplierUpdatedSuccess);
-				} else {
-					await createSupplier({ data: fields }).unwrap();
-					onSuccess(t.suppliers.supplierAddedSuccess);
-				}
-				router.push(SUPPLIERS_LIST);
-			} catch (e) {
-				setFormikAutoErrors({ e, setFieldError });
-				onError(isEditMode ? t.suppliers.supplierUpdateError : t.suppliers.supplierAddError);
-			} finally {
-				setIsPending(false);
-			}
+			await runWithCleanup(
+				async () => {
+					try {
+						if (isEditMode) {
+							await updateSupplier({ id: id!, data: fields }).unwrap();
+							onSuccess(t.suppliers.supplierUpdatedSuccess);
+						} else {
+							await createSupplier({ data: fields }).unwrap();
+							onSuccess(t.suppliers.supplierAddedSuccess);
+						}
+						router.push(SUPPLIERS_LIST);
+					} catch (e) {
+						setFormikAutoErrors({ e, setFieldError });
+						onError(isEditMode ? t.suppliers.supplierUpdateError : t.suppliers.supplierAddError);
+					}
+				},
+				() => {
+					setIsPending(false);
+				},
+			);
 		},
 	});
 
@@ -179,7 +185,7 @@ const SupplierFormContent: React.FC<{ token: string | undefined; id?: number }> 
 	);
 };
 
-const SupplierFormClient: React.FC<SessionProps & { id?: number }> = ({ session, id }) => {
+const SupplierFormClient: FC<SessionProps & { id?: number }> = ({ session, id }) => {
 	const token = useInitAccessToken(session);
 	const { t } = useLanguage();
 	const title = id !== undefined ? t.suppliers.editSupplier : t.suppliers.newSupplier;

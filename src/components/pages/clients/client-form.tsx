@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useState, type FC } from 'react';
 import { useRouter } from 'next/navigation';
 import { Alert, Box, Button, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import {
@@ -34,7 +35,7 @@ import Styles from '@/styles/dashboard/dashboard.module.sass';
 
 const inputTheme = textInputTheme();
 
-const ClientFormContent: React.FC<{ token: string | undefined; id?: number }> = ({ token, id }) => {
+const ClientFormContent: FC<{ token: string | undefined; id?: number }> = ({ token, id }) => {
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
 	const router = useRouter();
@@ -60,31 +61,44 @@ const ClientFormContent: React.FC<{ token: string | undefined; id?: number }> = 
 			setIsPending(true);
 			const { globalError, ...fields } = data;
 			void globalError;
-			try {
-				if (isEditMode) {
-					await updateClient({ id: id!, data: fields }).unwrap();
-					onSuccess(t.clients.clientUpdatedSuccess);
-				} else {
-					await createClient({ data: fields }).unwrap();
-					onSuccess(t.clients.clientAddedSuccess);
-				}
-				router.push(CLIENTS_LIST);
-			} catch (e) {
-				setFormikAutoErrors({ e, setFieldError });
-				onError(isEditMode ? t.clients.clientUpdateError : t.clients.clientAddError);
-			} finally {
-				setIsPending(false);
-			}
+			await runWithCleanup(
+				async () => {
+					try {
+						if (isEditMode) {
+							await updateClient({ id: id!, data: fields }).unwrap();
+							onSuccess(t.clients.clientUpdatedSuccess);
+						} else {
+							await createClient({ data: fields }).unwrap();
+							onSuccess(t.clients.clientAddedSuccess);
+						}
+						router.push(CLIENTS_LIST);
+					} catch (e) {
+						setFormikAutoErrors({ e, setFieldError });
+						onError(isEditMode ? t.clients.clientUpdateError : t.clients.clientAddError);
+					}
+				},
+				() => {
+					setIsPending(false);
+				},
+			);
 		},
 	});
 
-	const validationEntries = Object.entries(formik.errors).filter(([key]) => key !== 'globalError') as [string, string][];
+	const validationEntries = Object.entries(formik.errors).filter(([key]) => key !== 'globalError') as [
+		string,
+		string,
+	][];
 	const showValidationAlert = validationEntries.length > 0 && formik.submitCount > 0;
 	const isLoading = isCreateLoading || isUpdateLoading || isPending;
 
 	return (
 		<Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
-			<Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => router.back()} sx={{ alignSelf: 'flex-start' }}>
+			<Button
+				variant="outlined"
+				startIcon={<ArrowBackIcon />}
+				onClick={() => router.back()}
+				sx={{ alignSelf: 'flex-start' }}
+			>
 				{t.clients.clientsList}
 			</Button>
 			{showValidationAlert && (
@@ -202,7 +216,7 @@ const ClientFormContent: React.FC<{ token: string | undefined; id?: number }> = 
 	);
 };
 
-const ClientFormClient: React.FC<SessionProps & { id?: number }> = ({ session, id }) => {
+const ClientFormClient: FC<SessionProps & { id?: number }> = ({ session, id }) => {
 	const token = useInitAccessToken(session);
 	const { t } = useLanguage();
 	const title = id !== undefined ? t.clients.editClient : t.clients.newClient;

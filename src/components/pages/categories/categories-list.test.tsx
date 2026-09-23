@@ -1,4 +1,4 @@
-import React from 'react';
+import { type ReactNode } from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
@@ -51,13 +51,13 @@ jest.mock('@/components/htmlElements/modals/actionModal/actionModals', () => {
 });
 
 jest.mock('@/components/layouts/navigationBar/navigationBar', () => {
-	const Mock = ({ children }: { children: React.ReactNode }) => <div data-testid="navigation-bar">{children}</div>;
+	const Mock = ({ children }: { children: ReactNode }) => <div data-testid="navigation-bar">{children}</div>;
 	Mock.displayName = 'NavigationBar';
 	return { __esModule: true, default: Mock };
 });
 
 jest.mock('@/components/layouts/protected/protected', () => ({
-	Protected: ({ children }: { children: React.ReactNode }) => <div data-testid="protected">{children}</div>,
+	Protected: ({ children }: { children: ReactNode }) => <div data-testid="protected">{children}</div>,
 }));
 
 jest.mock('@/components/shared/mobileActionsMenu/mobileActionsMenu', () => {
@@ -67,7 +67,7 @@ jest.mock('@/components/shared/mobileActionsMenu/mobileActionsMenu', () => {
 });
 
 jest.mock('@/components/htmlElements/tooltip/darkTooltip/darkTooltip', () => {
-	const Mock = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+	const Mock = ({ children }: { children: ReactNode }) => <>{children}</>;
 	Mock.displayName = 'DarkTooltip';
 	return { __esModule: true, default: Mock };
 });

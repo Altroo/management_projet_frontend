@@ -1,4 +1,4 @@
-import React from 'react';
+import { type ChangeEvent } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { createTheme } from '@mui/material/styles';
@@ -35,7 +35,17 @@ jest.mock('@/utils/hooks', () => ({
 
 jest.mock('@/components/formikElements/customTextInput/customTextInput', () => ({
 	__esModule: true,
-	default: ({ id, value, onChange, helperText }: { id: string; value: string; onChange: (event: React.ChangeEvent<HTMLInputElement>) => void; helperText?: string }) => (
+	default: ({
+		id,
+		value,
+		onChange,
+		helperText,
+	}: {
+		id: string;
+		value: string;
+		onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+		helperText?: string;
+	}) => (
 		<div>
 			<input data-testid={id} value={value} onChange={onChange} />
 			<span data-testid={`${id}-helper`}>{helperText ?? ''}</span>

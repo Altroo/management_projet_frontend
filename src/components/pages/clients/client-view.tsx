@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import { runWithCleanup } from '@/utils/runWithCleanup';
+import { useState, type FC } from 'react';
 import { useRouter } from 'next/navigation';
 import {
 	Alert,
@@ -45,12 +46,12 @@ import { useLanguage, useToast } from '@/utils/hooks';
 
 const money = (value: string | number) => `${Number(value || 0).toLocaleString('fr-MA')} MAD`;
 
-const ClientViewClient: React.FC<SessionProps & { id: number }> = ({ session, id }) => {
+const ClientViewClient: FC<SessionProps & { id: number }> = ({ session, id }) => {
 	const { t } = useLanguage();
 	const router = useRouter();
 	const token = useInitAccessToken(session);
 	const { data: client, isLoading, error } = useGetClientQuery({ id }, { skip: !token });
-	const axiosError = useMemo(() => (error ? (error as ResponseDataInterface<ApiErrorResponseType>) : undefined), [error]);
+	const axiosError = error ? (error as ResponseDataInterface<ApiErrorResponseType>) : undefined;
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 	const [deleteClient] = useDeleteClientMutation();
@@ -58,19 +59,30 @@ const ClientViewClient: React.FC<SessionProps & { id: number }> = ({ session, id
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
 
 	const handleDelete = async () => {
-		try {
-			await deleteClient({ id }).unwrap();
-			onSuccess(t.clients.clientDeletedSuccess);
-			router.push(CLIENTS_LIST);
-		} catch (err) {
-			onError(extractApiErrorMessage(err, t.clients.clientDeleteError));
-		} finally {
-			setShowDeleteModal(false);
-		}
+		await runWithCleanup(
+			async () => {
+				try {
+					await deleteClient({ id }).unwrap();
+					onSuccess(t.clients.clientDeletedSuccess);
+					router.push(CLIENTS_LIST);
+				} catch (err) {
+					onError(extractApiErrorMessage(err, t.clients.clientDeleteError));
+				}
+			},
+			() => {
+				setShowDeleteModal(false);
+			},
+		);
 	};
 
 	const deleteModalActions = [
-		{ text: t.common.cancel, active: false, onClick: () => setShowDeleteModal(false), icon: <ArrowBackIcon />, color: '#6B6B6B' },
+		{
+			text: t.common.cancel,
+			active: false,
+			onClick: () => setShowDeleteModal(false),
+			icon: <ArrowBackIcon />,
+			color: '#6B6B6B',
+		},
 		{ text: t.common.delete, active: true, onClick: handleDelete, icon: <DeleteIcon />, color: '#D32F2F' },
 	];
 
@@ -86,12 +98,23 @@ const ClientViewClient: React.FC<SessionProps & { id: number }> = ({ session, id
 							{client && (
 								<Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
 									<Protected permission="can_edit">
-										<Button variant="outlined" size="small" startIcon={<EditIcon />} onClick={() => router.push(CLIENTS_EDIT(id))}>
+										<Button
+											variant="outlined"
+											size="small"
+											startIcon={<EditIcon />}
+											onClick={() => router.push(CLIENTS_EDIT(id))}
+										>
 											{t.common.edit}
 										</Button>
 									</Protected>
 									<Protected permission="can_delete">
-										<Button variant="outlined" color="error" size="small" startIcon={<DeleteIcon />} onClick={() => setShowDeleteModal(true)}>
+										<Button
+											variant="outlined"
+											color="error"
+											size="small"
+											startIcon={<DeleteIcon />}
+											onClick={() => setShowDeleteModal(true)}
+										>
 											{t.common.delete}
 										</Button>
 									</Protected>
@@ -116,11 +139,21 @@ const ClientViewClient: React.FC<SessionProps & { id: number }> = ({ session, id
 										</Stack>
 										<Divider sx={{ mb: 2 }} />
 										<Stack spacing={1.5}>
-											<Typography><PhoneIcon fontSize="small" /> {client.telephone || '-'}</Typography>
-											<Typography><EmailIcon fontSize="small" /> {client.email || '-'}</Typography>
-											<Typography><LocationCityIcon fontSize="small" /> {client.ville || '-'}</Typography>
-											<Typography><HomeIcon fontSize="small" /> {client.adresse || '-'}</Typography>
-											<Typography sx={{ fontWeight: 700 }}><AttachMoneyIcon fontSize="small" /> {t.clients.totalReceived}: {money(client.total_encaisse)}</Typography>
+											<Typography>
+												<PhoneIcon fontSize="small" /> {client.telephone || '-'}
+											</Typography>
+											<Typography>
+												<EmailIcon fontSize="small" /> {client.email || '-'}
+											</Typography>
+											<Typography>
+												<LocationCityIcon fontSize="small" /> {client.ville || '-'}
+											</Typography>
+											<Typography>
+												<HomeIcon fontSize="small" /> {client.adresse || '-'}
+											</Typography>
+											<Typography sx={{ fontWeight: 700 }}>
+												<AttachMoneyIcon fontSize="small" /> {t.clients.totalReceived}: {money(client.total_encaisse)}
+											</Typography>
 										</Stack>
 									</CardContent>
 								</Card>
@@ -148,7 +181,12 @@ const ClientViewClient: React.FC<SessionProps & { id: number }> = ({ session, id
 														</TableRow>
 													) : (
 														client.projects.map((project) => (
-															<TableRow key={project.id} hover sx={{ cursor: 'pointer' }} onClick={() => router.push(PROJECTS_VIEW(project.id))}>
+															<TableRow
+																key={project.id}
+																hover
+																sx={{ cursor: 'pointer' }}
+																onClick={() => router.push(PROJECTS_VIEW(project.id))}
+															>
 																<TableCell>{project.nom}</TableCell>
 																<TableCell>{project.status}</TableCell>
 																<TableCell>{formatDate(project.date_debut)}</TableCell>
@@ -169,7 +207,13 @@ const ClientViewClient: React.FC<SessionProps & { id: number }> = ({ session, id
 				</Protected>
 			</NavigationBar>
 			{showDeleteModal && (
-				<ActionModals title={t.clients.deleteClient} body={t.clients.deleteClientConfirm} actions={deleteModalActions} titleIcon={<DeleteIcon />} titleIconColor="#D32F2F" />
+				<ActionModals
+					title={t.clients.deleteClient}
+					body={t.clients.deleteClientConfirm}
+					actions={deleteModalActions}
+					titleIcon={<DeleteIcon />}
+					titleIconColor="#D32F2F"
+				/>
 			)}
 		</Stack>
 	);
