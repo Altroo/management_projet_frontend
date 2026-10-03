@@ -53,6 +53,7 @@ import {
 	useGetProjectDashboardQuery,
 } from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
+import ProjectEstimateBudget from '@/components/shared/projectEstimateBudget/projectEstimateBudget';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import { Protected } from '@/components/layouts/protected/protected';
 import CustomAutoCompleteSelect from '@/components/formikElements/customAutoCompleteSelect/customAutoCompleteSelect';
@@ -175,7 +176,7 @@ const KpiCard: FC<KpiCardProps> = ({ icon, label, value, sub, color, tooltip }) 
 interface ChartCardProps {
 	title: string;
 	subheader?: string;
-	infoTooltip?: string;
+	infoTooltip: string;
 	children: ReactNode;
 	height?: number;
 }
@@ -201,13 +202,11 @@ const ChartCard: FC<ChartCardProps> = ({ title, subheader, infoTooltip, children
 				)
 			}
 			action={
-				infoTooltip ? (
-					<MuiTooltip title={infoTooltip} arrow placement="top">
-						<IconButton size="small" sx={{ color: 'text.secondary' }}>
-							<InfoIcon fontSize="small" />
-						</IconButton>
-					</MuiTooltip>
-				) : undefined
+				<MuiTooltip title={infoTooltip} arrow placement="top">
+					<IconButton size="small" sx={{ color: 'text.secondary' }} aria-label={infoTooltip}>
+						<InfoIcon fontSize="small" />
+					</IconButton>
+				</MuiTooltip>
 			}
 			sx={{ pb: 0 }}
 		/>
@@ -721,9 +720,20 @@ const ProjectDashboardClient: FC<ProjectDashboardClientProps> = ({ session, clie
 												<Typography variant="subtitle2" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
 													{t.analytics.budgetUtilisation}
 												</Typography>
-												<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'success.main' }}>
-													{budgetUtilisation === null ? '—' : `${budgetUtilisation.toFixed(1)}%`}
-												</Typography>
+												<Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+													<Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'success.main' }}>
+														{budgetUtilisation === null ? '—' : `${budgetUtilisation.toFixed(1)}%`}
+													</Typography>
+													<MuiTooltip title={t.analytics.tooltipBudgetUtilisation} arrow placement="top">
+														<IconButton
+															size="small"
+															sx={{ color: 'text.secondary' }}
+															aria-label={t.analytics.tooltipBudgetUtilisation}
+														>
+															<InfoIcon fontSize="small" />
+														</IconButton>
+													</MuiTooltip>
+												</Stack>
 											</Stack>
 											{budgetUtilisation === null ? (
 												<Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -747,11 +757,19 @@ const ProjectDashboardClient: FC<ProjectDashboardClientProps> = ({ session, clie
 									</CardContent>
 								</Card>
 
+								{showInternalFinancials && selectedProjectId !== null && internalProjectOverview?.estimate_summary && (
+									<ProjectEstimateBudget
+										projectId={selectedProjectId}
+										summary={internalProjectOverview.estimate_summary}
+									/>
+								)}
+
 								{projectOverview ? (
 									<Stack spacing={2}>
 										{showInternalFinancials && (
 											<ChartCard
 												title={t.analytics.realBudgetByStage}
+												infoTooltip={t.analytics.tooltipRealBudgetByStage}
 												subheader={t.analytics.realBudgetByStageSub}
 												height={330}
 											>
@@ -764,6 +782,7 @@ const ProjectDashboardClient: FC<ProjectDashboardClientProps> = ({ session, clie
 										)}
 										<ChartCard
 											title={t.analytics.cumulativeIncomeExpenses}
+											infoTooltip={t.analytics.tooltipCumulativeIncomeExpenses}
 											subheader={projectOverview.nom}
 											height={340}
 										>
@@ -782,6 +801,7 @@ const ProjectDashboardClient: FC<ProjectDashboardClientProps> = ({ session, clie
 										>
 											<ChartCard
 												title={t.analytics.projectBudgetUtilization}
+												infoTooltip={t.analytics.tooltipProjectBudgetUtilization}
 												subheader={projectOverview.nom}
 												height={300}
 											>
@@ -831,7 +851,12 @@ const ProjectDashboardClient: FC<ProjectDashboardClientProps> = ({ session, clie
 												)}
 											</ChartCard>
 											{showInternalFinancials && (
-												<ChartCard title={t.analytics.profitGauge} subheader={t.analytics.profitMargin} height={300}>
+												<ChartCard
+													title={t.analytics.profitGauge}
+													infoTooltip={t.analytics.tooltipProfitGauge}
+													subheader={t.analytics.profitMargin}
+													height={300}
+												>
 													<Box sx={{ height: '100%', position: 'relative' }}>
 														<Doughnut
 															data={projectProfitData}
@@ -865,21 +890,33 @@ const ProjectDashboardClient: FC<ProjectDashboardClientProps> = ({ session, clie
 												gap: 2,
 											}}
 										>
-											<ChartCard title={t.analytics.costByCategory} height={300}>
+											<ChartCard
+												title={t.analytics.costByCategory}
+												infoTooltip={t.analytics.tooltipCostByCategory}
+												height={300}
+											>
 												{activeTopCategories.length > 0 ? (
 													<Bar data={projectTopCategoriesData} options={horizontalBarOptions} />
 												) : (
 													<EmptyChart />
 												)}
 											</ChartCard>
-											<ChartCard title={t.analytics.costBySubcategory} height={300}>
+											<ChartCard
+												title={t.analytics.costBySubcategory}
+												infoTooltip={t.analytics.tooltipCostBySubcategory}
+												height={300}
+											>
 												{activeTopSubcategories.length > 0 ? (
 													<Bar data={projectTopSubcategoriesData} options={horizontalBarOptions} />
 												) : (
 													<EmptyChart />
 												)}
 											</ChartCard>
-											<ChartCard title={t.analytics.costByVendor} height={300}>
+											<ChartCard
+												title={t.analytics.costByVendor}
+												infoTooltip={t.analytics.tooltipCostByVendor}
+												height={300}
+											>
 												{activeTopVendors.length > 0 ? (
 													<Bar data={projectTopVendorsData} options={horizontalBarOptions} />
 												) : (
@@ -893,6 +930,7 @@ const ProjectDashboardClient: FC<ProjectDashboardClientProps> = ({ session, clie
 										{showInternalFinancials && (
 											<ChartCard
 												title={t.analytics.realBudgetByStage}
+												infoTooltip={t.analytics.tooltipRealBudgetByStage}
 												subheader={t.analytics.realBudgetByStageSub}
 												height={330}
 											>
@@ -910,21 +948,33 @@ const ProjectDashboardClient: FC<ProjectDashboardClientProps> = ({ session, clie
 												gap: 2,
 											}}
 										>
-											<ChartCard title={t.analytics.categoryBreakdown} height={300}>
+											<ChartCard
+												title={t.analytics.categoryBreakdown}
+												infoTooltip={t.analytics.tooltipCategoryBreakdown}
+												height={300}
+											>
 												{activeTopCategories.length > 0 ? (
 													<Doughnut data={categoryBreakdownData} options={doughnutOptions} />
 												) : (
 													<EmptyChart />
 												)}
 											</ChartCard>
-											<ChartCard title={t.analytics.subcategoryBreakdown} height={300}>
+											<ChartCard
+												title={t.analytics.subcategoryBreakdown}
+												infoTooltip={t.analytics.tooltipSubcategoryBreakdown}
+												height={300}
+											>
 												{activeTopSubcategories.length > 0 ? (
 													<Doughnut data={subcategoryBreakdownData} options={doughnutOptions} />
 												) : (
 													<EmptyChart />
 												)}
 											</ChartCard>
-											<ChartCard title={t.analytics.vendorBreakdown} height={300}>
+											<ChartCard
+												title={t.analytics.vendorBreakdown}
+												infoTooltip={t.analytics.tooltipVendorBreakdown}
+												height={300}
+											>
 												{activeTopVendors.length > 0 ? (
 													<Doughnut data={vendorBreakdownData} options={doughnutOptions} />
 												) : (
@@ -942,6 +992,7 @@ const ProjectDashboardClient: FC<ProjectDashboardClientProps> = ({ session, clie
 										>
 											<ChartCard
 												title={t.analytics.expenseIncome}
+												infoTooltip={t.analytics.tooltipCumulativeIncomeExpenses}
 												subheader={t.analytics.expenseIncomeSub}
 												height={340}
 											>
@@ -953,6 +1004,7 @@ const ProjectDashboardClient: FC<ProjectDashboardClientProps> = ({ session, clie
 											</ChartCard>
 											<ChartCard
 												title={t.analytics.projectRanking}
+												infoTooltip={t.analytics.tooltipProjectRanking}
 												subheader={t.analytics.projectRankingSub}
 												height={340}
 											>
@@ -977,6 +1029,7 @@ const ProjectDashboardClient: FC<ProjectDashboardClientProps> = ({ session, clie
 									>
 										<ChartCard
 											title={t.analytics.topExpenseClients}
+											infoTooltip={t.analytics.tooltipTopExpenseClients}
 											subheader={t.analytics.topExpenseClientsSub}
 											height={280}
 										>
@@ -988,6 +1041,7 @@ const ProjectDashboardClient: FC<ProjectDashboardClientProps> = ({ session, clie
 										</ChartCard>
 										<ChartCard
 											title={t.analytics.topRevenueClients}
+											infoTooltip={t.analytics.tooltipTopRevenueClients}
 											subheader={t.analytics.topRevenueClientsSub}
 											height={280}
 										>

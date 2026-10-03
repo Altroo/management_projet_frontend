@@ -79,6 +79,7 @@ const InfoRow: FC<InfoRowProps> = ({ icon, label, value }) => {
 				sx={{
 					alignItems: 'center',
 					flex: 1,
+					minWidth: 0,
 					flexWrap: 'wrap',
 				}}
 			>
@@ -93,7 +94,7 @@ const InfoRow: FC<InfoRowProps> = ({ icon, label, value }) => {
 					{label}
 				</Typography>
 
-				<Box sx={{ flex: 1 }}>
+				<Box sx={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>
 					{isValidElement(displayValue) ? (
 						displayValue
 					) : (
@@ -109,10 +110,17 @@ interface Props extends SessionProps {
 	id: number;
 }
 
-const ExpenseViewClient: FC<Props> = ({ session, id }) => {
+type ExpenseViewContentProps = {
+	token: string | undefined;
+	id: number;
+	embedded?: boolean;
+	onEdit?: () => void;
+	onDeleted?: () => void;
+};
+
+export const ExpenseViewContent: FC<ExpenseViewContentProps> = ({ token, id, embedded = false, onEdit, onDeleted }) => {
 	const { t } = useLanguage();
 	const router = useRouter();
-	const token = useInitAccessToken(session);
 	const { data: expense, isLoading, error } = useGetExpenseQuery({ id }, { skip: !token });
 	const axiosError = error ? (error as ResponseDataInterface<ApiErrorResponseType>) : undefined;
 	const theme = useTheme();
@@ -130,7 +138,8 @@ const ExpenseViewClient: FC<Props> = ({ session, id }) => {
 				try {
 					await deleteExpense({ id }).unwrap();
 					onSuccess(t.expenses.expenseDeletedSuccess);
-					router.push(EXPENSES_LIST);
+					if (onDeleted) onDeleted();
+					else router.push(EXPENSES_LIST);
 				} catch (err) {
 					onError(extractApiErrorMessage(err, t.expenses.expenseDeleteError));
 				}
@@ -159,25 +168,18 @@ const ExpenseViewClient: FC<Props> = ({ session, id }) => {
 	];
 
 	return (
-		<Stack
-			direction="column"
-			spacing={2}
-			className={Styles.flexRootStack}
-			sx={{
-				mt: '32px',
-			}}
-		>
-			<NavigationBar title={t.expenses.expenseDetails}>
-				<Protected permission="can_view">
-					<Stack spacing={3} sx={{ p: { xs: 2, md: 3 }, mt: 2 }}>
-						<Stack
-							direction={isMobile ? 'column' : 'row'}
-							spacing={2}
-							sx={{
-								justifyContent: 'space-between',
-								alignItems: isMobile ? 'stretch' : 'center',
-							}}
-						>
+		<>
+			<Protected permission="can_view">
+				<Stack spacing={3} sx={{ p: { xs: 2, md: 3 }, mt: embedded ? 0 : 2 }}>
+					<Stack
+						direction={isMobile ? 'column' : 'row'}
+						spacing={2}
+						sx={{
+							justifyContent: embedded ? 'flex-end' : 'space-between',
+							alignItems: isMobile ? 'stretch' : 'center',
+						}}
+					>
+						{!embedded && (
 							<Button
 								variant="outlined"
 								startIcon={<ArrowBackIcon />}
@@ -186,214 +188,214 @@ const ExpenseViewClient: FC<Props> = ({ session, id }) => {
 							>
 								{t.expenses.expensesList}
 							</Button>
-							{!isLoading && !error && expense && (
-								<Stack
-									direction="row"
-									sx={{
-										gap: 1,
-										flexWrap: 'wrap',
-									}}
-								>
-									<Protected permission="can_edit">
-										<Button
-											variant="outlined"
-											size="small"
-											startIcon={<EditIcon />}
-											onClick={() => router.push(EXPENSES_EDIT(id))}
-										>
-											{t.common.edit}
-										</Button>
-									</Protected>
-									<Protected permission="can_delete">
-										<Button
-											variant="outlined"
-											color="error"
-											size="small"
-											startIcon={<DeleteIcon />}
-											onClick={() => setShowDeleteModal(true)}
-										>
-											{t.common.delete}
-										</Button>
-									</Protected>
-								</Stack>
-							)}
-						</Stack>
-
-						{isLoading ? (
-							<ApiProgress backdropColor="#FFFFFF" circularColor="#0D070B" />
-						) : (axiosError?.status as number) > 400 ? (
-							<ApiAlert
-								errorDetails={axiosError?.data.details}
-								cssStyle={{
-									position: 'absolute',
-									top: '50%',
-									left: '50%',
-									transform: 'translate(-50%, -50%)',
+						)}
+						{!isLoading && !error && expense && (
+							<Stack
+								direction="row"
+								sx={{
+									gap: 1,
+									flexWrap: 'wrap',
 								}}
-							/>
-						) : !expense ? (
-							<Alert severity="warning">{t.expenses.expenseNotFound}</Alert>
-						) : (
-							<Stack spacing={3}>
-								{/* Expense Info */}
-								<Card elevation={2} sx={{ borderRadius: 2 }}>
-									<CardContent sx={{ p: 3 }}>
-										<Stack
-											direction="row"
-											spacing={3}
-											sx={{
-												alignItems: 'center',
-											}}
-										>
-											<AttachMoneyIcon color="primary" />
-											<Typography
-												variant="h6"
-												sx={{
-													fontWeight: 700,
-												}}
-											>
-												{t.expenses.expenseNumber}
-												{expense.id}
-											</Typography>
-										</Stack>
-										<Divider sx={{ mb: { xs: 1.5, md: 2 } }} />
-										<Stack spacing={0}>
-											<InfoRow icon={<AssignmentIcon />} label={t.common.project} value={expense.project_name} />
-											<Divider />
-											<InfoRow
-												icon={<AttachMoneyIcon />}
-												label={t.common.amount}
-												value={
-													<Typography
-														color="primary"
-														sx={{
-															fontWeight: 600,
-														}}
-													>
-														{Number(expense.montant).toLocaleString('fr-MA')} MAD
-													</Typography>
-												}
-											/>
-											<Divider />
-											<InfoRow
-												icon={<PercentIcon />}
-												label={t.expenses.serviceFee}
-												value={expense.frais_de_service ? t.common.yes : t.common.no}
-											/>
-											{expense.frais_de_service && (
-												<>
-													<Divider />
-													<InfoRow
-														icon={<PercentIcon />}
-														label={t.expenses.serviceFeeValue}
-														value={`${Number(expense.frais_de_service_valeur).toLocaleString('fr-MA')} ${
-															expense.frais_de_service_type === 'percentage' ? '%' : 'MAD'
-														}`}
-													/>
-													<Divider />
-													<InfoRow
-														icon={<PercentIcon />}
-														label={t.expenses.serviceFeeType}
-														value={serviceFeeTypeLabel(expense.frais_de_service_type)}
-													/>
-													<Divider />
-													<InfoRow
-														icon={<PercentIcon />}
-														label={t.expenses.serviceFeeAmount}
-														value={`${Number(expense.frais_de_service_montant).toLocaleString('fr-MA')} MAD`}
-													/>
-												</>
-											)}
-											<Divider />
-											<InfoRow icon={<CalendarTodayIcon />} label={t.common.date} value={formatDate(expense.date)} />
-										</Stack>
-									</CardContent>
-								</Card>
-
-								{/* Category & Details */}
-								<Card elevation={2} sx={{ borderRadius: 2 }}>
-									<CardContent sx={{ p: 3 }}>
-										<Stack
-											direction="row"
-											spacing={2}
-											sx={{
-												alignItems: 'center',
-												mb: 2,
-											}}
-										>
-											<CategoryIcon color="primary" />
-											<Typography
-												variant="h6"
-												sx={{
-													fontWeight: 700,
-												}}
-											>
-												{t.expenses.categoryInfo}
-											</Typography>
-										</Stack>
-										<Divider sx={{ mb: { xs: 1.5, md: 2 } }} />
-										<Stack spacing={0}>
-											<InfoRow icon={<CategoryIcon />} label={t.common.category} value={expense.category_name} />
-											<Divider />
-											<InfoRow
-												icon={<CategoryIcon />}
-												label={t.expenses.subCategory}
-												value={expense.sous_categorie_name}
-											/>
-											<Divider />
-											<InfoRow icon={<NotesIcon />} label={t.expenses.element} value={expense.element} />
-											<Divider />
-											<InfoRow
-												icon={<PersonIcon />}
-												label={t.rawData.fieldLabels.expense.supplier}
-												value={expense.supplier_name}
-											/>
-										</Stack>
-									</CardContent>
-								</Card>
-
-								{/* Notes */}
-								<Card elevation={2} sx={{ borderRadius: 2 }}>
-									<CardContent sx={{ p: 3 }}>
-										<Stack
-											direction="row"
-											spacing={2}
-											sx={{
-												alignItems: 'center',
-												mb: 2,
-											}}
-										>
-											<NotesIcon color="primary" />
-											<Typography
-												variant="h6"
-												sx={{
-													fontWeight: 700,
-												}}
-											>
-												{t.expenses.expenseDetails}
-											</Typography>
-										</Stack>
-										<Divider sx={{ mb: { xs: 1.5, md: 2 } }} />
-										<Stack spacing={0}>
-											<InfoRow icon={<NotesIcon />} label={t.common.description} value={expense.description} />
-											<Divider />
-											<InfoRow icon={<NotesIcon />} label={t.common.notes} value={expense.notes} />
-											<Divider />
-											<InfoRow
-												icon={<PersonIcon />}
-												label={t.common.createdBy}
-												value={expense.created_by_user_name ?? '—'}
-											/>
-										</Stack>
-									</CardContent>
-								</Card>
-
-								<ExpenseAttachmentsViewSection id={id} />
+							>
+								<Protected permission="can_edit">
+									<Button
+										variant="outlined"
+										size="small"
+										startIcon={<EditIcon />}
+										onClick={() => (onEdit ? onEdit() : router.push(EXPENSES_EDIT(id)))}
+									>
+										{t.common.edit}
+									</Button>
+								</Protected>
+								<Protected permission="can_delete">
+									<Button
+										variant="outlined"
+										color="error"
+										size="small"
+										startIcon={<DeleteIcon />}
+										onClick={() => setShowDeleteModal(true)}
+									>
+										{t.common.delete}
+									</Button>
+								</Protected>
 							</Stack>
 						)}
 					</Stack>
-				</Protected>
-			</NavigationBar>
+
+					{isLoading ? (
+						<ApiProgress backdropColor="#FFFFFF" circularColor="#0D070B" />
+					) : (axiosError?.status as number) > 400 ? (
+						<ApiAlert
+							errorDetails={axiosError?.data.details}
+							cssStyle={{
+								position: 'absolute',
+								top: '50%',
+								left: '50%',
+								transform: 'translate(-50%, -50%)',
+							}}
+						/>
+					) : !expense ? (
+						<Alert severity="warning">{t.expenses.expenseNotFound}</Alert>
+					) : (
+						<Stack spacing={3}>
+							{/* Expense Info */}
+							<Card elevation={2} sx={{ borderRadius: 2 }}>
+								<CardContent sx={{ p: 3 }}>
+									<Stack
+										direction="row"
+										spacing={3}
+										sx={{
+											alignItems: 'center',
+										}}
+									>
+										<AttachMoneyIcon color="primary" />
+										<Typography
+											variant="h6"
+											sx={{
+												fontWeight: 700,
+											}}
+										>
+											{t.expenses.expenseNumber}
+											{expense.id}
+										</Typography>
+									</Stack>
+									<Divider sx={{ mb: { xs: 1.5, md: 2 } }} />
+									<Stack spacing={0}>
+										<InfoRow icon={<AssignmentIcon />} label={t.common.project} value={expense.project_name} />
+										<Divider />
+										<InfoRow
+											icon={<AttachMoneyIcon />}
+											label={t.common.amount}
+											value={
+												<Typography
+													color="primary"
+													sx={{
+														fontWeight: 600,
+													}}
+												>
+													{Number(expense.montant).toLocaleString('fr-MA')} MAD
+												</Typography>
+											}
+										/>
+										<Divider />
+										<InfoRow
+											icon={<PercentIcon />}
+											label={t.expenses.serviceFee}
+											value={expense.frais_de_service ? t.common.yes : t.common.no}
+										/>
+										{expense.frais_de_service && (
+											<>
+												<Divider />
+												<InfoRow
+													icon={<PercentIcon />}
+													label={t.expenses.serviceFeeValue}
+													value={`${Number(expense.frais_de_service_valeur).toLocaleString('fr-MA')} ${
+														expense.frais_de_service_type === 'percentage' ? '%' : 'MAD'
+													}`}
+												/>
+												<Divider />
+												<InfoRow
+													icon={<PercentIcon />}
+													label={t.expenses.serviceFeeType}
+													value={serviceFeeTypeLabel(expense.frais_de_service_type)}
+												/>
+												<Divider />
+												<InfoRow
+													icon={<PercentIcon />}
+													label={t.expenses.serviceFeeAmount}
+													value={`${Number(expense.frais_de_service_montant).toLocaleString('fr-MA')} MAD`}
+												/>
+											</>
+										)}
+										<Divider />
+										<InfoRow icon={<CalendarTodayIcon />} label={t.common.date} value={formatDate(expense.date)} />
+									</Stack>
+								</CardContent>
+							</Card>
+
+							{/* Category & Details */}
+							<Card elevation={2} sx={{ borderRadius: 2 }}>
+								<CardContent sx={{ p: 3 }}>
+									<Stack
+										direction="row"
+										spacing={2}
+										sx={{
+											alignItems: 'center',
+											mb: 2,
+										}}
+									>
+										<CategoryIcon color="primary" />
+										<Typography
+											variant="h6"
+											sx={{
+												fontWeight: 700,
+											}}
+										>
+											{t.expenses.categoryInfo}
+										</Typography>
+									</Stack>
+									<Divider sx={{ mb: { xs: 1.5, md: 2 } }} />
+									<Stack spacing={0}>
+										<InfoRow icon={<CategoryIcon />} label={t.common.category} value={expense.category_name} />
+										<Divider />
+										<InfoRow
+											icon={<CategoryIcon />}
+											label={t.expenses.subCategory}
+											value={expense.sous_categorie_name}
+										/>
+										<Divider />
+										<InfoRow icon={<NotesIcon />} label={t.expenses.element} value={expense.element} />
+										<Divider />
+										<InfoRow
+											icon={<PersonIcon />}
+											label={t.rawData.fieldLabels.expense.supplier}
+											value={expense.supplier_name}
+										/>
+									</Stack>
+								</CardContent>
+							</Card>
+
+							{/* Notes */}
+							<Card elevation={2} sx={{ borderRadius: 2 }}>
+								<CardContent sx={{ p: 3 }}>
+									<Stack
+										direction="row"
+										spacing={2}
+										sx={{
+											alignItems: 'center',
+											mb: 2,
+										}}
+									>
+										<NotesIcon color="primary" />
+										<Typography
+											variant="h6"
+											sx={{
+												fontWeight: 700,
+											}}
+										>
+											{t.expenses.expenseDetails}
+										</Typography>
+									</Stack>
+									<Divider sx={{ mb: { xs: 1.5, md: 2 } }} />
+									<Stack spacing={0}>
+										<InfoRow icon={<NotesIcon />} label={t.common.description} value={expense.description} />
+										<Divider />
+										<InfoRow icon={<NotesIcon />} label={t.common.notes} value={expense.notes} />
+										<Divider />
+										<InfoRow
+											icon={<PersonIcon />}
+											label={t.common.createdBy}
+											value={expense.created_by_user_name ?? '—'}
+										/>
+									</Stack>
+								</CardContent>
+							</Card>
+
+							<ExpenseAttachmentsViewSection id={id} />
+						</Stack>
+					)}
+				</Stack>
+			</Protected>
 			{showDeleteModal && (
 				<ActionModals
 					title={t.expenses.deleteExpense}
@@ -403,6 +405,19 @@ const ExpenseViewClient: FC<Props> = ({ session, id }) => {
 					titleIconColor="#D32F2F"
 				/>
 			)}
+		</>
+	);
+};
+
+const ExpenseViewClient: FC<Props> = ({ session, id }) => {
+	const { t } = useLanguage();
+	const token = useInitAccessToken(session);
+
+	return (
+		<Stack direction="column" spacing={2} className={Styles.flexRootStack} sx={{ mt: '32px' }}>
+			<NavigationBar title={t.expenses.expenseDetails}>
+				<ExpenseViewContent token={token} id={id} />
+			</NavigationBar>
 		</Stack>
 	);
 };

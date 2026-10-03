@@ -5,23 +5,21 @@ import { useState, type FC } from 'react';
 import { useRouter } from 'next/navigation';
 import {
 	Alert,
+	Box,
+	ThemeProvider,
 	Button,
 	Card,
 	CardContent,
 	Divider,
 	Stack,
-	Table,
-	TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
 	Typography,
 	useMediaQuery,
 	useTheme,
 } from '@mui/material';
 import {
 	ArrowBack as ArrowBackIcon,
+	History as HistoryIcon,
+	Visibility as VisibilityIcon,
 	AttachMoney as AttachMoneyIcon,
 	Build as BuildIcon,
 	Delete as DeleteIcon,
@@ -41,10 +39,18 @@ import { PROJECTS_VIEW, SUPPLIERS_EDIT, SUPPLIERS_LIST } from '@/utils/routes';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
 import { useLanguage, useToast } from '@/utils/hooks';
 
+import { DataGrid, type GridColDef } from '@mui/x-data-grid';
+import { frFR, enUS } from '@mui/x-data-grid/locales';
+import type { SupplierPaymentHistoryType } from '@/types/projectTypes';
+import { getDefaultTheme } from '@/utils/themes';
+import { useDataGridPagination } from '@/components/shared/paginatedDataGrid/useDataGridPagination';
+import MobileActionsMenu from '@/components/shared/mobileActionsMenu/mobileActionsMenu';
+import InfoRow from '@/components/shared/infoRow/infoRow';
+
 const money = (value: string | number) => `${Number(value || 0).toLocaleString('fr-MA')} MAD`;
 
 const SupplierViewClient: FC<SessionProps & { id: number }> = ({ session, id }) => {
-	const { t } = useLanguage();
+	const { t, language } = useLanguage();
 	const router = useRouter();
 	const token = useInitAccessToken(session);
 	const { data: supplier, isLoading, error } = useGetSupplierQuery({ id }, { skip: !token });
@@ -54,6 +60,50 @@ const SupplierViewClient: FC<SessionProps & { id: number }> = ({ session, id }) 
 	const [deleteSupplier] = useDeleteSupplierMutation();
 	const { onSuccess, onError } = useToast();
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const [paginationModel, setPaginationModel] = useDataGridPagination(10, 'supplier_payments');
+
+	const columns: GridColDef<SupplierPaymentHistoryType>[] = [
+		{
+			field: 'date',
+			headerName: t.common.date,
+			type: 'date',
+			minWidth: 175,
+			valueGetter: (value) => (value ? new Date(value) : null),
+			valueFormatter: (value: Date | null) => (value ? formatDate(value.toISOString()) : '—'),
+		},
+		{ field: 'project_name', headerName: t.common.project, flex: 1, minWidth: 200 },
+		{ field: 'description', headerName: t.common.description, flex: 1.5, minWidth: 240 },
+		{
+			field: 'montant',
+			headerName: t.common.amount,
+			type: 'number',
+			minWidth: 160,
+			flex: 1,
+			valueGetter: (value) => Number(value ?? 0),
+			valueFormatter: (value) => money(value),
+		},
+
+		{
+			field: 'actions',
+			headerName: t.common.actions,
+			minWidth: 100,
+			sortable: false,
+			filterable: false,
+			disableExport: true,
+			renderCell: (params) => (
+				<MobileActionsMenu
+					actions={[
+						{
+							label: t.common.view,
+							icon: <VisibilityIcon />,
+							color: 'info',
+							onClick: () => router.push(PROJECTS_VIEW(params.row.project)),
+						},
+					]}
+				/>
+			),
+		},
+	];
 
 	const handleDelete = async () => {
 		await runWithCleanup(
@@ -134,58 +184,61 @@ const SupplierViewClient: FC<SessionProps & { id: number }> = ({ session, id }) 
 												{supplier.nom}
 											</Typography>
 										</Stack>
-										<Divider sx={{ mb: 2 }} />
-										<Stack spacing={1.5}>
-											<Typography>
-												<PersonIcon fontSize="small" /> {t.suppliers.contact}: {supplier.contact || '-'}
-											</Typography>
-											<Typography>
-												<BuildIcon fontSize="small" /> {t.suppliers.speciality}: {supplier.specialite || '-'}
-											</Typography>
-											<Typography sx={{ fontWeight: 700 }}>
-												<AttachMoneyIcon fontSize="small" /> {t.suppliers.totalPaid}: {money(supplier.total_paid)}
-											</Typography>
+										<Divider sx={{ mb: { xs: 1.5, md: 2 } }} />
+										<Stack spacing={0}>
+											<InfoRow icon={<PersonIcon />} label={t.suppliers.contact} value={supplier.contact} />
+											<Divider />
+											<InfoRow icon={<BuildIcon />} label={t.suppliers.speciality} value={supplier.specialite} />
+											<Divider />
+											<InfoRow
+												icon={<AttachMoneyIcon />}
+												label={t.suppliers.totalPaid}
+												value={
+													<Typography color="primary" sx={{ fontWeight: 600 }}>
+														{money(supplier.total_paid)}
+													</Typography>
+												}
+											/>
 										</Stack>
 									</CardContent>
 								</Card>
 								<Card elevation={2} sx={{ borderRadius: 2 }}>
 									<CardContent sx={{ p: 3 }}>
-										<Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-											{t.suppliers.paymentsHistory}
-										</Typography>
-										<TableContainer>
-											<Table size="small">
-												<TableHead>
-													<TableRow>
-														<TableCell>{t.common.date}</TableCell>
-														<TableCell>{t.common.project}</TableCell>
-														<TableCell>{t.common.description}</TableCell>
-														<TableCell align="right">{t.common.amount}</TableCell>
-													</TableRow>
-												</TableHead>
-												<TableBody>
-													{supplier.payments.length === 0 ? (
-														<TableRow>
-															<TableCell colSpan={4}>{t.suppliers.noSupplierFound}</TableCell>
-														</TableRow>
-													) : (
-														supplier.payments.map((payment) => (
-															<TableRow
-																key={payment.id}
-																hover
-																sx={{ cursor: 'pointer' }}
-																onClick={() => router.push(PROJECTS_VIEW(payment.project))}
-															>
-																<TableCell>{formatDate(payment.date)}</TableCell>
-																<TableCell>{payment.project_name}</TableCell>
-																<TableCell>{payment.description}</TableCell>
-																<TableCell align="right">{money(payment.montant)}</TableCell>
-															</TableRow>
-														))
-													)}
-												</TableBody>
-											</Table>
-										</TableContainer>
+										<Stack direction="row" spacing={2} sx={{ alignItems: 'center', mb: 2 }}>
+											<HistoryIcon color="primary" />
+											<Typography variant="h6" sx={{ fontWeight: 700 }}>
+												{t.suppliers.paymentsHistory}
+											</Typography>
+										</Stack>
+										<Divider sx={{ mb: 3 }} />
+										<ThemeProvider theme={getDefaultTheme()}>
+											<Box sx={{ width: '100%', height: supplier.payments.length ? 430 : 320 }}>
+												<DataGrid<SupplierPaymentHistoryType>
+													rows={supplier.payments}
+													columns={columns}
+													loading={isLoading}
+													pagination
+													paginationModel={paginationModel}
+													onPaginationModelChange={setPaginationModel}
+													onFilterModelChange={() =>
+														setPaginationModel((current) => (current.page === 0 ? current : { ...current, page: 0 }))
+													}
+													pageSizeOptions={[5, 10, 25, 50, 100]}
+													localeText={{
+														...(language === 'fr' ? frFR : enUS).components.MuiDataGrid.defaultProps.localeText,
+													}}
+													disableRowSelectionOnClick
+													onRowClick={(params) => router.push(PROJECTS_VIEW(params.row.project))}
+													showToolbar
+													slotProps={{ toolbar: { showQuickFilter: true, quickFilterProps: { debounceMs: 500 } } }}
+													sx={{
+														'& .MuiDataGrid-columnHeaderTitle': { fontWeight: 700 },
+														'& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center' },
+														'& .MuiDataGrid-row:hover': { cursor: 'pointer' },
+													}}
+												/>
+											</Box>
+										</ThemeProvider>
 									</CardContent>
 								</Card>
 							</Stack>

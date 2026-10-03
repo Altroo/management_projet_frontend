@@ -131,6 +131,8 @@ export interface RevenueFormValues {
 }
 
 export interface ExpenseType {
+	quote?: number | null;
+	quote_number?: string | null;
 	id: number;
 	project: number;
 	project_name: string;
@@ -156,6 +158,7 @@ export interface ExpenseType {
 }
 
 export interface ExpenseFormValues {
+	quote?: number | null;
 	project: number | '';
 	date: string;
 	category: number | '';
@@ -329,6 +332,7 @@ export interface RealBudgetStageSummaryType {
 }
 
 export interface ProjectDashboardType {
+	estimate_summary?: EstimateSummaryType;
 	project_id: number;
 	nom: string;
 	budget_total: string;
@@ -401,3 +405,62 @@ export interface MultiProjectDashboardType {
 }
 
 export type ClientDashboardType = MultiProjectDashboardType;
+
+export type QuoteStatus = 'received' | 'validated' | 'rejected';
+export interface QuoteFormValues {
+	project: number | '';
+	supplier: number | '';
+	number: string;
+	date: string;
+	category: number | '';
+	sous_categorie: number | '';
+	description: string;
+	amount_ht: string;
+	amount_tva: string;
+	status: QuoteStatus;
+	globalError: string;
+}
+export type QuotePayload = Omit<QuoteFormValues, 'globalError' | 'category' | 'sous_categorie'> & {
+	category: number | null;
+	sous_categorie: number | null;
+};
+export interface EstimateTotalsType {
+	estimated: string | number;
+	spent: string | number;
+	remaining: string | number;
+	variance: string | number;
+	consumption_percent: string | number | null;
+	overrun: boolean;
+}
+export interface EstimateCategoryType extends EstimateTotalsType {
+	id: string | number;
+	category: number | null;
+	category_name: string | null;
+	sous_categorie?: number | null;
+	sous_categorie_name?: string | null;
+}
+export interface EstimateSummaryType extends EstimateTotalsType {
+	validated_count: number;
+	advances: string | number;
+	unlinked_spent: string | number;
+	by_category: EstimateCategoryType[];
+	by_subcategory: EstimateCategoryType[];
+}
+export interface QuoteType extends Omit<QuotePayload, 'project' | 'supplier'> {
+	id: number;
+	project: number;
+	supplier: number;
+	project_name: string;
+	supplier_name: string;
+	category_name: string | null;
+	sous_categorie_name: string | null;
+	amount_ttc: string;
+	spent: string;
+	remaining: string;
+	variance: string;
+	consumption_percent: string | null;
+	overrun: boolean;
+	created_by_user_name: string | null;
+	date_created: string;
+	date_updated: string;
+}

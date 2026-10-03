@@ -81,13 +81,17 @@ jest.mock('@/utils/fileDownload', () => ({
 	downloadFileBlob: jest.fn().mockResolvedValue(undefined),
 }));
 jest.mock('@/utils/routes', () => ({
-	REPORTS_DOWNLOAD: (language: string, filters: { dateFrom: string; dateTo: string; projectId?: number }) =>
-		`/api/reports/pdf?language=${language}&from=${filters.dateFrom}&to=${filters.dateTo}&project=${filters.projectId ?? ''}`,
+	REPORTS_DOWNLOAD: (
+		language: string,
+		filters: { dateFrom: string; dateTo: string; projectId?: number; includeEstimates?: boolean },
+	) =>
+		`/api/reports/pdf?language=${language}&from=${filters.dateFrom}&to=${filters.dateTo}&project=${filters.projectId ?? ''}${filters.includeEstimates ? '&include_estimates=true' : ''}`,
 }));
 jest.mock('@/utils/hooks', () => ({
 	useToast: () => ({ onError: jest.fn() }),
 	useLanguage: () => ({
 		t: {
+			quotes: { reportOption: 'Comparer le budget', reportHelp: 'Cumul du projet à ce jour' },
 			projects: { noProjectFound: 'Aucun projet trouvé' },
 			aiAssistant: { translateToFrench: 'Français', translateToEnglish: 'Anglais' },
 			reports: {
@@ -205,5 +209,21 @@ describe('ReportsClient', () => {
 		fireEvent.change(screen.getByLabelText('Périmètre'), { target: { value: '' } });
 
 		await waitFor(() => expect(screen.getByLabelText('Date de début')).toHaveValue('2026-01-01'));
+	});
+	it('includes the budget comparison only when selected for a project', async () => {
+		render(<ReportsClient />);
+		expect(screen.queryByLabelText('Comparer le budget')).not.toBeInTheDocument();
+		fireEvent.change(screen.getByLabelText('Périmètre'), { target: { value: '7' } });
+		const checkbox = screen.getByLabelText('Comparer le budget');
+		expect(checkbox).not.toBeChecked();
+		fireEvent.click(checkbox);
+		fireEvent.click(screen.getByRole('button', { name: 'Générer le PDF' }));
+		await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Français' })));
+		await waitFor(() =>
+			expect(downloadFileBlob).toHaveBeenCalledWith(
+				expect.stringContaining('include_estimates=true'),
+				expect.anything(),
+			),
+		);
 	});
 });

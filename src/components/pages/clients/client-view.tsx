@@ -5,23 +5,21 @@ import { useState, type FC } from 'react';
 import { useRouter } from 'next/navigation';
 import {
 	Alert,
+	Box,
+	ThemeProvider,
 	Button,
 	Card,
 	CardContent,
 	Divider,
 	Stack,
-	Table,
-	TableBody,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
 	Typography,
 	useMediaQuery,
 	useTheme,
 } from '@mui/material';
 import {
 	ArrowBack as ArrowBackIcon,
+	History as HistoryIcon,
+	Visibility as VisibilityIcon,
 	AttachMoney as AttachMoneyIcon,
 	Delete as DeleteIcon,
 	Edit as EditIcon,
@@ -44,10 +42,18 @@ import { CLIENTS_EDIT, CLIENTS_LIST, PROJECTS_VIEW } from '@/utils/routes';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
 import { useLanguage, useToast } from '@/utils/hooks';
 
+import { DataGrid, type GridColDef } from '@mui/x-data-grid';
+import { frFR, enUS } from '@mui/x-data-grid/locales';
+import type { ClientProjectHistoryType } from '@/types/projectTypes';
+import { getDefaultTheme } from '@/utils/themes';
+import { useDataGridPagination } from '@/components/shared/paginatedDataGrid/useDataGridPagination';
+import MobileActionsMenu from '@/components/shared/mobileActionsMenu/mobileActionsMenu';
+import InfoRow from '@/components/shared/infoRow/infoRow';
+
 const money = (value: string | number) => `${Number(value || 0).toLocaleString('fr-MA')} MAD`;
 
 const ClientViewClient: FC<SessionProps & { id: number }> = ({ session, id }) => {
-	const { t } = useLanguage();
+	const { t, language } = useLanguage();
 	const router = useRouter();
 	const token = useInitAccessToken(session);
 	const { data: client, isLoading, error } = useGetClientQuery({ id }, { skip: !token });
@@ -57,6 +63,75 @@ const ClientViewClient: FC<SessionProps & { id: number }> = ({ session, id }) =>
 	const [deleteClient] = useDeleteClientMutation();
 	const { onSuccess, onError } = useToast();
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const [paginationModel, setPaginationModel] = useDataGridPagination(10, 'client_projects');
+
+	const columns: GridColDef<ClientProjectHistoryType>[] = [
+		{ field: 'nom', headerName: t.projects.projectName, flex: 1.5, minWidth: 200 },
+		{
+			field: 'status',
+			headerName: t.common.status,
+			type: 'singleSelect',
+			valueOptions: [...new Set((client?.projects ?? []).map((project) => project.status))],
+			flex: 1,
+			minWidth: 150,
+		},
+		{
+			field: 'date_debut',
+			headerName: t.projects.dateDebut,
+			type: 'date',
+			minWidth: 175,
+			valueGetter: (value) => (value ? new Date(value) : null),
+			valueFormatter: (value: Date | null) => (value ? formatDate(value.toISOString()) : '—'),
+		},
+		{
+			field: 'revenue_total',
+			headerName: t.projects.totalRevenue,
+			type: 'number',
+			minWidth: 170,
+			flex: 1,
+			valueGetter: (value) => Number(value ?? 0),
+			valueFormatter: (value) => money(value),
+		},
+		{
+			field: 'depenses_totales',
+			headerName: t.projects.totalExpenses,
+			type: 'number',
+			minWidth: 170,
+			flex: 1,
+			valueGetter: (value) => Number(value ?? 0),
+			valueFormatter: (value) => money(value),
+		},
+		{
+			field: 'benefice',
+			headerName: t.projects.profit,
+			type: 'number',
+			minWidth: 160,
+			flex: 1,
+			valueGetter: (value) => Number(value ?? 0),
+			valueFormatter: (value) => money(value),
+		},
+
+		{
+			field: 'actions',
+			headerName: t.common.actions,
+			minWidth: 100,
+			sortable: false,
+			filterable: false,
+			disableExport: true,
+			renderCell: (params) => (
+				<MobileActionsMenu
+					actions={[
+						{
+							label: t.common.view,
+							icon: <VisibilityIcon />,
+							color: 'info',
+							onClick: () => router.push(PROJECTS_VIEW(params.row.id)),
+						},
+					]}
+				/>
+			),
+		},
+	];
 
 	const handleDelete = async () => {
 		await runWithCleanup(
@@ -137,68 +212,66 @@ const ClientViewClient: FC<SessionProps & { id: number }> = ({ session, id }) =>
 												{client.nom}
 											</Typography>
 										</Stack>
-										<Divider sx={{ mb: 2 }} />
-										<Stack spacing={1.5}>
-											<Typography>
-												<PhoneIcon fontSize="small" /> {client.telephone || '-'}
-											</Typography>
-											<Typography>
-												<EmailIcon fontSize="small" /> {client.email || '-'}
-											</Typography>
-											<Typography>
-												<LocationCityIcon fontSize="small" /> {client.ville || '-'}
-											</Typography>
-											<Typography>
-												<HomeIcon fontSize="small" /> {client.adresse || '-'}
-											</Typography>
-											<Typography sx={{ fontWeight: 700 }}>
-												<AttachMoneyIcon fontSize="small" /> {t.clients.totalReceived}: {money(client.total_encaisse)}
-											</Typography>
+										<Divider sx={{ mb: { xs: 1.5, md: 2 } }} />
+										<Stack spacing={0}>
+											<InfoRow icon={<PhoneIcon />} label={t.common.phone} value={client.telephone} />
+											<Divider />
+											<InfoRow icon={<EmailIcon />} label={t.common.email} value={client.email} />
+											<Divider />
+											<InfoRow icon={<LocationCityIcon />} label={t.common.city} value={client.ville} />
+											<Divider />
+											<InfoRow icon={<HomeIcon />} label={t.common.address} value={client.adresse} />
+											<Divider />
+											<InfoRow
+												icon={<AttachMoneyIcon />}
+												label={t.clients.totalReceived}
+												value={
+													<Typography color="primary" sx={{ fontWeight: 600 }}>
+														{money(client.total_encaisse)}
+													</Typography>
+												}
+											/>
 										</Stack>
 									</CardContent>
 								</Card>
 								<Card elevation={2} sx={{ borderRadius: 2 }}>
 									<CardContent sx={{ p: 3 }}>
-										<Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-											{t.clients.projectsHistory}
-										</Typography>
-										<TableContainer>
-											<Table size="small">
-												<TableHead>
-													<TableRow>
-														<TableCell>{t.projects.projectName}</TableCell>
-														<TableCell>{t.common.status}</TableCell>
-														<TableCell>{t.projects.dateDebut}</TableCell>
-														<TableCell align="right">{t.projects.totalRevenue}</TableCell>
-														<TableCell align="right">{t.projects.totalExpenses}</TableCell>
-														<TableCell align="right">{t.projects.profit}</TableCell>
-													</TableRow>
-												</TableHead>
-												<TableBody>
-													{client.projects.length === 0 ? (
-														<TableRow>
-															<TableCell colSpan={6}>{t.projects.noProjectFound}</TableCell>
-														</TableRow>
-													) : (
-														client.projects.map((project) => (
-															<TableRow
-																key={project.id}
-																hover
-																sx={{ cursor: 'pointer' }}
-																onClick={() => router.push(PROJECTS_VIEW(project.id))}
-															>
-																<TableCell>{project.nom}</TableCell>
-																<TableCell>{project.status}</TableCell>
-																<TableCell>{formatDate(project.date_debut)}</TableCell>
-																<TableCell align="right">{money(project.revenue_total)}</TableCell>
-																<TableCell align="right">{money(project.depenses_totales)}</TableCell>
-																<TableCell align="right">{money(project.benefice)}</TableCell>
-															</TableRow>
-														))
-													)}
-												</TableBody>
-											</Table>
-										</TableContainer>
+										<Stack direction="row" spacing={2} sx={{ alignItems: 'center', mb: 2 }}>
+											<HistoryIcon color="primary" />
+											<Typography variant="h6" sx={{ fontWeight: 700 }}>
+												{t.clients.projectsHistory}
+											</Typography>
+										</Stack>
+										<Divider sx={{ mb: 3 }} />
+										<ThemeProvider theme={getDefaultTheme()}>
+											<Box sx={{ width: '100%', height: client.projects.length ? 430 : 320 }}>
+												<DataGrid<ClientProjectHistoryType>
+													rows={client.projects}
+													columns={columns}
+													loading={isLoading}
+													pagination
+													paginationModel={paginationModel}
+													onPaginationModelChange={setPaginationModel}
+													onFilterModelChange={() =>
+														setPaginationModel((current) => (current.page === 0 ? current : { ...current, page: 0 }))
+													}
+													pageSizeOptions={[5, 10, 25, 50, 100]}
+													localeText={{
+														...(language === 'fr' ? frFR : enUS).components.MuiDataGrid.defaultProps.localeText,
+														noRowsLabel: t.projects.noProjectFound,
+													}}
+													disableRowSelectionOnClick
+													onRowClick={(params) => router.push(PROJECTS_VIEW(params.row.id))}
+													showToolbar
+													slotProps={{ toolbar: { showQuickFilter: true, quickFilterProps: { debounceMs: 500 } } }}
+													sx={{
+														'& .MuiDataGrid-columnHeaderTitle': { fontWeight: 700 },
+														'& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center' },
+														'& .MuiDataGrid-row:hover': { cursor: 'pointer' },
+													}}
+												/>
+											</Box>
+										</ThemeProvider>
 									</CardContent>
 								</Card>
 							</Stack>

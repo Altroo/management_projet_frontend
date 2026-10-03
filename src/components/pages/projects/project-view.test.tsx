@@ -20,6 +20,7 @@ jest.mock('@/utils/hooks', () => {
 
 jest.mock('@/store/services/project', () => ({
 	...jest.requireActual('@/store/services/project'),
+	useGetProjectDashboardQuery: jest.fn(() => ({ data: undefined, isLoading: false })),
 	useGetProjectQuery: jest.fn(() => ({ data: undefined, isLoading: false, error: undefined })),
 	useDeleteProjectMutation: jest.fn(() => [jest.fn(), { isLoading: false }]),
 	useGetPaymentSchedulesQuery: jest.fn(() => ({ data: [], isLoading: false })),

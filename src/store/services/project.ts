@@ -7,6 +7,8 @@ import type { RootState } from '@/store/store';
 import { initToken } from '@/store/slices/_initSlice';
 import type { ApiErrorResponseType, PaginationResponseType } from '@/types/_initTypes';
 import type {
+	QuoteType,
+	QuotePayload,
 	CategoryType,
 	AttachmentType,
 	ClientFormValues,
@@ -63,6 +65,7 @@ export const projectApi = createApi({
 		'SubCategory',
 		'Revenue',
 		'Expense',
+		'Quote',
 		'Attachment',
 		'PaymentSchedule',
 		'RealBudget',
@@ -91,7 +94,7 @@ export const projectApi = createApi({
 				method: 'POST',
 				data,
 			}),
-			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
+			invalidatesTags: ['Category', 'SubCategory', 'Expense', 'Quote'],
 		}),
 
 		updateExpenseCategory: builder.mutation<
@@ -103,7 +106,7 @@ export const projectApi = createApi({
 				method: 'PUT',
 				data,
 			}),
-			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
+			invalidatesTags: ['Category', 'SubCategory', 'Expense', 'Quote'],
 		}),
 
 		deleteExpenseCategory: builder.mutation<void, { id: number }>({
@@ -111,7 +114,7 @@ export const projectApi = createApi({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_EXPENSE_TAXONOMY}categories/${id}/`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
+			invalidatesTags: ['Category', 'SubCategory', 'Expense', 'Quote'],
 		}),
 
 		createExpenseSubCategory: builder.mutation<
@@ -123,7 +126,7 @@ export const projectApi = createApi({
 				method: 'POST',
 				data,
 			}),
-			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
+			invalidatesTags: ['Category', 'SubCategory', 'Expense', 'Quote'],
 		}),
 
 		updateExpenseSubCategory: builder.mutation<
@@ -135,7 +138,7 @@ export const projectApi = createApi({
 				method: 'PUT',
 				data,
 			}),
-			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
+			invalidatesTags: ['Category', 'SubCategory', 'Expense', 'Quote'],
 		}),
 
 		deleteExpenseSubCategory: builder.mutation<void, { id: number }>({
@@ -143,7 +146,7 @@ export const projectApi = createApi({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_EXPENSE_TAXONOMY}subcategories/${id}/`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: ['Category', 'SubCategory', 'Expense'],
+			invalidatesTags: ['Category', 'SubCategory', 'Expense', 'Quote'],
 		}),
 
 		// ── Clients ─────────────────────────────────────────────────────────
@@ -170,7 +173,7 @@ export const projectApi = createApi({
 				method: 'POST',
 				data,
 			}),
-			invalidatesTags: ['Client', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Client', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		updateClient: builder.mutation<
@@ -182,7 +185,7 @@ export const projectApi = createApi({
 				method: 'PUT',
 				data,
 			}),
-			invalidatesTags: ['Client', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Client', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		deleteClient: builder.mutation<void, { id: number }>({
@@ -190,7 +193,7 @@ export const projectApi = createApi({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_CLIENTS}${id}/`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: ['Client', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Client', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		bulkDeleteClients: builder.mutation<void, { ids: number[] }>({
@@ -199,7 +202,7 @@ export const projectApi = createApi({
 				method: 'DELETE',
 				data: { ids },
 			}),
-			invalidatesTags: ['Client', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Client', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		// ── Suppliers ───────────────────────────────────────────────────────
@@ -229,7 +232,7 @@ export const projectApi = createApi({
 				method: 'POST',
 				data,
 			}),
-			invalidatesTags: ['Supplier', 'Expense', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Supplier', 'Expense', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		updateSupplier: builder.mutation<
@@ -241,7 +244,7 @@ export const projectApi = createApi({
 				method: 'PUT',
 				data,
 			}),
-			invalidatesTags: ['Supplier', 'Expense', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Supplier', 'Expense', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		deleteSupplier: builder.mutation<void, { id: number }>({
@@ -249,7 +252,7 @@ export const projectApi = createApi({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_SUPPLIERS}${id}/`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: ['Supplier', 'Expense', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Supplier', 'Expense', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		bulkDeleteSuppliers: builder.mutation<void, { ids: number[] }>({
@@ -258,7 +261,7 @@ export const projectApi = createApi({
 				method: 'DELETE',
 				data: { ids },
 			}),
-			invalidatesTags: ['Supplier', 'Expense', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Supplier', 'Expense', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		// ── Categories ──────────────────────────────────────────────────────
@@ -287,7 +290,7 @@ export const projectApi = createApi({
 				method: 'POST',
 				data,
 			}),
-			invalidatesTags: ['Category'],
+			invalidatesTags: ['Category', 'Quote'],
 		}),
 
 		updateCategory: builder.mutation<
@@ -299,7 +302,7 @@ export const projectApi = createApi({
 				method: 'PUT',
 				data,
 			}),
-			invalidatesTags: ['Category'],
+			invalidatesTags: ['Category', 'Quote'],
 		}),
 
 		deleteCategory: builder.mutation<void, { id: number }>({
@@ -307,7 +310,7 @@ export const projectApi = createApi({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_CATEGORIES}${id}/`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: ['Category'],
+			invalidatesTags: ['Category', 'Quote'],
 		}),
 
 		bulkDeleteCategories: builder.mutation<void, { ids: number[] }>({
@@ -316,7 +319,7 @@ export const projectApi = createApi({
 				method: 'DELETE',
 				data: { ids },
 			}),
-			invalidatesTags: ['Category'],
+			invalidatesTags: ['Category', 'Quote'],
 		}),
 
 		// ── SubCategories ───────────────────────────────────────────────────
@@ -346,7 +349,7 @@ export const projectApi = createApi({
 				method: 'POST',
 				data,
 			}),
-			invalidatesTags: ['SubCategory'],
+			invalidatesTags: ['SubCategory', 'Quote'],
 		}),
 
 		updateSubCategory: builder.mutation<
@@ -358,7 +361,7 @@ export const projectApi = createApi({
 				method: 'PUT',
 				data,
 			}),
-			invalidatesTags: ['SubCategory'],
+			invalidatesTags: ['SubCategory', 'Quote'],
 		}),
 
 		deleteSubCategory: builder.mutation<void, { id: number }>({
@@ -366,7 +369,7 @@ export const projectApi = createApi({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_SUBCATEGORIES}${id}/`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: ['SubCategory'],
+			invalidatesTags: ['SubCategory', 'Quote'],
 		}),
 
 		bulkDeleteSubCategories: builder.mutation<void, { ids: number[] }>({
@@ -375,7 +378,7 @@ export const projectApi = createApi({
 				method: 'DELETE',
 				data: { ids },
 			}),
-			invalidatesTags: ['SubCategory'],
+			invalidatesTags: ['SubCategory', 'Quote'],
 		}),
 
 		// ── Projects ────────────────────────────────────────────────────────
@@ -426,7 +429,7 @@ export const projectApi = createApi({
 				method: 'POST',
 				data,
 			}),
-			invalidatesTags: ['Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		updateProject: builder.mutation<
@@ -438,7 +441,7 @@ export const projectApi = createApi({
 				method: 'PUT',
 				data,
 			}),
-			invalidatesTags: ['Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		deleteProject: builder.mutation<void, { id: number }>({
@@ -453,6 +456,8 @@ export const projectApi = createApi({
 				'ClientDashboard',
 				'Revenue',
 				'Expense',
+				,
+				'Quote',
 			],
 		}),
 
@@ -469,6 +474,8 @@ export const projectApi = createApi({
 				'ClientDashboard',
 				'Revenue',
 				'Expense',
+				,
+				'Quote',
 			],
 		}),
 
@@ -523,7 +530,14 @@ export const projectApi = createApi({
 				method: 'POST',
 				data,
 			}),
-			invalidatesTags: ['PaymentSchedule', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: [
+				'PaymentSchedule',
+				'Project',
+				'ProjectDashboard',
+				'MultiProjectDashboard',
+				'ClientDashboard',
+				'Quote',
+			],
 		}),
 
 		updatePaymentSchedule: builder.mutation<
@@ -535,7 +549,14 @@ export const projectApi = createApi({
 				method: 'PUT',
 				data,
 			}),
-			invalidatesTags: ['PaymentSchedule', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: [
+				'PaymentSchedule',
+				'Project',
+				'ProjectDashboard',
+				'MultiProjectDashboard',
+				'ClientDashboard',
+				'Quote',
+			],
 		}),
 
 		deletePaymentSchedule: builder.mutation<void, { id: number }>({
@@ -543,7 +564,14 @@ export const projectApi = createApi({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_PAYMENT_SCHEDULES}${id}/`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: ['PaymentSchedule', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: [
+				'PaymentSchedule',
+				'Project',
+				'ProjectDashboard',
+				'MultiProjectDashboard',
+				'ClientDashboard',
+				'Quote',
+			],
 		}),
 
 		bulkDeletePaymentSchedules: builder.mutation<void, { ids: number[] }>({
@@ -552,7 +580,14 @@ export const projectApi = createApi({
 				method: 'DELETE',
 				data: { ids },
 			}),
-			invalidatesTags: ['PaymentSchedule', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: [
+				'PaymentSchedule',
+				'Project',
+				'ProjectDashboard',
+				'MultiProjectDashboard',
+				'ClientDashboard',
+				'Quote',
+			],
 		}),
 
 		getRealBudgetEntries: builder.query<
@@ -584,7 +619,14 @@ export const projectApi = createApi({
 				method: 'POST',
 				data,
 			}),
-			invalidatesTags: ['RealBudget', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: [
+				'RealBudget',
+				'Project',
+				'ProjectDashboard',
+				'MultiProjectDashboard',
+				'ClientDashboard',
+				'Quote',
+			],
 		}),
 
 		updateRealBudgetEntry: builder.mutation<
@@ -596,7 +638,14 @@ export const projectApi = createApi({
 				method: 'PUT',
 				data,
 			}),
-			invalidatesTags: ['RealBudget', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: [
+				'RealBudget',
+				'Project',
+				'ProjectDashboard',
+				'MultiProjectDashboard',
+				'ClientDashboard',
+				'Quote',
+			],
 		}),
 
 		deleteRealBudgetEntry: builder.mutation<void, { id: number }>({
@@ -604,7 +653,14 @@ export const projectApi = createApi({
 				url: `${process.env.NEXT_PUBLIC_PROJECT_REAL_BUDGET_ENTRIES}${id}/`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: ['RealBudget', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: [
+				'RealBudget',
+				'Project',
+				'ProjectDashboard',
+				'MultiProjectDashboard',
+				'ClientDashboard',
+				'Quote',
+			],
 		}),
 
 		bulkDeleteRealBudgetEntries: builder.mutation<void, { ids: number[] }>({
@@ -613,7 +669,14 @@ export const projectApi = createApi({
 				method: 'DELETE',
 				data: { ids },
 			}),
-			invalidatesTags: ['RealBudget', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: [
+				'RealBudget',
+				'Project',
+				'ProjectDashboard',
+				'MultiProjectDashboard',
+				'ClientDashboard',
+				'Quote',
+			],
 		}),
 
 		downloadProjectReport: builder.mutation<Blob, { id: number }>({
@@ -660,7 +723,7 @@ export const projectApi = createApi({
 				method: 'POST',
 				data,
 			}),
-			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		updateRevenue: builder.mutation<
@@ -672,7 +735,7 @@ export const projectApi = createApi({
 				method: 'PUT',
 				data,
 			}),
-			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		deleteRevenue: builder.mutation<void, { id: number }>({
@@ -680,7 +743,7 @@ export const projectApi = createApi({
 				url: `${process.env.NEXT_PUBLIC_REVENUE_LIST}${id}/`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		bulkDeleteRevenues: builder.mutation<void, { ids: number[] }>({
@@ -689,7 +752,7 @@ export const projectApi = createApi({
 				method: 'DELETE',
 				data: { ids },
 			}),
-			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Revenue', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		getRevenueAttachments: builder.query<AttachmentType[], { id: number }>({
@@ -717,6 +780,54 @@ export const projectApi = createApi({
 			invalidatesTags: ['Attachment'],
 		}),
 
+		// Quotes / Estimates
+		getQuotes: builder.query<QuoteType[], Record<string, string | number | undefined>>({
+			query: (params) => ({ url: `${process.env.NEXT_PUBLIC_ROOT_API_URL}/devis/`, method: 'GET', params }),
+			providesTags: ['Quote'],
+		}),
+		getQuote: builder.query<QuoteType, { id: number }>({
+			query: ({ id }) => ({ url: `${process.env.NEXT_PUBLIC_ROOT_API_URL}/devis/${id}/`, method: 'GET' }),
+			providesTags: ['Quote'],
+		}),
+		createQuote: builder.mutation<QuoteType, { data: QuotePayload }>({
+			query: ({ data }) => ({ url: `${process.env.NEXT_PUBLIC_ROOT_API_URL}/devis/`, method: 'POST', data }),
+			invalidatesTags: ['Quote', 'ProjectDashboard'],
+		}),
+		updateQuote: builder.mutation<QuoteType, { id: number; data: QuotePayload }>({
+			query: ({ id, data }) => ({ url: `${process.env.NEXT_PUBLIC_ROOT_API_URL}/devis/${id}/`, method: 'PUT', data }),
+			invalidatesTags: ['Quote', 'Expense', 'ProjectDashboard'],
+		}),
+		deleteQuote: builder.mutation<void, { id: number }>({
+			query: ({ id }) => ({ url: `${process.env.NEXT_PUBLIC_ROOT_API_URL}/devis/${id}/`, method: 'DELETE' }),
+			invalidatesTags: ['Quote', 'ProjectDashboard', 'Attachment'],
+		}),
+		bulkDeleteQuotes: builder.mutation<void, { ids: number[] }>({
+			query: ({ ids }) => ({
+				url: `${process.env.NEXT_PUBLIC_ROOT_API_URL}/devis/bulk_delete/`,
+				method: 'DELETE',
+				data: { ids },
+			}),
+			invalidatesTags: ['Quote', 'ProjectDashboard', 'Attachment'],
+		}),
+		getQuoteAttachments: builder.query<AttachmentType[], { id: number }>({
+			query: ({ id }) => ({ url: `${process.env.NEXT_PUBLIC_ROOT_API_URL}/devis/${id}/attachments/`, method: 'GET' }),
+			providesTags: ['Attachment'],
+		}),
+		uploadQuoteAttachment: builder.mutation<AttachmentType, { id: number; data: FormData }>({
+			query: ({ id, data }) => ({
+				url: `${process.env.NEXT_PUBLIC_ROOT_API_URL}/devis/${id}/attachments/`,
+				method: 'POST',
+				data,
+			}),
+			invalidatesTags: ['Attachment'],
+		}),
+		deleteQuoteAttachment: builder.mutation<void, { id: number }>({
+			query: ({ id }) => ({
+				url: `${process.env.NEXT_PUBLIC_ROOT_API_URL}/devis/attachments/${id}/`,
+				method: 'DELETE',
+			}),
+			invalidatesTags: ['Attachment'],
+		}),
 		// ── Expenses ────────────────────────────────────────────────────────
 		getExpenses: builder.query<
 			ExpenseType[],
@@ -756,7 +867,7 @@ export const projectApi = createApi({
 				method: 'POST',
 				data,
 			}),
-			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		updateExpense: builder.mutation<
@@ -768,7 +879,7 @@ export const projectApi = createApi({
 				method: 'PUT',
 				data,
 			}),
-			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		deleteExpense: builder.mutation<void, { id: number }>({
@@ -776,7 +887,7 @@ export const projectApi = createApi({
 				url: `${process.env.NEXT_PUBLIC_EXPENSE_LIST}${id}/`,
 				method: 'DELETE',
 			}),
-			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		bulkDeleteExpenses: builder.mutation<void, { ids: number[] }>({
@@ -785,7 +896,7 @@ export const projectApi = createApi({
 				method: 'DELETE',
 				data: { ids },
 			}),
-			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard'],
+			invalidatesTags: ['Expense', 'Project', 'ProjectDashboard', 'MultiProjectDashboard', 'ClientDashboard', 'Quote'],
 		}),
 
 		getExpenseAttachments: builder.query<AttachmentType[], { id: number }>({
@@ -874,6 +985,15 @@ export const projectApi = createApi({
 });
 
 export const {
+	useGetQuotesQuery,
+	useGetQuoteQuery,
+	useCreateQuoteMutation,
+	useUpdateQuoteMutation,
+	useDeleteQuoteMutation,
+	useBulkDeleteQuotesMutation,
+	useGetQuoteAttachmentsQuery,
+	useUploadQuoteAttachmentMutation,
+	useDeleteQuoteAttachmentMutation,
 	// Expense Taxonomy
 	useGetExpenseTaxonomyQuery,
 	useCreateExpenseCategoryMutation,

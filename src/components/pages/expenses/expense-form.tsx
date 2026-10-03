@@ -2,7 +2,7 @@
 
 import { runWithCleanup } from '@/utils/runWithCleanup';
 import { useState, type ChangeEvent, type FC, type MouseEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
 	Alert,
 	Box,
@@ -37,7 +37,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { fr } from 'date-fns/locale';
 import { format, parseISO } from 'date-fns';
 import type { SessionProps } from '@/types/_initTypes';
-import type { ExpenseFormValues, ExpenseType, ServiceFeeType } from '@/types/projectTypes';
+import type { ExpenseFormValues, ExpenseType, QuoteType, ServiceFeeType } from '@/types/projectTypes';
 import type { DropDownType } from '@/types/accountTypes';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import { Protected } from '@/components/layouts/protected/protected';
@@ -65,6 +65,8 @@ import {
 	useDeleteExpenseSubCategoryMutation,
 	useGetExpenseTaxonomyQuery,
 	useGetExpenseQuery,
+	useGetQuoteQuery,
+	useGetQuotesQuery,
 	useGetProjectsListQuery,
 	useGetSuppliersQuery,
 	useUpdateExpenseCategoryMutation,
@@ -77,17 +79,35 @@ import Styles from '@/styles/dashboard/dashboard.module.sass';
 
 const inputTheme = textInputTheme();
 
-type FormikContentProps = {
+type ExpenseFormContentProps = {
 	token: string | undefined;
 	id?: number;
+	quote?: QuoteType;
+	onSaved?: () => void;
+	onCancel?: () => void;
+	onSubmittingChange?: (pending: boolean) => void;
 };
 
-const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
+export const ExpenseFormContent: FC<ExpenseFormContentProps> = ({
+	token,
+	id,
+	quote,
+	onSaved,
+	onCancel,
+	onSubmittingChange,
+}) => {
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
 	const isEditMode = id !== undefined;
 	const router = useRouter();
+	const params = useSearchParams();
+	const initialQuoteId = quote?.id ?? Number(params.get('quote'));
+	const { data: fetchedInitialQuote } = useGetQuoteQuery(
+		{ id: initialQuoteId },
+		{ skip: !token || isEditMode || !initialQuoteId || Boolean(quote) },
+	);
 
+	const initialQuote = quote ?? fetchedInitialQuote;
 	const { data: rawData } = useGetExpenseQuery({ id: id! }, { skip: !token || !isEditMode });
 
 	const { data: projectsData } = useGetProjectsListQuery({}, { skip: !token });
@@ -130,17 +150,18 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 
 	const formik = useFormik<ExpenseFormValues>({
 		initialValues: {
-			project: rawData?.project ?? '',
+			project: rawData?.project ?? initialQuote?.project ?? (Number(params.get('project')) || ''),
+			quote: rawData?.quote ?? initialQuote?.id ?? null,
 			date: rawData?.date ?? '',
-			category: rawData?.category ?? '',
-			sous_categorie: rawData?.sous_categorie ?? '',
+			category: rawData?.category ?? initialQuote?.category ?? '',
+			sous_categorie: rawData?.sous_categorie ?? initialQuote?.sous_categorie ?? '',
 			element: rawData?.element ?? '',
 			description: rawData?.description ?? '',
 			montant: rawData?.montant ?? '',
 			frais_de_service: rawData?.frais_de_service ?? false,
 			frais_de_service_valeur: rawData?.frais_de_service_valeur ?? '',
 			frais_de_service_type: rawData?.frais_de_service_type ?? 'fixed',
-			supplier: rawData?.supplier ?? '',
+			supplier: rawData?.supplier ?? initialQuote?.supplier ?? '',
 			notes: rawData?.notes ?? '',
 			globalError: '',
 		},
@@ -149,6 +170,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 		validationSchema: toFormikValidationSchema(expenseSchema),
 		onSubmit: async (data, { setFieldError }) => {
 			setIsPending(true);
+			onSubmittingChange?.(true);
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const { globalError, ...fields } = data;
 			const payload = {
@@ -178,7 +200,8 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 							}
 							onSuccess(t.expenses.expenseAddedSuccess);
 						}
-						router.push(EXPENSES_LIST);
+						if (onSaved) onSaved();
+						else router.push(EXPENSES_LIST);
 					} catch (e) {
 						setFormikAutoErrors({ e, setFieldError });
 						onError(isEditMode ? t.expenses.expenseUpdateError : t.expenses.expenseAddError);
@@ -186,11 +209,21 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 				},
 				() => {
 					setIsPending(false);
+					onSubmittingChange?.(false);
 				},
 			);
 		},
 	});
 
+	const { data: quotes = [], error: quotesError } = useGetQuotesQuery(
+		{ project: Number(formik.values.project), status: 'validated' },
+		{ skip: !token || !formik.values.project },
+	);
+	const quoteItems = quotes.map((quote) => ({
+		code: String(quote.id),
+		value: `${quote.number} — ${quote.supplier_name} — ${Number(quote.amount_ttc).toLocaleString('fr-MA')} MAD`,
+	}));
+	const selectedQuote = quotes.find((quote) => quote.id === formik.values.quote);
 	const selectedProject = projectItems.find((p) => p.code === String(formik.values.project)) ?? null;
 	const selectedCategory = categoryItems.find((c) => c.code === String(formik.values.category)) ?? null;
 	const selectedSupplier = supplierItems.find((s) => s.code === String(formik.values.supplier)) ?? null;
@@ -216,21 +249,23 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 	return (
 		<LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
 			<Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
-				<Stack
-					direction="row"
-					sx={{
-						justifyContent: 'space-between',
-					}}
-				>
-					<Button
-						variant="outlined"
-						startIcon={<ArrowBackIcon />}
-						onClick={() => router.back()}
-						sx={{ whiteSpace: 'nowrap' }}
+				{!onCancel && (
+					<Stack
+						direction="row"
+						sx={{
+							justifyContent: 'space-between',
+						}}
 					>
-						{t.expenses.expensesList}
-					</Button>
-				</Stack>
+						<Button
+							variant="outlined"
+							startIcon={<ArrowBackIcon />}
+							onClick={() => router.back()}
+							sx={{ whiteSpace: 'nowrap' }}
+						>
+							{t.expenses.expensesList}
+						</Button>
+					</Stack>
+				)}
 
 				{showValidationAlert && (
 					<Alert severity="error" icon={<WarningIcon />}>
@@ -283,6 +318,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 								<Stack spacing={2.5}>
 									<CustomAutoCompleteSelect
 										id="project"
+										disabled={Boolean(quote)}
 										size="small"
 										noOptionsText={t.projects.noProjectFound}
 										label={`${t.common.project} *`}
@@ -291,6 +327,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 										value={selectedProject}
 										fullWidth
 										onChange={(_, newVal) => {
+											void formik.setFieldValue('quote', null);
 											void formik.setFieldValue('project', newVal ? Number(newVal.code) : '');
 										}}
 										onBlur={formik.handleBlur('project')}
@@ -298,6 +335,39 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 										helperText={formik.submitCount > 0 ? ((formik.errors.project as string) ?? '') : ''}
 										startIcon={<AssignmentIcon fontSize="small" />}
 									/>
+									{quotesError && <Alert severity="error">{t.quotes.loadError}</Alert>}
+									<CustomAutoCompleteSelect
+										id="quote"
+										disabled={Boolean(quote)}
+										size="small"
+										noOptionsText={t.common.noOptions}
+										label={t.quotes.quoteLink}
+										items={quoteItems}
+										theme={inputTheme}
+										value={quoteItems.find((item) => item.code === String(formik.values.quote)) ?? null}
+										fullWidth
+										onChange={(_, item) => {
+											const quote = quotes.find((row) => String(row.id) === item?.code);
+											void formik.setValues({
+												...formik.values,
+												quote: quote?.id ?? null,
+												...(quote
+													? {
+															supplier: quote.supplier,
+															category: quote.category ?? '',
+															sous_categorie: quote.sous_categorie ?? '',
+														}
+													: {}),
+											});
+										}}
+										error={formik.submitCount > 0 && Boolean(formik.errors.quote)}
+										helperText={formik.errors.quote || t.quotes.linkHelp}
+									/>
+									{selectedQuote &&
+										Number(selectedQuote.spent) -
+											(rawData?.quote === selectedQuote.id ? Number(rawData.montant) : 0) +
+											Number(formik.values.montant.replace(',', '.')) >
+											Number(selectedQuote.amount_ttc) && <Alert severity="warning">{t.quotes.overrun}</Alert>}
 									<CustomTextInput
 										theme={inputTheme}
 										id="description"
@@ -448,6 +518,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 								<Stack spacing={2.5}>
 									<CustomAutoCompleteSelect
 										id="category"
+										disabled={Boolean(quote)}
 										size="small"
 										noOptionsText={t.categories.noCategoryFound}
 										label={t.common.category}
@@ -456,6 +527,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 										value={selectedCategory}
 										fullWidth
 										onChange={(_, newVal) => {
+											void formik.setFieldValue('quote', null);
 											void formik.setFieldValue('category', newVal ? Number(newVal.code) : '');
 											void formik.setFieldValue('sous_categorie', '');
 										}}
@@ -469,6 +541,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 												icon={<CategoryIcon fontSize="small" />}
 												inputTheme={inputTheme}
 												selectedItem={selectedCategory}
+												disabled={Boolean(quote)}
 												addEntity={({ data }) => createExpenseCategory({ data: { name: String(data.name ?? '') } })}
 												editEntity={({ id: entityId, data }) =>
 													updateExpenseCategory({ id: entityId, data: { name: String(data.name ?? '') } })
@@ -477,10 +550,12 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 												buildAddPayload={(name) => ({ name })}
 												buildEditPayload={(name) => ({ name })}
 												onAddSuccess={(newId) => {
+													void formik.setFieldValue('quote', null);
 													void formik.setFieldValue('category', newId);
 													void formik.setFieldValue('sous_categorie', '');
 												}}
 												onDeleteSuccess={() => {
+													void formik.setFieldValue('quote', null);
 													void formik.setFieldValue('category', '');
 													void formik.setFieldValue('sous_categorie', '');
 													onSuccess(t.categories.categoryDeletedSuccess);
@@ -490,6 +565,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 									/>
 									<CustomAutoCompleteSelect
 										id="sous_categorie"
+										disabled={Boolean(quote)}
 										size="small"
 										noOptionsText={t.expenses.noSubCategoryFound}
 										label={t.expenses.subCategory}
@@ -498,6 +574,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 										value={selectedSubCategory}
 										fullWidth
 										onChange={(_, newVal) => {
+											void formik.setFieldValue('quote', null);
 											void formik.setFieldValue('sous_categorie', newVal ? Number(newVal.code) : '');
 										}}
 										onBlur={formik.handleBlur('sous_categorie')}
@@ -531,11 +608,13 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 												buildAddPayload={(name) => ({ name, category: Number(formik.values.category) })}
 												buildEditPayload={(name) => ({ name, category: Number(formik.values.category) })}
 												addDisabled={!formik.values.category}
-												disabled={!formik.values.category}
+												disabled={Boolean(quote) || !formik.values.category}
 												onAddSuccess={(newId) => {
+													void formik.setFieldValue('quote', null);
 													void formik.setFieldValue('sous_categorie', newId);
 												}}
 												onDeleteSuccess={() => {
+													void formik.setFieldValue('quote', null);
 													void formik.setFieldValue('sous_categorie', '');
 													onSuccess(t.expenses.subCategoryDeletedSuccess);
 												}}
@@ -563,6 +642,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 									/>
 									<CustomAutoCompleteSelect
 										id="supplier"
+										disabled={Boolean(quote)}
 										size="small"
 										noOptionsText={t.suppliers.noSupplierFound}
 										label={t.rawData.fieldLabels.expense.supplier}
@@ -572,6 +652,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 										fullWidth
 										onChange={(_, newVal) => {
 											const selected = suppliersData?.find((supplier) => String(supplier.id) === newVal?.code);
+											void formik.setFieldValue('quote', null);
 											void formik.setFieldValue('supplier', selected ? selected.id : '');
 										}}
 										onBlur={formik.handleBlur('supplier')}
@@ -635,7 +716,12 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 							setQueuedAttachments={setQueuedAttachments}
 						/>
 
-						<Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 2 }}>
+						<Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, pt: 2 }}>
+							{onCancel && (
+								<Button variant="outlined" onClick={onCancel} disabled={isLoading}>
+									{t.common.cancel}
+								</Button>
+							)}
 							<PrimaryLoadingButton
 								buttonText={isEditMode ? t.common.update : t.expenses.newExpense}
 								loading={isPending}
@@ -647,7 +733,8 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 										e.preventDefault();
 										formik.handleSubmit();
 										onError(t.users.fixValidationErrors);
-										window.scrollTo({ top: 0, behavior: 'smooth' });
+										const scrollContainer = onCancel ? e.currentTarget.closest('.MuiDialogContent-root') : window;
+										scrollContainer?.scrollTo({ top: 0, behavior: 'smooth' });
 									}
 								}}
 								cssClass={Styles.submitButton}
@@ -676,7 +763,7 @@ const ExpenseFormClient: FC<SessionProps & { id?: number }> = ({ session, id }) 
 		>
 			<NavigationBar title={title}>
 				<Protected permission={id !== undefined ? 'can_edit' : 'can_create'}>
-					<FormikContent token={token} id={id} />
+					<ExpenseFormContent token={token} id={id} />
 				</Protected>
 			</NavigationBar>
 		</Stack>

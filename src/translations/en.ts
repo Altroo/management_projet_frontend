@@ -1,6 +1,59 @@
 import type { TranslationDictionary } from '@/types/languageTypes';
 
 export const en: TranslationDictionary = {
+	quotes: {
+		budgetTracking: 'Budget tracking',
+		quotesList: 'Quotes / Estimates',
+		backToList: 'Quotes / Estimates list',
+		newQuote: 'New quote',
+		editQuote: 'Edit quote',
+		quoteDetails: 'Quote details',
+		number: 'Quote number',
+		supplier: 'Supplier / Contractor',
+		amount_ht: 'Amount excl. VAT',
+		amount_tva: 'VAT amount',
+		amount_ttc: 'Amount incl. VAT',
+		status: 'Status',
+		received: 'Received',
+		validated: 'Validated',
+		rejected: 'Rejected',
+		spent: 'Already spent',
+		remaining: 'Remaining to pay',
+		variance: 'Variance (planned − actual)',
+		consumption: 'Consumption',
+		overrun: 'Budget exceeded',
+		estimated: 'Estimated budget incl. VAT',
+		advances: 'Client advances received',
+		remainingBudget: 'Remaining budget',
+		unlinked: 'Expenses without a quote',
+		noValidated: 'No validated quotes: estimated budget unavailable.',
+		budgetHelp:
+			'Sum of validated quotes including VAT. Actual spending includes all project expenses, excluding service fees.',
+		quoteLink: 'Linked quote (optional)',
+		linkHelp: 'Only validated quotes for this project are available. Supplier and category are copied from the quote.',
+		reportOption: 'Include estimated budget / actual spending comparison',
+		reportHelp: 'The comparison shows project lifetime totals to date, independently of the report period.',
+		saved: 'Quote saved.',
+		saveError: 'Unable to save the quote.',
+		loadError: 'Unable to load quotes.',
+		attachmentError: 'Quote saved, but some attachments failed. You can add them from the edit page.',
+		deleteQuote: 'Delete quote',
+		deleteQuoteConfirm: 'Delete this quote? Quotes linked to expenses cannot be deleted.',
+		quoteDeletedSuccess: 'Quote deleted.',
+		quoteDeleteError: 'Unable to delete the quote.',
+		quoteBulkDeleteError: 'Unable to delete quotes.',
+		bulkDeleteQuotesConfirm: 'Delete selected quotes? Quotes linked to expenses are protected.',
+		byCategory: 'Budget and spending by category',
+		bySubcategory: 'Subcategory breakdown',
+		uncategorized: 'Uncategorized',
+		noSubcategory: 'No subcategory',
+		linkedExpenses: 'Expenses linked to quote',
+		attachmentsHelp: 'PDF or photo (JPG, PNG, WEBP, HEIC), up to 250 MB per file.',
+		invalidAmount: 'Enter a valid amount with up to two decimal places.',
+		required: 'This field is required.',
+		quotesBulkDeletedSuccess: (n: number) => `${n} quote(s) deleted.`,
+		bulkDeleteQuotes: (n: number) => `Delete ${n} quotes`,
+	},
 	common: {
 		yes: 'Yes',
 		no: 'No',
@@ -778,6 +831,34 @@ export const en: TranslationDictionary = {
 		budgetUnavailable: 'Budget not provided',
 		realBudgetByStage: 'Real budget by stage',
 		realBudgetByStageSub: 'Revenue, charges, and margin by stage',
+		tooltipBudgetUtilisation:
+			'Share of the total budget used: recorded expenses ÷ total budget × 100. The budget comes from the displayed projects’ records. Above 100%, expenses exceed that budget and the bar stays full. The percentage is unavailable without a positive budget.',
+		tooltipRealBudgetByStage:
+			'Compares client and supplier amounts from real-budget entries, grouped by stage. Revenue and costs use the left axis in MAD; margin uses the right axis as a percentage: (revenue − costs) ÷ revenue × 100. Margin is 0% when revenue is zero.',
+		tooltipCumulativeIncomeExpenses:
+			'Tracks cumulative recorded revenue and expenses by date, starting with the displayed projects’ first transaction. Each point includes earlier transactions. The gap between the curves shows the revenue-minus-expenses balance on that date, in MAD.',
+		tooltipProjectBudgetUtilization:
+			'Compares recorded expenses with the budget entered in the project record. The ring shows the used and remaining shares, from 0 to 100%. If expenses exceed the budget, the ring stays full and an overrun is indicated. The chart is unavailable without a positive budget.',
+		tooltipProfitGauge:
+			'Shows the project balance in MAD: recorded revenue − expenses. Margin is that balance divided by revenue × 100; it is 0% when revenue is zero. The ring is limited to 0–100%, while the central values retain the actual result, including a loss.',
+		tooltipCostByCategory:
+			'Ranks the 10 categories with the highest recorded expenses for this project. Each bar represents the total amount in MAD, helping identify the most costly work categories.',
+		tooltipCostBySubcategory:
+			'Ranks the 10 subcategories with the highest recorded expenses for this project, in MAD. Expenses without a subcategory are excluded from this chart.',
+		tooltipCostByVendor:
+			'Ranks the 10 suppliers with the highest recorded expenses for this project, in MAD. Expenses without a supplier are excluded from this chart.',
+		tooltipCategoryBreakdown:
+			'Splits recorded expenses among the 10 categories with the highest totals. Each slice shows its category’s share of the displayed total. Categories outside the top 10 are excluded from the ring.',
+		tooltipSubcategoryBreakdown:
+			'Splits recorded expenses among the 10 subcategories with the highest totals. Each slice shows a share of the displayed total. Expenses without a subcategory and subcategories outside the top 10 are excluded.',
+		tooltipVendorBreakdown:
+			'Splits recorded expenses among the 10 suppliers with the highest totals. Each slice shows a share of the displayed total. Expenses without a supplier and suppliers outside the top 10 are excluded.',
+		tooltipProjectRanking:
+			'Ranks the 10 projects with the highest budgets entered in their project records, in descending order. The bars show these budgets in MAD.',
+		tooltipTopExpenseClients:
+			'Ranks the 5 clients whose projects have the highest recorded expenses. Amounts are grouped by client across all projects and shown in MAD.',
+		tooltipTopRevenueClients:
+			'Ranks the 5 clients whose projects have the highest recorded revenue. Amounts are grouped by client across all projects and shown in MAD.',
 		noDataAvailable: 'No data available',
 		budget: 'Budget',
 		revenue: 'Revenue',

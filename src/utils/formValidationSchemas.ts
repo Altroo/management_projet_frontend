@@ -294,3 +294,32 @@ export const paymentScheduleSchema = z.object({
 	notes: optionalTextField(1, 2000),
 	globalError: optionalTextField(1, 500),
 });
+
+const quoteMoneyField = (positive: boolean) =>
+	z.string().refine(
+		(value) => {
+			const normalized = value.replace(',', '.');
+			return (
+				/^\d+(\.\d{1,2})?$/.test(normalized) &&
+				Number(normalized) < 1e12 &&
+				(positive ? Number(normalized) > 0 : Number(normalized) >= 0)
+			);
+		},
+		{ error: () => getT().quotes.invalidAmount },
+	);
+export const quoteSchema = z.object({
+	project: z
+		.union([z.number().positive(), z.literal('')])
+		.refine((value) => value !== '', { error: () => getT().quotes.required }),
+	supplier: z
+		.union([z.number().positive(), z.literal('')])
+		.refine((value) => value !== '', { error: () => getT().quotes.required }),
+	number: requiredTextField(1, 100),
+	date: requiredDateField(() => getT().common.date),
+	category: optionalNumberField(),
+	sous_categorie: optionalNumberField(),
+	description: requiredTextField(1, 5000),
+	amount_ht: quoteMoneyField(true),
+	amount_tva: quoteMoneyField(false),
+	status: z.enum(['received', 'validated', 'rejected']),
+});

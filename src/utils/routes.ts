@@ -21,9 +21,10 @@ export const REPORTS = `${SITE_ROOT}dashboard/reports`;
 export type PdfLanguage = 'fr' | 'en';
 export const REPORTS_PDF = (
 	language: PdfLanguage,
-	filters: { dateFrom?: string; dateTo?: string; projectId?: number } = {},
+	filters: { dateFrom?: string; dateTo?: string; includeEstimates?: boolean; projectId?: number } = {},
 ) => {
 	const params = new URLSearchParams();
+	if (filters.includeEstimates && filters.projectId) params.set('include_estimates', 'true');
 	if (filters.dateFrom) params.set('date_from', filters.dateFrom);
 	if (filters.dateTo) params.set('date_to', filters.dateTo);
 	if (filters.projectId) params.set('project_id', String(filters.projectId));
@@ -32,9 +33,16 @@ export const REPORTS_PDF = (
 };
 export const REPORTS_DOWNLOAD = (
 	language: PdfLanguage,
-	filters: { dateFrom?: string; dateTo?: string; projectId?: number; projectName?: string } = {},
+	filters: {
+		dateFrom?: string;
+		dateTo?: string;
+		includeEstimates?: boolean;
+		projectId?: number;
+		projectName?: string;
+	} = {},
 ) => {
 	const params = new URLSearchParams({ language });
+	if (filters.includeEstimates && filters.projectId) params.set('include_estimates', 'true');
 	if (filters.dateFrom) params.set('date_from', filters.dateFrom);
 	if (filters.dateTo) params.set('date_to', filters.dateTo);
 	if (filters.projectId) params.set('project_id', String(filters.projectId));
@@ -75,3 +83,9 @@ export const EXPENSES_LIST = `${SITE_ROOT}dashboard/expenses`;
 export const EXPENSES_ADD = `${SITE_ROOT}dashboard/expenses/new`;
 export const EXPENSES_VIEW = (id: number) => `${SITE_ROOT}dashboard/expenses/${id}`;
 export const EXPENSES_EDIT = (id: number) => `${SITE_ROOT}dashboard/expenses/${id}/edit`;
+
+// Quotes / Estimates
+export const QUOTES_LIST = `${SITE_ROOT}dashboard/quotes`;
+export const QUOTES_ADD = `${QUOTES_LIST}/new`;
+export const QUOTES_VIEW = (id: number) => `${QUOTES_LIST}/${id}`;
+export const QUOTES_EDIT = (id: number) => `${QUOTES_LIST}/${id}/edit`;

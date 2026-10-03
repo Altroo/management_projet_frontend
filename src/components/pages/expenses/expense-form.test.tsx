@@ -15,6 +15,7 @@ const mockStore = configureStore({
 
 const mockPush = jest.fn();
 jest.mock('next/navigation', () => ({
+	useSearchParams: () => new URLSearchParams(),
 	__esModule: true,
 	useRouter: () => ({
 		push: mockPush,
@@ -48,6 +49,8 @@ const mockDeleteExpenseAttachment = jest.fn();
 
 jest.mock('@/store/services/project', () => ({
 	__esModule: true,
+	useGetQuotesQuery: () => ({ data: [] }),
+	useGetQuoteQuery: () => ({ data: undefined }),
 	useGetExpenseQuery: (params: { id: number }, options: { skip: boolean }) => mockUseGetExpenseQuery(params, options),
 	useCreateExpenseMutation: () => [mockCreateExpense, { isLoading: false, error: undefined }],
 	useUpdateExpenseMutation: () => [mockUpdateExpense, { isLoading: false, error: undefined }],

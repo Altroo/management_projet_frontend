@@ -64,6 +64,8 @@ import {
 	DASHBOARD_COMPANY,
 	DASHBOARD_NOTIFICATIONS,
 	DASHBOARD_PASSWORD,
+	QUOTES_ADD,
+	QUOTES_LIST,
 	EXPENSES_ADD,
 	EXPENSES_LIST,
 	PROJECTS_ADD,
@@ -130,6 +132,14 @@ const getNavigationMenu = (isStaff: boolean, canPrint: boolean, t: TranslationDi
 			items: [
 				{ title: t.navigation.revenuesList, label: t.navigation.revenuesList, path: REVENUES_LIST },
 				{ title: t.navigation.newRevenue, label: t.navigation.newRevenue, path: REVENUES_ADD },
+			],
+		},
+		devis: {
+			title: t.quotes.quotesList,
+			icon: <PictureAsPdfIcon />,
+			items: [
+				{ title: t.quotes.quotesList, label: t.quotes.quotesList, path: QUOTES_LIST },
+				{ title: t.quotes.newQuote, label: t.quotes.newQuote, path: QUOTES_ADD },
 			],
 		},
 		depenses: {

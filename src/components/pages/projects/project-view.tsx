@@ -10,6 +10,8 @@ import Styles from '@/styles/dashboard/dashboard.module.sass';
 import NavigationBar from '@/components/layouts/navigationBar/navigationBar';
 import {
 	Alert,
+	Checkbox,
+	FormControlLabel,
 	Box,
 	Button,
 	Card,
@@ -34,6 +36,7 @@ import {
 	Notes as NotesIcon,
 	Person as PersonIcon,
 	Phone as PhoneIcon,
+	PictureAsPdf as PictureAsPdfIcon,
 	Schedule as ScheduleIcon,
 } from '@mui/icons-material';
 import { PROJECTS_EDIT, PROJECTS_LIST, REPORTS_DOWNLOAD, type PdfLanguage } from '@/utils/routes';
@@ -47,6 +50,7 @@ import { downloadFileBlob } from '@/utils/fileDownload';
 import { useLanguage, useToast } from '@/utils/hooks';
 import { STATUS_CHIP_COLORS } from '@/utils/rawData';
 import ProjectPaymentScheduleCard from '@/components/shared/projectPaymentSchedule/projectPaymentSchedule';
+import ProjectEstimateBudget from '@/components/shared/projectEstimateBudget/projectEstimateBudget';
 import ProjectRealBudgetCard from '@/components/shared/projectRealBudget/projectRealBudget';
 import { ProjectAttachmentsViewSection } from '@/components/shared/entityAttachments/entityAttachments';
 
@@ -130,6 +134,7 @@ const ProjectViewClient: FC<Props> = ({ session, id }) => {
 	const [deleteProject] = useDeleteProjectMutation();
 	const { onSuccess, onError } = useToast();
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const [includeEstimates, setIncludeEstimates] = useState(false);
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
 	const [isDownloadingReport, setIsDownloadingReport] = useState(false);
 
@@ -174,7 +179,13 @@ const ProjectViewClient: FC<Props> = ({ session, id }) => {
 		await runWithCleanup(
 			async () => {
 				try {
-					await downloadFileBlob(REPORTS_DOWNLOAD(language, { projectId: id, projectName: project.nom }));
+					await downloadFileBlob(
+						REPORTS_DOWNLOAD(language, {
+							projectId: id,
+							projectName: project.nom,
+							...(includeEstimates ? { includeEstimates: true } : {}),
+						}),
+					);
 				} catch (err) {
 					onError(extractApiErrorMessage(err, t.projects.reportDownloadError));
 				}
@@ -233,17 +244,7 @@ const ProjectViewClient: FC<Props> = ({ session, id }) => {
 											{t.common.edit}
 										</Button>
 									</Protected>
-									<Protected permission="can_print">
-										<Button
-											variant="outlined"
-											size="small"
-											startIcon={<DownloadIcon />}
-											disabled={isDownloadingReport}
-											onClick={() => setShowLanguageModal(true)}
-										>
-											{t.projects.downloadReport}
-										</Button>
-									</Protected>
+
 									<Protected permission="can_delete">
 										<Button
 											variant="outlined"
@@ -283,6 +284,7 @@ const ProjectViewClient: FC<Props> = ({ session, id }) => {
 											spacing={3}
 											sx={{
 												alignItems: 'center',
+												mb: 2,
 											}}
 										>
 											<AssignmentIcon color="primary" />
@@ -427,6 +429,53 @@ const ProjectViewClient: FC<Props> = ({ session, id }) => {
 									</CardContent>
 								</Card>
 
+								<Protected permission="can_print">
+									<Card elevation={2} sx={{ borderRadius: 2 }}>
+										<CardContent sx={{ p: 3 }}>
+											<Stack
+												direction={{ xs: 'column', sm: 'row' }}
+												spacing={2}
+												sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 2 }}
+											>
+												<Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
+													<PictureAsPdfIcon color="primary" />
+													<Typography variant="h6" sx={{ fontWeight: 700 }}>
+														{t.projects.downloadReport}
+													</Typography>
+												</Stack>
+												<Button
+													variant="outlined"
+													size="small"
+													startIcon={<DownloadIcon />}
+													disabled={isDownloadingReport}
+													onClick={() => setShowLanguageModal(true)}
+												>
+													{t.common.download}
+												</Button>
+											</Stack>
+											<Divider sx={{ mb: 3 }} />
+											<FormControlLabel
+												sx={{ m: 0, gap: 1, alignItems: 'flex-start' }}
+												control={
+													<Checkbox
+														checked={includeEstimates}
+														onChange={(event) => setIncludeEstimates(event.target.checked)}
+														sx={{ p: 0.5 }}
+													/>
+												}
+												label={
+													<Stack spacing={0.5}>
+														<Typography sx={{ fontWeight: 600 }}>{t.quotes.reportOption}</Typography>
+														<Typography variant="body2" color="text.secondary">
+															{t.quotes.reportHelp}
+														</Typography>
+													</Stack>
+												}
+											/>
+										</CardContent>
+									</Card>
+								</Protected>
+								<ProjectEstimateBudget projectId={id} />
 								<ProjectPaymentScheduleCard projectId={id} />
 
 								<ProjectRealBudgetCard projectId={id} budgetInitial={project.budget_total} />

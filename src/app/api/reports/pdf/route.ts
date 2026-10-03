@@ -4,8 +4,7 @@ import { auth } from '@/auth';
 import { financialReportFilename } from '@/utils/fileDownload';
 import { REPORTS_PDF, type PdfLanguage } from '@/utils/routes';
 
-const pdfLanguage = (value: string | null): PdfLanguage | null =>
-	value === 'fr' || value === 'en' ? value : null;
+const pdfLanguage = (value: string | null): PdfLanguage | null => (value === 'fr' || value === 'en' ? value : null);
 
 export async function GET(request: NextRequest) {
 	const session = await auth();
@@ -27,10 +26,18 @@ export async function GET(request: NextRequest) {
 	}
 
 	try {
-		const upstream = await fetch(REPORTS_PDF(language, { dateFrom, dateTo, projectId }), {
-			headers: { Authorization: `Bearer ${session.accessToken}` },
-			cache: 'no-store',
-		});
+		const upstream = await fetch(
+			REPORTS_PDF(language, {
+				dateFrom,
+				dateTo,
+				projectId,
+				...(request.nextUrl.searchParams.get('include_estimates') === 'true' ? { includeEstimates: true } : {}),
+			}),
+			{
+				headers: { Authorization: `Bearer ${session.accessToken}` },
+				cache: 'no-store',
+			},
+		);
 		if (!upstream.ok) {
 			return new NextResponse(upstream.body, {
 				status: upstream.status,

@@ -5,6 +5,8 @@ import { runWithCleanup } from '@/utils/runWithCleanup';
 import { useEffect, useRef, useState, type FC } from 'react';
 import {
 	Alert,
+	Checkbox,
+	FormControlLabel,
 	Box,
 	Card,
 	CardContent,
@@ -68,6 +70,7 @@ const ReportsClient: FC<SessionProps> = ({ session }) => {
 	const [dateFrom, setDateFrom] = useState(initialPeriod.dateFrom);
 	const [dateTo, setDateTo] = useState(initialPeriod.dateTo);
 	const [projectId, setProjectId] = useState<number | ''>('');
+	const [includeEstimates, setIncludeEstimates] = useState(false);
 	const startDateInitialized = useRef(false);
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
 	const [generationStage, setGenerationStage] = useState<GenerationStage | null>(null);
@@ -116,6 +119,7 @@ const ReportsClient: FC<SessionProps> = ({ session }) => {
 								dateFrom,
 								dateTo,
 								projectId: projectId || undefined,
+								...(projectId && includeEstimates ? { includeEstimates: true } : {}),
 								projectName: projectId ? selectedProject?.value : undefined,
 							}),
 							{ onResponseReady: () => setGenerationStage('downloading') },
@@ -152,6 +156,22 @@ const ReportsClient: FC<SessionProps> = ({ session }) => {
 									<Divider sx={{ mb: 3 }} />
 									<Stack spacing={2.5}>
 										<Alert severity="info">{t.reports.periodHelp}</Alert>
+										{projectId && (
+											<>
+												<FormControlLabel
+													control={
+														<Checkbox
+															checked={includeEstimates}
+															onChange={(event) => setIncludeEstimates(event.target.checked)}
+														/>
+													}
+													label={t.quotes.reportOption}
+												/>
+												<Typography variant="body2" color="text.secondary">
+													{t.quotes.reportHelp}
+												</Typography>
+											</>
+										)}
 										<Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
 											<DatePicker
 												label={t.reports.startDate}

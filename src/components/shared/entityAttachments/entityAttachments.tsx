@@ -40,6 +40,9 @@ import {
 } from '@mui/icons-material';
 import type { AttachmentType } from '@/types/projectTypes';
 import {
+	useDeleteQuoteAttachmentMutation,
+	useGetQuoteAttachmentsQuery,
+	useUploadQuoteAttachmentMutation,
 	useDeleteExpenseAttachmentMutation,
 	useDeleteProjectAttachmentMutation,
 	useDeleteRevenueAttachmentMutation,
@@ -60,6 +63,8 @@ export type QueuedAttachment = {
 };
 
 type EntityAttachmentsFormProps = {
+	accept?: string;
+	validateFile?: (file: File) => string | undefined;
 	attachments: AttachmentType[];
 	queuedAttachments: QueuedAttachment[];
 	isLoading: boolean;
@@ -172,6 +177,8 @@ const AttachmentRow: FC<AttachmentRowProps> = ({ icon, title, subtitle, actions,
 };
 
 const EntityAttachmentsForm: FC<EntityAttachmentsFormProps> = ({
+	accept,
+	validateFile,
 	attachments,
 	queuedAttachments,
 	isLoading,
@@ -189,6 +196,11 @@ const EntityAttachmentsForm: FC<EntityAttachmentsFormProps> = ({
 
 	const handleSelectedFiles = async (files: File[]) => {
 		if (files.length === 0) return;
+		const fileError = files.map((file) => validateFile?.(file)).find(Boolean);
+		if (fileError) {
+			onError(fileError);
+			return;
+		}
 
 		const selected = files.map((file) => ({
 			id: makeQueuedAttachmentId(),
@@ -330,6 +342,7 @@ const EntityAttachmentsForm: FC<EntityAttachmentsFormProps> = ({
 								component="input"
 								ref={inputRef}
 								type="file"
+								accept={accept}
 								multiple
 								disabled={isPending || isLoading}
 								onChange={handleFileChange}
@@ -674,6 +687,39 @@ export const ExpenseAttachmentsViewSection: FC<ViewSectionProps> = ({ id }) => {
 
 export const RevenueAttachmentsViewSection: FC<ViewSectionProps> = ({ id }) => {
 	const { data = [], isLoading } = useGetRevenueAttachmentsQuery({ id }, { skip: !id });
+
+	return <EntityAttachmentsView attachments={data} isLoading={isLoading} />;
+};
+
+export const QuoteAttachmentsFormSection: FC<FormSectionProps> = ({ id, queuedAttachments, setQueuedAttachments }) => {
+	const { t } = useLanguage();
+	const { data = [], isLoading } = useGetQuoteAttachmentsQuery({ id: id! }, { skip: !id });
+	const [uploadAttachment] = useUploadQuoteAttachmentMutation();
+	const [deleteAttachment] = useDeleteQuoteAttachmentMutation();
+
+	return (
+		<EntityAttachmentsForm
+			accept=".pdf,.jpg,.jpeg,.png,.webp,.heic"
+			validateFile={(file) =>
+				!/\.(pdf|jpe?g|png|webp|heic)$/i.test(file.name) || file.size > 250 * 1024 * 1024
+					? t.quotes.attachmentsHelp
+					: undefined
+			}
+			attachments={id ? data : []}
+			queuedAttachments={id ? [] : queuedAttachments}
+			isLoading={isLoading}
+			onQueueAttachments={(items) => setQueuedAttachments((current) => [...current, ...items])}
+			onRemoveQueuedAttachment={(attachmentId) =>
+				setQueuedAttachments((current) => current.filter((attachment) => attachment.id !== attachmentId))
+			}
+			onUpload={id ? (formData) => uploadAttachment({ id, data: formData }).unwrap() : undefined}
+			onDelete={id ? (attachmentId) => deleteAttachment({ id: attachmentId }).unwrap() : undefined}
+		/>
+	);
+};
+
+export const QuoteAttachmentsViewSection: FC<ViewSectionProps> = ({ id }) => {
+	const { data = [], isLoading } = useGetQuoteAttachmentsQuery({ id }, { skip: !id });
 
 	return <EntityAttachmentsView attachments={data} isLoading={isLoading} />;
 };

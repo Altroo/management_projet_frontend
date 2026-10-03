@@ -1,6 +1,60 @@
 import type { TranslationDictionary } from '@/types/languageTypes';
 
 export const fr: TranslationDictionary = {
+	quotes: {
+		budgetTracking: 'Suivi du budget',
+		quotesList: 'Devis / Estimations',
+		backToList: 'Liste des devis / estimations',
+		newQuote: 'Nouveau devis',
+		editQuote: 'Modifier le devis',
+		quoteDetails: 'Détails du devis',
+		number: 'Numéro du devis',
+		supplier: 'Fournisseur / Prestataire',
+		amount_ht: 'Montant HT',
+		amount_tva: 'Montant TVA',
+		amount_ttc: 'Montant TTC',
+		status: 'Statut',
+		received: 'Reçu',
+		validated: 'Validé',
+		rejected: 'Refusé',
+		spent: 'Déjà dépensé',
+		remaining: 'Reste à payer',
+		variance: 'Écart (prévu − réel)',
+		consumption: 'Consommation',
+		overrun: 'Dépassement du budget',
+		estimated: 'Budget prévisionnel TTC',
+		advances: 'Avances reçues du client',
+		remainingBudget: 'Reste à engager',
+		unlinked: 'Dépenses sans devis',
+		noValidated: 'Aucun devis validé : budget prévisionnel non renseigné.',
+		budgetHelp:
+			'Somme des devis validés TTC. Les dépenses incluent toutes les dépenses du projet, sans frais de service.',
+		quoteLink: 'Devis associé (facultatif)',
+		linkHelp: 'Seuls les devis validés du projet sont proposés. Le fournisseur et le lot sont repris du devis.',
+		reportOption: 'Inclure la comparaison budget prévisionnel / dépenses réelles',
+		reportHelp: 'La comparaison porte sur le cumul du projet à ce jour, indépendamment de la période du rapport.',
+		saved: 'Devis enregistré.',
+		saveError: 'Impossible d’enregistrer le devis.',
+		loadError: 'Impossible de charger les devis.',
+		attachmentError:
+			'Devis enregistré, mais certaines pièces jointes ont échoué. Vous pouvez les ajouter depuis la modification du devis.',
+		deleteQuote: 'Supprimer le devis',
+		deleteQuoteConfirm: 'Supprimer ce devis ? Un devis lié à des dépenses ne peut pas être supprimé.',
+		quoteDeletedSuccess: 'Devis supprimé.',
+		quoteDeleteError: 'Impossible de supprimer le devis.',
+		quoteBulkDeleteError: 'Impossible de supprimer les devis.',
+		bulkDeleteQuotesConfirm: 'Supprimer les devis sélectionnés ? Les devis liés à des dépenses sont protégés.',
+		byCategory: 'Budget et dépenses par lot / catégorie',
+		bySubcategory: 'Détail par sous-catégorie',
+		uncategorized: 'Sans catégorie',
+		noSubcategory: 'Sans sous-catégorie',
+		linkedExpenses: 'Dépenses liées au devis',
+		attachmentsHelp: 'PDF ou photo (JPG, PNG, WEBP, HEIC), 250 Mo maximum par fichier.',
+		invalidAmount: 'Saisissez un montant valide avec au plus deux décimales.',
+		required: 'Ce champ est obligatoire.',
+		quotesBulkDeletedSuccess: (n: number) => `${n} devis supprimé(s).`,
+		bulkDeleteQuotes: (n: number) => `Supprimer ${n} devis`,
+	},
 	common: {
 		yes: 'Oui',
 		no: 'Non',
@@ -778,6 +832,34 @@ export const fr: TranslationDictionary = {
 		budgetUnavailable: 'Budget non renseigné',
 		realBudgetByStage: 'Budget réel par étape',
 		realBudgetByStageSub: 'Revenus, charges et marge par étape',
+		tooltipBudgetUtilisation:
+			'Part du budget total consommée : dépenses enregistrées ÷ budget total × 100. Le budget est celui saisi dans les fiches des projets affichés. Au-delà de 100 %, les dépenses dépassent ce budget ; la barre reste pleine. Sans budget positif, le pourcentage est indisponible.',
+		tooltipRealBudgetByStage:
+			'Compare les montants client et fournisseur des lignes du budget réel, regroupés par étape. Les revenus et les coûts se lisent en MAD sur l’axe de gauche ; la marge se lit en pourcentage sur l’axe de droite : (revenus − coûts) ÷ revenus × 100. La marge vaut 0 % lorsque les revenus sont nuls.',
+		tooltipCumulativeIncomeExpenses:
+			'Suit le cumul des revenus enregistrés et des dépenses au fil des dates, depuis la première opération des projets affichés. Chaque point inclut les opérations précédentes. L’écart entre les courbes montre le solde entre les revenus et les dépenses à cette date, en MAD.',
+		tooltipProjectBudgetUtilization:
+			'Compare les dépenses enregistrées au budget saisi dans la fiche du projet. L’anneau représente la part consommée et la part restante, entre 0 et 100 %. Si les dépenses dépassent le budget, l’anneau reste plein et le dépassement est signalé. Sans budget positif, le graphique est indisponible.',
+		tooltipProfitGauge:
+			'Affiche le solde du projet en MAD : revenus enregistrés − dépenses. La marge est ce solde divisé par les revenus × 100 ; elle vaut 0 % si les revenus sont nuls. L’anneau est limité à 0–100 %, tandis que les valeurs au centre conservent le résultat réel, y compris une perte.',
+		tooltipCostByCategory:
+			'Classe les 10 catégories avec le plus de dépenses enregistrées pour ce projet. La longueur de chaque barre représente le montant total en MAD et permet de repérer les lots les plus coûteux.',
+		tooltipCostBySubcategory:
+			'Classe les 10 sous-catégories avec le plus de dépenses enregistrées pour ce projet, en MAD. Les dépenses sans sous-catégorie ne figurent pas dans ce graphique.',
+		tooltipCostByVendor:
+			'Classe les 10 fournisseurs avec le plus de dépenses enregistrées pour ce projet, en MAD. Les dépenses sans fournisseur ne figurent pas dans ce graphique.',
+		tooltipCategoryBreakdown:
+			'Répartit les dépenses enregistrées entre les 10 catégories aux montants les plus élevés. Chaque secteur représente la part de sa catégorie dans le total affiché. Les catégories au-delà des 10 premières ne figurent pas dans l’anneau.',
+		tooltipSubcategoryBreakdown:
+			'Répartit les dépenses enregistrées entre les 10 sous-catégories aux montants les plus élevés. Chaque secteur représente une part du total affiché. Les dépenses sans sous-catégorie et les sous-catégories au-delà des 10 premières sont exclues.',
+		tooltipVendorBreakdown:
+			'Répartit les dépenses enregistrées entre les 10 fournisseurs aux montants les plus élevés. Chaque secteur représente une part du total affiché. Les dépenses sans fournisseur et les fournisseurs au-delà des 10 premiers sont exclus.',
+		tooltipProjectRanking:
+			'Classe les 10 projets dont le budget saisi dans la fiche projet est le plus élevé, par ordre décroissant. Les barres représentent ces budgets en MAD.',
+		tooltipTopExpenseClients:
+			'Classe les 5 clients dont les projets totalisent le plus de dépenses enregistrées. Les montants sont regroupés par client, tous projets confondus, et affichés en MAD.',
+		tooltipTopRevenueClients:
+			'Classe les 5 clients dont les projets totalisent le plus de revenus enregistrés. Les montants sont regroupés par client, tous projets confondus, et affichés en MAD.',
 		noDataAvailable: 'Aucune donnée disponible',
 		budget: 'Budget',
 		revenue: 'Revenu',
