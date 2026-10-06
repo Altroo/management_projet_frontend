@@ -37,7 +37,7 @@ const SuppliersListClient: FC<SessionProps> = ({ session }) => {
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
 	const token = useInitAccessToken(session);
-	const [paginationModel, setPaginationModel] = useDataGridPagination();
+	const [paginationModel, setPaginationModel, sorting] = useDataGridPagination();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [filterModel, setFilterModel] = useState<GridFilterModel>({
 		items: [],
@@ -48,7 +48,7 @@ const SuppliersListClient: FC<SessionProps> = ({ session }) => {
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
 	const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
-	const { data = [], isLoading } = useGetSuppliersQuery({}, { skip: !token });
+	const { data = [], isLoading } = useGetSuppliersQuery({ ordering: sorting.ordering }, { skip: !token });
 	const [deleteSupplier] = useDeleteSupplierMutation();
 	const [bulkDeleteSuppliers] = useBulkDeleteSuppliersMutation();
 
@@ -235,6 +235,7 @@ const SuppliersListClient: FC<SessionProps> = ({ session }) => {
 							columns={columns}
 							paginationModel={paginationModel}
 							setPaginationModel={setPaginationModel}
+							sorting={sorting}
 							searchTerm={searchTerm}
 							setSearchTerm={setSearchTerm}
 							filterModel={filterModel}

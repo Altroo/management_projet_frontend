@@ -49,7 +49,7 @@ const QuotesListClient: FC<SessionProps> = ({ session }) => {
 	const { onSuccess, onError } = useToast();
 	const token = useInitAccessToken(session);
 
-	const [paginationModel, setPaginationModel] = useDataGridPagination();
+	const [paginationModel, setPaginationModel, sorting] = useDataGridPagination();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [filterModel, setFilterModel] = useState<GridFilterModel>({
 		items: [],
@@ -62,7 +62,7 @@ const QuotesListClient: FC<SessionProps> = ({ session }) => {
 		data: quotes,
 		isLoading,
 		error,
-	} = useGetQuotesQuery({ project: params.get('project') || undefined }, { skip: !token });
+	} = useGetQuotesQuery({ ordering: sorting.ordering, project: params.get('project') || undefined }, { skip: !token });
 	const { data: projectsData } = useGetProjectsListQuery({}, { skip: !token });
 	const { data: categoriesData } = useGetCategoriesQuery(undefined, { skip: !token });
 	const { data: suppliersData } = useGetSuppliersQuery({}, { skip: !token });
@@ -554,6 +554,7 @@ const QuotesListClient: FC<SessionProps> = ({ session }) => {
 							columns={columns}
 							paginationModel={paginationModel}
 							setPaginationModel={setPaginationModel}
+							sorting={sorting}
 							searchTerm={searchTerm}
 							setSearchTerm={setSearchTerm}
 							filterModel={filterModel}

@@ -33,7 +33,7 @@ const CategoriesListClient: FC<SessionProps> = ({ session }) => {
 	const { onSuccess, onError } = useToast();
 	const token = useInitAccessToken(session);
 
-	const [paginationModel, setPaginationModel] = useDataGridPagination();
+	const [paginationModel, setPaginationModel, sorting] = useDataGridPagination();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [filterModel, setFilterModel] = useState<GridFilterModel>({
 		items: [],
@@ -41,7 +41,7 @@ const CategoriesListClient: FC<SessionProps> = ({ session }) => {
 	});
 	const [customFilterParams, setCustomFilterParams] = useState<Record<string, string>>({});
 
-	const { data: categories, isLoading } = useGetCategoriesQuery(undefined, { skip: !token });
+	const { data: categories, isLoading } = useGetCategoriesQuery({ ordering: sorting.ordering }, { skip: !token });
 
 	const [deleteCategory] = useDeleteCategoryMutation();
 	const [bulkDeleteCategories] = useBulkDeleteCategoriesMutation();
@@ -281,6 +281,7 @@ const CategoriesListClient: FC<SessionProps> = ({ session }) => {
 							columns={columns}
 							paginationModel={paginationModel}
 							setPaginationModel={setPaginationModel}
+							sorting={sorting}
 							searchTerm={searchTerm}
 							setSearchTerm={setSearchTerm}
 							filterModel={filterModel}

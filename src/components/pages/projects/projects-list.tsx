@@ -43,7 +43,7 @@ const ProjectsListClient: FC<SessionProps> = ({ session }) => {
 	const { onSuccess, onError } = useToast();
 	const token = useInitAccessToken(session);
 
-	const [paginationModel, setPaginationModel] = useDataGridPagination();
+	const [paginationModel, setPaginationModel, sorting] = useDataGridPagination();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [filterModel, setFilterModel] = useState<GridFilterModel>({
 		items: [],
@@ -57,6 +57,7 @@ const ProjectsListClient: FC<SessionProps> = ({ session }) => {
 			with_pagination: true,
 			page: paginationModel.page + 1,
 			pageSize: paginationModel.pageSize,
+			ordering: sorting.ordering,
 			search: searchTerm || undefined,
 			status: chipFilterParams['status'] || undefined,
 		},
@@ -356,6 +357,7 @@ const ProjectsListClient: FC<SessionProps> = ({ session }) => {
 							columns={columns}
 							paginationModel={paginationModel}
 							setPaginationModel={setPaginationModel}
+							sorting={sorting}
 							searchTerm={searchTerm}
 							setSearchTerm={setSearchTerm}
 							filterModel={filterModel}

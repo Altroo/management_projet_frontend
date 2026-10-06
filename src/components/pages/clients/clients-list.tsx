@@ -33,7 +33,7 @@ const ClientsListClient: FC<SessionProps> = ({ session }) => {
 	const { t } = useLanguage();
 	const { onSuccess, onError } = useToast();
 	const token = useInitAccessToken(session);
-	const [paginationModel, setPaginationModel] = useDataGridPagination();
+	const [paginationModel, setPaginationModel, sorting] = useDataGridPagination();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [filterModel, setFilterModel] = useState<GridFilterModel>({
 		items: [],
@@ -44,7 +44,7 @@ const ClientsListClient: FC<SessionProps> = ({ session }) => {
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
 	const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
-	const { data = [], isLoading } = useGetClientsQuery({}, { skip: !token });
+	const { data = [], isLoading } = useGetClientsQuery({ ordering: sorting.ordering }, { skip: !token });
 	const [deleteClient] = useDeleteClientMutation();
 	const [bulkDeleteClients] = useBulkDeleteClientsMutation();
 
@@ -234,6 +234,7 @@ const ClientsListClient: FC<SessionProps> = ({ session }) => {
 							columns={columns}
 							paginationModel={paginationModel}
 							setPaginationModel={setPaginationModel}
+							sorting={sorting}
 							searchTerm={searchTerm}
 							setSearchTerm={setSearchTerm}
 							filterModel={filterModel}

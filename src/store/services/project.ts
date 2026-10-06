@@ -150,11 +150,11 @@ export const projectApi = createApi({
 		}),
 
 		// ── Clients ─────────────────────────────────────────────────────────
-		getClients: builder.query<ClientType[], { search?: string }>({
-			query: ({ search } = {}) => ({
+		getClients: builder.query<ClientType[], { search?: string; ordering?: string }>({
+			query: ({ search, ordering } = {}) => ({
 				url: process.env.NEXT_PUBLIC_PROJECT_CLIENTS,
 				method: 'GET',
-				params: { search },
+				params: { search, ordering },
 			}),
 			providesTags: ['Client'],
 		}),
@@ -206,11 +206,11 @@ export const projectApi = createApi({
 		}),
 
 		// ── Suppliers ───────────────────────────────────────────────────────
-		getSuppliers: builder.query<SupplierType[], { search?: string }>({
-			query: ({ search } = {}) => ({
+		getSuppliers: builder.query<SupplierType[], { search?: string; ordering?: string }>({
+			query: ({ search, ordering } = {}) => ({
 				url: process.env.NEXT_PUBLIC_PROJECT_SUPPLIERS,
 				method: 'GET',
-				params: { search },
+				params: { search, ordering },
 			}),
 			providesTags: ['Supplier'],
 		}),
@@ -265,10 +265,11 @@ export const projectApi = createApi({
 		}),
 
 		// ── Categories ──────────────────────────────────────────────────────
-		getCategories: builder.query<CategoryType[], void>({
-			query: () => ({
+		getCategories: builder.query<CategoryType[], { ordering?: string } | void>({
+			query: (params) => ({
 				url: process.env.NEXT_PUBLIC_PROJECT_CATEGORIES,
 				method: 'GET',
+				params: params || undefined,
 			}),
 			providesTags: ['Category'],
 		}),

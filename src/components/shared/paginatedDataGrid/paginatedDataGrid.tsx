@@ -1,5 +1,7 @@
 'use client';
 
+import type { DataGridSorting } from './useDataGridPagination';
+
 import { Dispatch, SetStateAction, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Badge, Box, Button, CircularProgress, Stack, ThemeProvider, Typography } from '@mui/material';
 import { FilterList as FilterListIcon, ViewColumn as ViewColumnIcon } from '@mui/icons-material';
@@ -18,6 +20,7 @@ import CustomFilterPanel, {
 } from '@/components/shared/filterPanel/customFilterPanel';
 
 type PaginatedDataGridProps<T> = {
+	sorting?: DataGridSorting;
 	queryHook?: (params: { page: number; pageSize: number; search: string; [key: string]: string | number }) => {
 		data?: { count: number; results: T[] };
 		isLoading: boolean;
@@ -153,6 +156,7 @@ const PaginatedDataGrid = <T,>({
 	columns,
 	paginationModel,
 	setPaginationModel,
+	sorting,
 	searchTerm,
 	setSearchTerm,
 	filterModel: externalFilterModel,
@@ -221,6 +225,7 @@ const PaginatedDataGrid = <T,>({
 		page: paginationModel.page + 1,
 		pageSize: paginationModel.pageSize,
 		search: searchTerm,
+		...(sorting?.ordering ? { ordering: sorting.ordering } : {}),
 		...extractCustomFilterParams(customFilters),
 	});
 
@@ -429,8 +434,12 @@ const PaginatedDataGrid = <T,>({
 								rows={rows}
 								columns={columns}
 								loading={isLoading}
-								rowCount={data?.count ?? 0}
+								rowCount={data?.count ?? -1}
 								paginationMode="server"
+								sortingMode={sorting ? 'server' : 'client'}
+								sortingOrder={['asc', 'desc']}
+								sortModel={sorting?.sortModel}
+								onSortModelChange={sorting?.onSortModelChange}
 								paginationModel={paginationModel}
 								onPaginationModelChange={setPaginationModel}
 								pageSizeOptions={[5, 10, 25, 50, 100]}

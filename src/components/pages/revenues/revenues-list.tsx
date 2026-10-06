@@ -45,7 +45,7 @@ const RevenuesListClient: FC<SessionProps> = ({ session }) => {
 	const { onSuccess, onError } = useToast();
 	const token = useInitAccessToken(session);
 
-	const [paginationModel, setPaginationModel] = useDataGridPagination();
+	const [paginationModel, setPaginationModel, sorting] = useDataGridPagination();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [filterModel, setFilterModel] = useState<GridFilterModel>({
 		items: [],
@@ -54,7 +54,7 @@ const RevenuesListClient: FC<SessionProps> = ({ session }) => {
 	const [chipFilterParams, setChipFilterParams] = useState<Record<string, string>>({});
 	const [customFilterParams, setCustomFilterParams] = useState<Record<string, string>>({});
 
-	const { data: revenues, isLoading } = useGetRevenuesQuery({}, { skip: !token });
+	const { data: revenues, isLoading } = useGetRevenuesQuery({ ordering: sorting.ordering }, { skip: !token });
 	const { data: projectsData } = useGetProjectsListQuery({}, { skip: !token });
 
 	const projectOptions = (() => {
@@ -405,6 +405,7 @@ const RevenuesListClient: FC<SessionProps> = ({ session }) => {
 							columns={columns}
 							paginationModel={paginationModel}
 							setPaginationModel={setPaginationModel}
+							sorting={sorting}
 							searchTerm={searchTerm}
 							setSearchTerm={setSearchTerm}
 							filterModel={filterModel}
