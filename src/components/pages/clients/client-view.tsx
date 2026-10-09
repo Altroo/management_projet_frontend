@@ -167,7 +167,7 @@ const ClientViewClient: FC<SessionProps & { id: number }> = ({ session, id }) =>
 				<Protected permission="can_view">
 					<Stack spacing={3} sx={{ p: { xs: 2, md: 3 }, mt: 2 }}>
 						<Stack direction={isMobile ? 'column' : 'row'} spacing={2} sx={{ justifyContent: 'space-between' }}>
-							<Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => router.back()}>
+							<Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => router.push(CLIENTS_LIST)}>
 								{t.clients.clientsList}
 							</Button>
 							{client && (

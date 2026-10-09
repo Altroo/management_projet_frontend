@@ -1,5 +1,5 @@
 import { type ReactElement, type ReactNode } from 'react';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
@@ -99,7 +99,7 @@ jest.mock('zod-formik-adapter', () => ({
 }));
 
 jest.mock('@/utils/routes', () => ({
-	CATEGORIES_LIST: '/dashboard/categories',
+	EXPENSES_LIST: '/dashboard/expenses',
 }));
 import CategoryFormClient from './category-form';
 
@@ -149,9 +149,10 @@ describe('CategoryFormClient', () => {
 			expect(screen.getByTestId('submit-button')).toHaveTextContent('Nouvelle catégorie');
 		});
 
-		it('renders back button', () => {
+		it('returns to the existing expenses page from the category editor', () => {
 			renderWithProviders(<CategoryFormClient session={mockSession} />);
-			expect(screen.getByText('Liste des catégories')).toBeInTheDocument();
+			fireEvent.click(screen.getByRole('button', { name: 'Liste des dépenses' }));
+			expect(mockPush).toHaveBeenCalledWith('/dashboard/expenses');
 		});
 
 		it('renders protected wrapper', () => {

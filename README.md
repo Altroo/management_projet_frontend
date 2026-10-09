@@ -20,6 +20,8 @@ This frontend is built around real staff workflows: authenticated navigation, de
 - Formik/Zod forms for projects, clients, suppliers, expenses, revenues, attachments, and users.
 - Jest and Testing Library coverage for dashboards, forms, helpers, routes, store, and entity components.
 
+- Feature-gated Chat AI Assistant in the authenticated root layout: native floating panel, bilingual shortcuts, structured records, history and confirmed actions. See the backend [integration report](https://github.com/Altroo/management_projet_backend/blob/main/docs/AI_PROGRESS.md) for measured deployment status.
+
 ## Stack
 
 - Next.js 16, React 19, TypeScript

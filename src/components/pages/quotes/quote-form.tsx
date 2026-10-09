@@ -41,7 +41,7 @@ import {
 import { textInputTheme } from '@/utils/themes';
 import { quoteSchema } from '@/utils/formValidationSchemas';
 import { setFormikAutoErrors, extractApiErrorMessage } from '@/utils/helpers';
-import { QUOTES_VIEW, QUOTES_EDIT } from '@/utils/routes';
+import { QUOTES_VIEW, QUOTES_EDIT, QUOTES_LIST } from '@/utils/routes';
 import { useLanguage, useToast } from '@/utils/hooks';
 import {
 	useCreateQuoteMutation,
@@ -174,7 +174,7 @@ const FormikContent: FC<{ token?: string; id?: number }> = ({ token, id }) => {
 				<Button
 					variant="outlined"
 					startIcon={<ArrowBackIcon />}
-					onClick={() => router.back()}
+					onClick={() => router.push(QUOTES_LIST)}
 					sx={{ alignSelf: 'flex-start' }}
 				>
 					{t.quotes.backToList}

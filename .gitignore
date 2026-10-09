@@ -55,3 +55,9 @@ next-env.d.ts
 # Claude
 .claude/
 .claude/*
+# Synthetic/private browser test evidence and authentication state
+/test-artifacts/
+/playwright-report/
+/test-results/
+/.auth/
+/storage-state*.json

@@ -92,7 +92,7 @@ const SupplierFormContent: FC<{ token: string | undefined; id?: number }> = ({ t
 			<Button
 				variant="outlined"
 				startIcon={<ArrowBackIcon />}
-				onClick={() => router.back()}
+				onClick={() => router.push(SUPPLIERS_LIST)}
 				sx={{ alignSelf: 'flex-start' }}
 			>
 				{t.suppliers.suppliersList}

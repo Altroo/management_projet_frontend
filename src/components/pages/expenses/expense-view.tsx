@@ -183,7 +183,7 @@ export const ExpenseViewContent: FC<ExpenseViewContentProps> = ({ token, id, emb
 							<Button
 								variant="outlined"
 								startIcon={<ArrowBackIcon />}
-								onClick={() => router.back()}
+								onClick={() => router.push(EXPENSES_LIST)}
 								sx={{ width: isMobile ? '100%' : 'auto' }}
 							>
 								{t.expenses.expensesList}

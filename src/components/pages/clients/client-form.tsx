@@ -96,7 +96,7 @@ const ClientFormContent: FC<{ token: string | undefined; id?: number }> = ({ tok
 			<Button
 				variant="outlined"
 				startIcon={<ArrowBackIcon />}
-				onClick={() => router.back()}
+				onClick={() => router.push(CLIENTS_LIST)}
 				sx={{ alignSelf: 'flex-start' }}
 			>
 				{t.clients.clientsList}

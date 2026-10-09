@@ -259,7 +259,7 @@ export const ExpenseFormContent: FC<ExpenseFormContentProps> = ({
 						<Button
 							variant="outlined"
 							startIcon={<ArrowBackIcon />}
-							onClick={() => router.back()}
+							onClick={() => router.push(EXPENSES_LIST)}
 							sx={{ whiteSpace: 'nowrap' }}
 						>
 							{t.expenses.expensesList}

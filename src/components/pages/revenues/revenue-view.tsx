@@ -177,7 +177,7 @@ const RevenueViewClient: FC<Props> = ({ session, id }) => {
 							<Button
 								variant="outlined"
 								startIcon={<ArrowBackIcon />}
-								onClick={() => router.back()}
+								onClick={() => router.push(REVENUES_LIST)}
 								sx={{ width: isMobile ? '100%' : 'auto' }}
 							>
 								{t.revenues.revenuesList}

@@ -221,7 +221,7 @@ const ProjectViewClient: FC<Props> = ({ session, id }) => {
 							<Button
 								variant="outlined"
 								startIcon={<ArrowBackIcon />}
-								onClick={() => router.back()}
+								onClick={() => router.push(PROJECTS_LIST)}
 								sx={{ width: isMobile ? '100%' : 'auto' }}
 							>
 								{t.projects.projectsList}

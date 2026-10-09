@@ -23,7 +23,7 @@ import ApiProgress from '@/components/formikElements/apiLoading/apiProgress/apiP
 import { textInputTheme } from '@/utils/themes';
 import { categorySchema } from '@/utils/formValidationSchemas';
 import { getLabelForKey, setFormikAutoErrors } from '@/utils/helpers';
-import { CATEGORIES_LIST } from '@/utils/routes';
+import { EXPENSES_LIST } from '@/utils/routes';
 import { useLanguage, useToast } from '@/utils/hooks';
 import { useCreateCategoryMutation, useGetCategoryQuery, useUpdateCategoryMutation } from '@/store/services/project';
 import { useInitAccessToken } from '@/contexts/InitContext';
@@ -70,7 +70,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 							await createCategory({ data: fields }).unwrap();
 							onSuccess(t.categories.categoryAddedSuccess);
 						}
-						router.push(CATEGORIES_LIST);
+						router.push(EXPENSES_LIST);
 					} catch (e) {
 						setFormikAutoErrors({ e, setFieldError });
 						onError(isEditMode ? t.categories.categoryUpdateError : t.categories.categoryAddError);
@@ -100,10 +100,10 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 				<Button
 					variant="outlined"
 					startIcon={<ArrowBackIcon />}
-					onClick={() => router.back()}
+					onClick={() => router.push(EXPENSES_LIST)}
 					sx={{ whiteSpace: 'nowrap' }}
 				>
-					{t.categories.categoriesList}
+					{t.expenses.expensesList}
 				</Button>
 			</Stack>
 			{showValidationAlert && (

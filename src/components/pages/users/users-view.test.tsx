@@ -1,12 +1,14 @@
 import { type ReactNode } from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
 import { store } from '@/store/store';
 import UsersViewClient from './users-view';
 
+const mockPush = jest.fn();
+const mockBack = jest.fn();
 jest.mock('next/navigation', () => ({
-	useRouter: () => ({ push: jest.fn() }),
+	useRouter: () => ({ push: mockPush, back: mockBack }),
 }));
 
 jest.mock('@/utils/hooks', () => {
@@ -33,7 +35,7 @@ jest.mock('@/store/services/account', () => ({
 }));
 
 jest.mock('@/utils/routes', () => ({
-	USERS_LIST: '/users',
+	USERS_LIST: '/dashboard/users',
 	USERS_EDIT: (id: number) => `/users/${id}/edit`,
 }));
 
@@ -63,7 +65,9 @@ describe('UsersViewClient', () => {
 		expect(screen.getByText(/utilisateur introuvable/i)).toBeInTheDocument();
 	});
 
-	it('renders user details', () => {
+	it('renders user details and returns to users rather than the previous project page', () => {
+		window.history.replaceState({}, '', '/dashboard/projects/31');
+		window.history.pushState({}, '', '/dashboard/users/1');
 		const { useGetUserQuery } = jest.requireMock('@/store/services/account');
 		(useGetUserQuery as jest.Mock).mockReturnValue({
 			data: {
@@ -90,6 +94,9 @@ describe('UsersViewClient', () => {
 		expect(screen.getByText('Marie Martin')).toBeInTheDocument();
 		expect(screen.getByText('marie@test.com')).toBeInTheDocument();
 		expect(screen.getByText('Peut imprimer')).toBeInTheDocument();
+		fireEvent.click(screen.getByRole('button', { name: /liste.*utilisateurs/i }));
+		expect(mockPush).toHaveBeenCalledWith('/dashboard/users');
+		expect(mockBack).not.toHaveBeenCalled();
 	});
 
 	it('renders modify and delete buttons', () => {

@@ -212,7 +212,7 @@ const QuoteViewClient: FC<SessionProps & { id: number }> = ({ session, id }) => 
 							<Button
 								variant="outlined"
 								startIcon={<ArrowBack />}
-								onClick={() => router.back()}
+								onClick={() => router.push(QUOTES_LIST)}
 								sx={{ width: isMobile ? '100%' : 'auto' }}
 							>
 								{t.quotes.backToList}

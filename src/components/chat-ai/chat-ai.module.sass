@@ -1,0 +1,105 @@
+@use '@/styles/sass/colors' as *
+
+// Match Facturation's assistant palette without changing application-wide styles.
+$surface: var(--app-surface, #FFFFFF)
+$grayColor: var(--app-border, #D9D9DD)
+$grayInput: var(--app-input-border, #A3A3AD)
+$defaultInput: var(--app-input, #FBFBFB)
+$buttonTextDisabled: var(--app-disabled-text, rgba(0, 0, 0, .38))
+$buttonInputDisabled: var(--app-disabled-bg, #f2f2f3)
+
+.panel
+  font-family: Poppins, sans-serif
+  border: 1px solid $grayColor
+  box-shadow: 0 12px 40px rgba(13, 7, 11, .16) !important
+
+.floating
+  background: var(--chat-ai-primary) !important
+  color: $white !important
+
+.header
+  background: $surface
+  padding: 18px 18px 14px
+  border-bottom: 1px solid $grayColor
+
+.company
+  background: color-mix(in srgb, var(--chat-ai-primary) 8%, transparent)
+  padding: 10px 18px
+  border-bottom: 1px solid $grayColor
+
+.result
+  padding: 14px
+  margin-bottom: 10px
+  border-color: $grayColor !important
+  border-radius: 12px !important
+  overflow-wrap: anywhere
+
+.suggestion
+  justify-content: flex-start !important
+  text-align: left
+  padding: 12px 14px !important
+  border: 1px solid color-mix(in srgb, var(--chat-ai-primary) 40%, transparent) !important
+  border-radius: 12px !important
+  background: $surface !important
+  color: var(--app-secondary, #525256) !important
+  font-size: 12px !important
+
+.composer
+  background: $surface
+  padding: 12px 16px
+  border-top: 1px solid $grayColor
+
+.input
+  background: $defaultInput
+  border-radius: 16px
+  padding: 8px 8px 8px 14px
+  border: 1px solid $grayInput
+  &:focus-within
+    border-color: var(--chat-ai-primary)
+    box-shadow: 0 0 0 1px var(--chat-ai-primary)
+
+.send
+  background: var(--chat-ai-primary) !important
+  color: $white !important
+  border-radius: 12px !important
+  width: 36px
+  height: 36px
+  &:disabled
+    background: $buttonInputDisabled !important
+    color: $buttonTextDisabled !important
+
+.headerControl.headerControl
+  color: var(--app-secondary, #525256) !important
+  white-space: nowrap
+  font-size: 11px !important
+  min-width: 0 !important
+  width: auto !important
+  flex: 0 0 auto
+  height: 30px
+  border-radius: 6px !important
+  padding: 4px 8px !important
+
+.resultAction.resultAction
+  color: var(--app-secondary, #525256) !important
+  width: auto !important
+  min-width: 0
+  white-space: nowrap
+  padding: 5px 8px !important
+  border-radius: 6px !important
+
+.assistantAvatar
+  background: color-mix(in srgb, var(--chat-ai-primary) 20%, transparent) !important
+  color: var(--chat-ai-primary) !important
+
+.assistantMessage
+  border-color: color-mix(in srgb, var(--chat-ai-primary) 36%, transparent) !important
+
+.userMessage
+  background: color-mix(in srgb, var(--chat-ai-primary) 16%, transparent) !important
+
+.messageAuthor
+  font-weight: 600
+
+.suggestion, .headerControl, .resultAction
+  svg
+    color: var(--chat-ai-primary)
