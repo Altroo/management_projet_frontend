@@ -154,7 +154,7 @@ export const fr: TranslationDictionary = {
 		allUsers: 'Tous les utilisateurs',
 	},
 	navigation: {
-		changelog: 'Changelog',
+		changelog: 'Nouveautés',
 		users: 'Utilisateurs',
 		usersList: 'Liste des utilisateurs',
 		newUser: 'Nouvel utilisateur',
