@@ -1,6 +1,7 @@
 import { type ChangeEvent, type FocusEvent, type HTMLInputTypeAttribute, type ReactNode, type Ref } from 'react';
 import type { Theme } from '@mui/material/styles';
-import { InputAdornment, ThemeProvider } from '@mui/material';
+import { InputAdornment } from '@mui/material';
+import { ThemeProvider } from '@/providers/scopedThemeProvider';
 import TextField, { type TextFieldProps } from '@mui/material/TextField';
 
 type Props = {

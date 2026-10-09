@@ -1,7 +1,7 @@
 import { type Key, type FC, type FocusEvent, type HTMLAttributes, type ReactNode, type SyntheticEvent } from 'react';
 import TextField, { type TextFieldProps } from '@mui/material/TextField';
 import type { Theme } from '@mui/material/styles';
-import { ThemeProvider } from '@mui/material/styles';
+import { ThemeProvider } from '@/providers/scopedThemeProvider';
 import type { DropDownType } from '@/types/accountTypes';
 import { Autocomplete, Box, InputAdornment, Typography } from '@mui/material';
 

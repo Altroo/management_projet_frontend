@@ -1,6 +1,11 @@
 import type { EventChannel } from 'redux-saga';
 import { eventChannel } from 'redux-saga';
-import { WSMaintenanceAction, WSUserAvatarAction, WSReconnectedAction, WSNotificationAction } from '@/store/actions/wsActions';
+import {
+	WSMaintenanceAction,
+	WSUserAvatarAction,
+	WSReconnectedAction,
+	WSNotificationAction,
+} from '@/store/actions/wsActions';
 import type { WSAction, WSEnvelope } from '@/types/wsTypes';
 import type { NotificationType } from '@/types/managementNotificationTypes';
 
@@ -76,7 +81,7 @@ export function initWebsocket(getToken: () => Promise<string | null>): EventChan
 								}
 							} else if (signalType === 'MAINTENANCE') {
 								if (typeof message.maintenance === 'boolean') {
-									emitter(WSMaintenanceAction(message.maintenance));
+									emitter(WSMaintenanceAction(message.maintenance, message.version));
 								}
 							} else if (signalType === 'NOTIFICATION') {
 								if (typeof message.id === 'number' && typeof message.title === 'string') {
@@ -89,7 +94,8 @@ export function initWebsocket(getToken: () => Promise<string | null>): EventChan
 											: 'status_change',
 										object_id: typeof message.object_id === 'number' ? message.object_id : null,
 										is_read: typeof message.is_read === 'boolean' ? message.is_read : false,
-										date_created: typeof message.date_created === 'string' ? message.date_created : new Date().toISOString(),
+										date_created:
+											typeof message.date_created === 'string' ? message.date_created : new Date().toISOString(),
 									};
 									emitter(WSNotificationAction(notification));
 								}

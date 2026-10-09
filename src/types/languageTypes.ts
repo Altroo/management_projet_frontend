@@ -1,6 +1,23 @@
 export type Language = 'fr' | 'en';
 
 export type TranslationDictionary = {
+	changelog: {
+		description: string;
+		loading: string;
+		error: string;
+		empty: string;
+	};
+
+	appUpdate: {
+		title: string;
+		body: string;
+		later: string;
+		update: string;
+		updating: string;
+		version: string;
+		error: string;
+	};
+
 	quotes: {
 		budgetTracking: string;
 		quotesList: string;
@@ -135,6 +152,7 @@ export type TranslationDictionary = {
 		allUsers: string;
 	};
 	navigation: {
+		changelog: string;
 		users: string;
 		usersList: string;
 		newUser: string;

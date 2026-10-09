@@ -14,13 +14,13 @@ import {
 	DialogContent,
 	DialogTitle,
 	IconButton,
-	ThemeProvider,
 	LinearProgress,
 	Stack,
 	Typography,
 	useMediaQuery,
 	useTheme,
 } from '@mui/material';
+import { ThemeProvider } from '@/providers/scopedThemeProvider';
 import {
 	ArrowBack,
 	Delete,

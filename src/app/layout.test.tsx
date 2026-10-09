@@ -109,6 +109,8 @@ jest.mock('@mui/material-nextjs/v16-appRouter', () => ({
 	},
 }));
 
+jest.mock('@/components/shared/themeToggle/themeToggle', () => ({ AuthThemeToggle: () => null }));
+
 jest.mock('@/providers/themeProvider', () => ({
 	__esModule: true,
 	default: (props: { children?: ReactNode }) => {

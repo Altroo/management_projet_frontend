@@ -65,7 +65,12 @@ const DiffText: FC<DiffTextProps> = ({ changes, variant }) => (
 					data-change={variant === 'original' ? 'removed' : 'added'}
 					key={`${operation}-${index}`}
 					sx={{
-						bgcolor: variant === 'original' ? 'error.light' : '#fff59d',
+						bgcolor: (theme) =>
+							variant === 'original'
+								? theme.palette.mode === 'dark'
+									? 'error.dark'
+									: 'error.light'
+								: 'var(--app-highlight, #fff59d)',
 						color: variant === 'original' ? 'error.contrastText' : 'text.primary',
 						borderRadius: 0.5,
 					}}
@@ -234,7 +239,6 @@ const EnabledAiAssistantControl: FC<AiAssistantControlProps> = ({
 								void run('translate', 'fr');
 							},
 							icon: <LanguageFlag language="fr" />,
-							color: '#0D070B',
 						},
 						{
 							active: true,
@@ -244,7 +248,6 @@ const EnabledAiAssistantControl: FC<AiAssistantControlProps> = ({
 								void run('translate', 'en');
 							},
 							icon: <LanguageFlag language="en" />,
-							color: '#0D070B',
 						},
 					]}
 				/>

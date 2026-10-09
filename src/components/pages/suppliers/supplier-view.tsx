@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import {
 	Alert,
 	Box,
-	ThemeProvider,
 	Button,
 	Card,
 	CardContent,
@@ -16,6 +15,7 @@ import {
 	useMediaQuery,
 	useTheme,
 } from '@mui/material';
+import { ThemeProvider } from '@/providers/scopedThemeProvider';
 import {
 	ArrowBack as ArrowBackIcon,
 	History as HistoryIcon,

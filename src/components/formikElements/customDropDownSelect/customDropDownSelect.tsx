@@ -2,16 +2,8 @@ import { ITEM_HEIGHT, MenuProps } from '@/utils/rawData';
 import { type FC, type FocusEvent, type ReactNode } from 'react';
 import Styles from './customDropDownSelect.module.sass';
 import Select, { type SelectChangeEvent } from '@mui/material/Select';
-import {
-	FormControl,
-	FormHelperText,
-	InputAdornment,
-	InputLabel,
-	MenuItem,
-	OutlinedInput,
-	Stack,
-	ThemeProvider,
-} from '@mui/material';
+import { FormControl, FormHelperText, InputAdornment, InputLabel, MenuItem, OutlinedInput, Stack } from '@mui/material';
+import { ThemeProvider } from '@/providers/scopedThemeProvider';
 import type { Theme } from '@mui/material/styles';
 import { CheckCircle as CheckCircleIcon } from '@mui/icons-material';
 import { DropDownType } from '@/types/accountTypes';

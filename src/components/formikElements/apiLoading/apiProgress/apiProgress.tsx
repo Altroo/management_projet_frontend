@@ -14,10 +14,16 @@ type Props = {
 const ApiProgress: FC<Props> = (props: Props) => {
 	return (
 		<Backdrop
-			sx={{ backgroundColor: props.backdropColor, zIndex: (theme) => theme.zIndex.drawer + 1 }}
+			sx={{
+				backgroundColor: props.backdropColor.toLowerCase() === '#ffffff' ? 'var(--app-surface)' : props.backdropColor,
+				zIndex: (theme) => theme.zIndex.drawer + 1,
+			}}
 			open={props.backdropOpen ?? true}
 		>
-			<CircularProgress data-testid="api-loader" sx={{ color: props.circularColor }} />
+			<CircularProgress
+				data-testid="api-loader"
+				sx={{ color: props.circularColor.toLowerCase() === '#0d070b' ? 'var(--app-text)' : props.circularColor }}
+			/>
 		</Backdrop>
 	);
 };

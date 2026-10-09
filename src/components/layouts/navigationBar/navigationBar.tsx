@@ -2,7 +2,8 @@
 
 import { runWithCleanup } from '@/utils/runWithCleanup';
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode, type SyntheticEvent } from 'react';
-import { styled, ThemeProvider } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
+import { ThemeProvider } from '@/providers/scopedThemeProvider';
 import MuiAppBar, { type AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
 import {
 	Accordion,
@@ -47,10 +48,12 @@ import {
 	People as PeopleIcon,
 	PictureAsPdf as PictureAsPdfIcon,
 	Settings as SettingsIcon,
+	History as HistoryIcon,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector, useLanguage } from '@/utils/hooks';
 import { getProfilState, getUnreadNotificationCount } from '@/store/selectors';
 import { cookiesDeleter } from '@/utils/apiHelpers';
+import ThemeToggle from '@/components/shared/themeToggle/themeToggle';
 import LanguageSwitcher, { LanguageFlag } from '@/components/shared/languageSwitcher/languageSwitcher';
 import type { TranslationDictionary } from '@/types/languageTypes';
 import {
@@ -60,6 +63,7 @@ import {
 	CLIENTS_ADD,
 	CLIENTS_LIST,
 	DASHBOARD,
+	DASHBOARD_CHANGELOG,
 	DASHBOARD_EDIT_PROFILE,
 	DASHBOARD_COMPANY,
 	DASHBOARD_NOTIFICATIONS,
@@ -244,7 +248,8 @@ type Props = {
 const NavigationBar = (props: Props) => {
 	const theme = useTheme();
 	const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-	const [open, setOpen] = useState(!isMobile);
+	const [mobileOpen, setMobileOpen] = useState(false);
+	const open = !isMobile || mobileOpen;
 	const { data: session, status } = useSession();
 	const { avatar_cropped, first_name, last_name, gender, is_staff, can_print } = useAppSelector(getProfilState);
 	const { t, language, setLanguage } = useLanguage();
@@ -339,7 +344,7 @@ const NavigationBar = (props: Props) => {
 
 	const handleDrawerToggle = () => {
 		if (isMobile) {
-			setOpen(!open);
+			setMobileOpen(!open);
 		}
 	};
 
@@ -348,6 +353,7 @@ const NavigationBar = (props: Props) => {
 	const [userExpanded, setUserExpanded] = useState<string | false>(false);
 
 	const defaultExpanded: string | false = (() => {
+		if (pathname === DASHBOARD_CHANGELOG.replace(/^https?:\/\/[^/]+/, '')) return false;
 		const exactMatch = Object.entries(navigationMenu).find(([, section]) =>
 			section.items.some((item) => {
 				const normalizedPath = item.path.replace(/^https?:\/\/[^/]+/, '');
@@ -419,6 +425,7 @@ const NavigationBar = (props: Props) => {
 								spacing={1}
 								sx={{
 									alignItems: 'center',
+									minWidth: 0,
 								}}
 							>
 								{isMobile && (
@@ -431,7 +438,7 @@ const NavigationBar = (props: Props) => {
 										<MenuIcon />
 									</IconButton>
 								)}
-								<Typography variant="h6" noWrap component="div">
+								<Typography variant="h6" noWrap component="div" sx={{ minWidth: 0 }}>
 									{props.title}
 								</Typography>
 							</Stack>
@@ -445,6 +452,7 @@ const NavigationBar = (props: Props) => {
 													<NotificationsIcon />
 												</Badge>
 											</IconButton>
+											<ThemeToggle />
 											<LanguageSwitcher />
 											{is_staff && (
 												<Button
@@ -463,6 +471,7 @@ const NavigationBar = (props: Props) => {
 											</Button>
 										</Desktop>
 										<TabletAndMobile>
+											<ThemeToggle />
 											<IconButton color="inherit" onClick={handleNotifOpen} aria-label={t.navigation.notifications}>
 												<Badge badgeContent={unreadCount > 0 ? unreadCount : undefined} color="primary" max={99}>
 													<NotificationsIcon />
@@ -631,9 +640,10 @@ const NavigationBar = (props: Props) => {
 														sx={{
 															pl: open ? 9 : 2,
 															minHeight: 48,
-															backgroundColor: normalizePath(item.path) === pathname ? '#F0F0F0' : 'transparent',
+															backgroundColor:
+																normalizePath(item.path) === pathname ? 'var(--app-selected)' : 'transparent',
 															'&.Mui-selected': {
-																backgroundColor: '#E0E0E0',
+																backgroundColor: 'var(--app-hover)',
 																fontWeight: 600,
 															},
 														}}
@@ -647,6 +657,27 @@ const NavigationBar = (props: Props) => {
 								</Accordion>
 							</Box>
 						))}
+						<ListItem disablePadding>
+							<Link
+								href={DASHBOARD_CHANGELOG}
+								style={{ width: '100%', color: 'inherit' }}
+								aria-current={normalizePath(DASHBOARD_CHANGELOG) === pathname ? 'page' : undefined}
+								onClick={() => {
+									setUserExpanded(false);
+									if (isMobile) setMobileOpen(false);
+								}}
+							>
+								<ListItemButton
+									selected={normalizePath(DASHBOARD_CHANGELOG) === pathname}
+									sx={{ minHeight: 48, px: 2.5 }}
+								>
+									<ListItemIcon sx={{ minWidth: 0, mr: 3 }}>
+										<HistoryIcon />
+									</ListItemIcon>
+									<ListItemText primary={t.navigation.changelog} />
+								</ListItemButton>
+							</Link>
+						</ListItem>
 					</List>
 				</Drawer>
 				<Main open={open}>{props.children}</Main>

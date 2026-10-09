@@ -1,6 +1,23 @@
 import type { TranslationDictionary } from '@/types/languageTypes';
 
 export const en: TranslationDictionary = {
+	changelog: {
+		description: 'Discover new features and improvements to your workspace.',
+		loading: 'Loading updates…',
+		error: 'Updates could not be loaded. Please try again shortly.',
+		empty: 'Upcoming updates will appear here.',
+	},
+	appUpdate: {
+		title: 'An update is available',
+		body: 'Save your work before continuing. The app will reload to apply the update, without reinstalling.',
+		later: 'Later',
+		update: 'Update now',
+		updating: 'Updating…',
+		version: 'New version:',
+		error:
+			'The update is not available yet. Check your connection and try again shortly. Your work has not been reloaded.',
+	},
+
 	quotes: {
 		budgetTracking: 'Budget tracking',
 		quotesList: 'Quotes / Estimates',
@@ -136,6 +153,7 @@ export const en: TranslationDictionary = {
 		allUsers: 'All users',
 	},
 	navigation: {
+		changelog: 'Changelog',
 		users: 'Users',
 		usersList: 'Users list',
 		newUser: 'New user',

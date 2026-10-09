@@ -11,6 +11,7 @@ export const AUTH_RESET_PASSWORD_COMPLETE = `${SITE_ROOT}/reset-password/set-pas
 // Dashboard
 export const DASHBOARD = `${SITE_ROOT}dashboard`;
 export const CLIENT_DASHBOARD = `${SITE_ROOT}dashboard/client-dashboard`;
+export const DASHBOARD_CHANGELOG = `${SITE_ROOT}dashboard/changelog`;
 // Settings
 export const DASHBOARD_EDIT_PROFILE = `${SITE_ROOT}dashboard/settings/edit-profile`;
 export const DASHBOARD_PASSWORD = `${SITE_ROOT}dashboard/settings/password`;

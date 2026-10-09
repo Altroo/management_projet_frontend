@@ -26,10 +26,10 @@ import {
 	LinearProgress,
 	Stack,
 	TextField,
-	ThemeProvider,
 	Tooltip,
 	Typography,
 } from '@mui/material';
+import { ThemeProvider } from '@/providers/scopedThemeProvider';
 import {
 	AccountBalanceWallet as BudgetIcon,
 	Add as AddIcon,

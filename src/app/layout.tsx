@@ -6,6 +6,8 @@ import StoreProvider from '@/providers/storeProvider';
 import type { RootLayoutProps } from '@/types/routeTypes';
 import { InitContextProvider } from '@/contexts/InitContext';
 import ThemeProvider from '@/providers/themeProvider';
+import { resolveColorMode } from '@/utils/colorMode';
+import { AuthThemeToggle } from '@/components/shared/themeToggle/themeToggle';
 import { InitEffects } from '@/contexts/initEffects';
 import { ToastContextProvider } from '@/contexts/toastContext';
 import { ErrorBoundary } from '@/components/shared/errorBoundary';
@@ -70,9 +72,10 @@ export const viewport: Viewport = {
 const RootLayout = async (props: RootLayoutProps) => {
 	const t = await getServerTranslations();
 	const cookieStore = await cookies();
+	const initialTheme = resolveColorMode(cookieStore.get('app-theme')?.value);
 	const lang = cookieStore.get('app-language')?.value === 'en' ? 'en' : 'fr';
 	return (
-		<html lang={lang} data-scroll-behavior="smooth">
+		<html lang={lang} data-theme={initialTheme} data-scroll-behavior="smooth">
 			<body>
 				<a href="#main-content" className="skip-to-content">
 					{t.common.skipToContent}
@@ -82,11 +85,12 @@ const RootLayout = async (props: RootLayoutProps) => {
 						<InitContextProvider>
 							<InitEffects />
 							<AppRouterCacheProvider>
-								<ThemeProvider>
+								<ThemeProvider initialTheme={initialTheme}>
 									<LanguageContextProvider initialLanguage={lang}>
 										<ErrorBoundary>
 											<ToastContextProvider>
 												<SessionExpiredListener />
+												<AuthThemeToggle />
 												<Maintenance />
 												<div id="main-content">{props.children}</div>
 											</ToastContextProvider>

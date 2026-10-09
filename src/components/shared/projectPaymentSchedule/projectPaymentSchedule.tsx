@@ -13,10 +13,10 @@ import {
 	LinearProgress,
 	Stack,
 	TextField,
-	ThemeProvider,
 	Tooltip,
 	Typography,
 } from '@mui/material';
+import { ThemeProvider } from '@/providers/scopedThemeProvider';
 import { Add as AddIcon, Delete as DeleteIcon, EventAvailable as EventAvailableIcon } from '@mui/icons-material';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { useDataGridPagination } from '@/components/shared/paginatedDataGrid/useDataGridPagination';

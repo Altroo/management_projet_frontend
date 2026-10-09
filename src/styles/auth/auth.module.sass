@@ -35,7 +35,7 @@
 .subHeader
   +Regular
   font-size: 19px
-  color: #84848A
+  color: var(--app-subtle, #84848A)
   text-align: center
 
 .subContent
@@ -46,14 +46,14 @@
 .paragraphe
   +Regular
   font-size: 17px
-  color: #84848A
+  color: var(--app-subtle, #84848A)
 
   // reset-password uses larger font
   &--large
     font-size: 19px
 
 .email
-  color: #0274d7
+  color: var(--app-accent, #0274d7)
 
 .emailRegisterButton
   width: 100% !important
@@ -62,10 +62,10 @@
   +Regular
   font-size: 16px
   text-align: center
-  color: #E12D3D
+  color: var(--app-error, #E12D3D)
 
 .resendCodeButton
-  color: #0274d7 !important
+  color: var(--app-accent, #0274d7) !important
   width: auto
 
 .divider
@@ -81,9 +81,9 @@
 .bottomLinks
   +Regular
   font-size: 15px
-  color: #525256
+  color: var(--app-secondary, #525256)
   a
-    color: #0274d7
+    color: var(--app-accent, #0274d7)
 
 .desktopOnly
   display: block

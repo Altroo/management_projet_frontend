@@ -45,7 +45,7 @@ import {
 	Title,
 	Tooltip,
 } from 'chart.js';
-import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import { Bar, Doughnut, Line } from '@/components/shared/themedCharts/themedCharts';
 import {
 	useGetClientDashboardQuery,
 	useGetClientProjectDashboardQuery,
@@ -226,10 +226,10 @@ const EmptyChart: FC<{ message?: string }> = ({ message }) => {
 				justifyContent: 'center',
 				alignItems: 'center',
 				height: '100%',
-				bgcolor: 'grey.50',
+				bgcolor: 'var(--app-inset, #fafafa)',
 				borderRadius: 2,
 				border: '1px dashed',
-				borderColor: 'grey.300',
+				borderColor: 'var(--app-strong-border, #e0e0e0)',
 			}}
 		>
 			<Typography

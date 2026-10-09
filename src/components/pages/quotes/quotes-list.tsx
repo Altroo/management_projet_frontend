@@ -328,7 +328,12 @@ const QuotesListClient: FC<SessionProps> = ({ session }) => {
 					sx={
 						params.row.overrun
 							? undefined
-							: { bgcolor: 'grey.50', color: 'text.secondary', border: '1px solid', borderColor: 'grey.200' }
+							: {
+									bgcolor: 'var(--app-inset, #fafafa)',
+									color: 'text.secondary',
+									border: '1px solid',
+									borderColor: 'var(--app-soft-border, #eeeeee)',
+								}
 					}
 				/>
 			),

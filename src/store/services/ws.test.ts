@@ -113,7 +113,7 @@ describe('initWebsocket', () => {
         }
         const ev = new MessageEvent('message', {
           data: JSON.stringify({
-            message: { type: 'MAINTENANCE', maintenance: true },
+            message: { type: 'MAINTENANCE', maintenance: true, version: '4.2.0' },
           }),
         });
         createdSocket.onmessage?.(ev);
@@ -122,7 +122,7 @@ describe('initWebsocket', () => {
       sendMessage();
     });
 
-    expect(emitted).toEqual(WSMaintenanceAction(true));
+    expect(emitted).toEqual(WSMaintenanceAction(true, '4.2.0'));
     channel.close();
   });
 

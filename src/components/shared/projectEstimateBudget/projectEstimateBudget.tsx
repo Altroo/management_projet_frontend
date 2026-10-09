@@ -12,9 +12,9 @@ import {
 	Divider,
 	IconButton,
 	Stack,
-	ThemeProvider,
 	Typography,
 } from '@mui/material';
+import { ThemeProvider } from '@/providers/scopedThemeProvider';
 import {
 	AccountBalanceWallet,
 	TrendingDown,

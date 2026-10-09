@@ -14,3 +14,5 @@ export const getWSMaintenanceState = (state: RootState): boolean => state.ws.mai
 
 // Notification
 export const getUnreadNotificationCount = (state: RootState): number => state.notification.unreadCount;
+
+export const getAppVersions = (state: RootState) => state.ws;
