@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports -- Standalone CommonJS CLI loads an optional caller-provided Playwright module. */
 /** Real authenticated local UI checks; synthetic demo database only. No API mocks. */
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const fs = require('node:fs');
