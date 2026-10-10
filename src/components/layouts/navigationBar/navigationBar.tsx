@@ -471,12 +471,12 @@ const NavigationBar = (props: Props) => {
 											</Button>
 										</Desktop>
 										<TabletAndMobile>
-											<ThemeToggle />
 											<IconButton color="inherit" onClick={handleNotifOpen} aria-label={t.navigation.notifications}>
 												<Badge badgeContent={unreadCount > 0 ? unreadCount : undefined} color="primary" max={99}>
 													<NotificationsIcon />
 												</Badge>
 											</IconButton>
+											<ThemeToggle />
 											<IconButton
 												ref={moreVertRef}
 												color="inherit"

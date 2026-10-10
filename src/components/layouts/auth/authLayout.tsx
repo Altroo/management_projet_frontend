@@ -10,6 +10,7 @@ import TasksSVG from '../../../../public/assets/images/auth_illu/tasks.svg';
 import TeamSVG from '../../../../public/assets/images/auth_illu/team.svg';
 import MilestoneSVG from '../../../../public/assets/images/auth_illu/milestone.svg';
 import { useLanguage } from '@/utils/hooks';
+import { useColorMode } from '@/providers/themeProvider';
 
 type Props = {
 	children?: ReactNode;
@@ -24,6 +25,7 @@ export type svgImageType = {
 
 const AuthLayout = ({ ref, ...props }: Props) => {
 	const { t } = useLanguage();
+	const { mode } = useColorMode();
 	const [authIlluRandom] = useState<{ image: svgImageType; color: string }>(() => {
 		const availableAuthBgImages: Array<{ image: svgImageType; color: string }> = [
 			{
@@ -54,7 +56,7 @@ const AuthLayout = ({ ref, ...props }: Props) => {
 					className={Styles.leftBox}
 					sx={{
 						background: `url(${authIlluRandom ? authIlluRandom.image : ''}) bottom left no-repeat scroll ${
-							authIlluRandom && authIlluRandom.color
+							mode === 'dark' ? '#222c3d' : authIlluRandom.color
 						}`,
 						msFilter: `progid:DXImageTransform.Microsoft.AlphaImageLoader(src='${
 							authIlluRandom ? authIlluRandom.image : ''
