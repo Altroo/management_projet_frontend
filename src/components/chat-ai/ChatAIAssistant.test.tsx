@@ -126,7 +126,7 @@ it.each(['anonymous', 'no-read', 'public'])('hides the assistant for %s context'
 it('uses Management Projet identity and sends suggestions once on click', async () => {
 	handlers['conversations/conversation-1/messages/'] = () => response(reply('Projets trouvés'));
 	await open();
-	expect(screen.getByText('Management Projet')).toBeVisible();
+	expect(screen.getByText('Votre aide dans Management Projet')).toBeVisible();
 	expect(screen.queryByText('Facturation')).not.toBeInTheDocument();
 	fireEvent.click(screen.getByRole('button', { name: 'Affiche les projets en cours.' }));
 	await screen.findByText('Projets trouvés');
@@ -141,7 +141,7 @@ it('a slash selection fills the draft without sending', async () => {
 	await open();
 	fireEvent.change(screen.getByRole('textbox', { name: 'Votre message' }), { target: { value: '/' } });
 	expect(screen.getByText(/sans raccourci/)).toBeVisible();
-	fireEvent.click(screen.getByRole('button', { name: /\/voir Rechercher/ }));
+	fireEvent.click(screen.getByRole('option', { name: /\/voir Rechercher/ }));
 	expect(screen.getByRole('textbox', { name: 'Votre message' })).toHaveValue('/voir ');
 	expect(jest.mocked(chatRequest).mock.calls.some(([p]) => p.endsWith('/messages/'))).toBe(false);
 });
@@ -173,7 +173,8 @@ it('keeps replies across routes and sends the new current page context', async (
 		resource: 'project',
 		identifier: 42,
 	});
-	expect(screen.getAllByRole('button', { name: 'Ask AI Assistant' })).toHaveLength(1);
+	expect(document.querySelectorAll('button[aria-label="Ask AI Assistant"]')).toHaveLength(1);
+	expect(screen.queryByRole('button', { name: 'Ask AI Assistant' })).not.toBeInTheDocument();
 });
 it('drops private chat state on session expiration', async () => {
 	handlers['conversations/conversation-1/messages/'] = () => response(reply('Private fixture response'));
@@ -324,7 +325,7 @@ it('hides the previous user context while resolving the next authenticated user 
 			})),
 		}),
 	);
-	expect(await screen.findByRole('button', { name: 'Ask AI Assistant' })).toBeVisible();
+	expect(await screen.findByRole('dialog', { name: 'AI Assistant' })).toBeVisible();
 	expect(screen.queryByText('Private writer response')).not.toBeInTheDocument();
 	expect(await screen.findByRole('textbox', { name: 'Votre message' })).toHaveValue('');
 });
@@ -363,4 +364,14 @@ it('uses English error feedback when the native interface is English', async () 
 	});
 	fireEvent.click(screen.getByRole('button', { name: 'Send' }));
 	expect(await screen.findByText('You do not have permission to access this information.')).toBeVisible();
+});
+
+it('closes shortcut help and clears its draft when starting a new conversation', async () => {
+	await open();
+	fireEvent.change(screen.getByRole('textbox', { name: 'Votre message' }), { target: { value: '/voir client Demo' } });
+	fireEvent.click(screen.getByRole('button', { name: '/ Raccourcis' }));
+	expect(screen.getByRole('listbox')).toBeInTheDocument();
+	fireEvent.click(screen.getByRole('button', { name: 'Nouvelle conversation' }));
+	expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+	expect(screen.getByRole('textbox', { name: 'Votre message' })).toHaveValue('');
 });

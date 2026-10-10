@@ -4,7 +4,7 @@ import { DeleteOutlined, EditOutlined, OpenInNew, PictureAsPdfOutlined } from '@
 import { useLanguage } from '@/utils/hooks';
 import TextButton from '@/components/htmlElements/buttons/textButton/textButton';
 import ActionModals from '@/components/htmlElements/modals/actionModal/actionModals';
-import styles from './chat-ai.module.sass';
+import styles from './shared/chat-ai.module.css';
 import type { ChatCard, NavigationTarget } from './types';
 
 const resources: Record<string, [string, string]> = {
@@ -117,6 +117,7 @@ export const ChatAIResults = ({ cards, navigate, confirm, pdf, select, permissio
 		value === undefined
 			? ''
 			: new Intl.NumberFormat(en ? 'en-GB' : 'fr-FR', { maximumFractionDigits: 2 }).format(Number(value));
+	if (!cards.length) return null;
 	return (
 		<Stack spacing={1.5}>
 			{cards.map((card, i) => (

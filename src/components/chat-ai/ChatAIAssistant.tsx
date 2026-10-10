@@ -1,112 +1,32 @@
 'use client';
 
-import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
 	Alert,
 	Box,
 	Button,
 	CircularProgress,
-	Fab,
 	IconButton,
 	ListItemButton,
-	Paper,
 	Portal,
 	Stack,
 	Typography,
-	InputBase,
-	Avatar,
 } from '@mui/material';
-import { ChatBubbleOutlined, Close, History, Add, Send, Stop, DeleteOutlined, ArrowForward } from '@mui/icons-material';
+import { DeleteOutlined } from '@mui/icons-material';
 import { useAppSelector, useAppDispatch, useLanguage } from '@/utils/hooks';
 import { getAccessToken, getProfilState } from '@/store/selectors';
 import { chatRequest, ChatAPIError, consumeChatStream, safeNavigation, downloadProjectPDF } from './api';
 import { projectApi } from '@/store/services/project';
 import TextButton from '@/components/htmlElements/buttons/textButton/textButton';
 import DarkTooltip from '@/components/htmlElements/tooltip/darkTooltip/darkTooltip';
-import styles from './chat-ai.module.sass';
-import { ChatAIShortcuts } from './ChatAIShortcuts';
+import ActionModals from '@/components/htmlElements/modals/actionModal/actionModals';
+import styles from './shared/chat-ai.module.css';
+import { ChatAIInterface, ChatAIHeader, ChatAIWelcome, ChatAIMessageBox } from './shared/ChatAIInterface';
+export { ChatAIFloatingButton, ChatAIPanel } from './shared/ChatAIInterface';
+import { ChatAIComposer } from './shared/ChatAIComposer';
 import { ChatAIResults } from './ChatAIResults';
 import type { ChatCapabilities, ChatMessage, NavigationTarget, ChatCard } from './types';
-
-export const ChatAIFloatingButton = ({
-	open,
-	toggle,
-	offset = false,
-}: {
-	open: boolean;
-	toggle: () => void;
-	offset?: boolean;
-}) => (
-	<DarkTooltip title="Ask AI Assistant">
-		<Fab
-			className={styles.floating}
-			color="primary"
-			aria-label="Ask AI Assistant"
-			aria-expanded={open}
-			aria-controls="chat-ai-panel"
-			onClick={toggle}
-			sx={{
-				'--chat-ai-primary': (theme) => theme.palette.primary.main,
-				position: 'fixed',
-				width: 56,
-				height: 56,
-				right: { xs: 16, sm: 24 },
-				bottom: offset ? 96 : { xs: 'max(16px, env(safe-area-inset-bottom))', sm: 24 },
-				zIndex: (theme) => theme.zIndex.drawer + 1,
-				boxShadow: 3,
-				'&:focus-visible': { outline: '3px solid', outlineColor: 'text.primary', outlineOffset: 3 },
-				'@media (prefers-reduced-motion: reduce)': { transition: 'none' },
-			}}
-		>
-			{open ? <Close /> : <ChatBubbleOutlined />}
-		</Fab>
-	</DarkTooltip>
-);
-
-const ChatAIMessageBox = ({
-	role,
-	text,
-	children,
-	language = 'fr',
-}: {
-	role: ChatMessage['role'];
-	language?: 'fr' | 'en';
-	text?: string;
-	children?: ReactNode;
-}) => (
-	<Box
-		component="article"
-		className={role === 'user' ? styles.userMessage : styles.assistantMessage}
-		aria-label={role === 'user' ? (language === 'en' ? 'Your message' : 'Message de vous') : 'AI Assistant'}
-		sx={{
-			alignSelf: role === 'user' ? 'flex-end' : 'stretch',
-			maxWidth: role === 'user' ? '90%' : '100%',
-			minWidth: 0,
-			bgcolor: role === 'user' ? 'action.hover' : 'background.paper',
-			border: 1,
-			borderColor: role === 'user' ? 'transparent' : 'divider',
-			p: 1.5,
-			borderRadius: 2,
-		}}
-	>
-		<Typography
-			className={styles.messageAuthor}
-			component="div"
-			variant="caption"
-			color="text.secondary"
-			sx={{ fontWeight: 600, mb: 0.75 }}
-		>
-			{role === 'user' ? (language === 'en' ? 'You' : 'Vous') : 'AI Assistant'}
-		</Typography>
-		{text && (
-			<Typography dir="auto" variant="body2" sx={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', lineHeight: 1.6 }}>
-				{text}
-			</Typography>
-		)}
-		{children}
-	</Box>
-);
 
 const errorText: Record<string, string> = {
 	PERMISSION_DENIED: 'Vous n’avez pas accès à ces informations.',
@@ -146,124 +66,6 @@ const errorTextEnglish: Record<string, string> = {
 	CONTEXT_LIMIT: 'This conversation is full. Start a new conversation.',
 };
 
-export const ChatAIPanel = ({
-	children,
-	close,
-	minimized,
-	offset = false,
-}: {
-	children: React.ReactNode;
-	close: () => void;
-	minimized: boolean;
-	offset?: boolean;
-}) => {
-	const panel = useRef<HTMLDivElement>(null);
-	const [viewport, setViewport] = useState<{ height: number; top: number } | null>(null);
-	useEffect(() => {
-		const view = window.visualViewport;
-		if (!view) return;
-		const resize = () => setViewport({ height: view.height, top: view.offsetTop });
-		resize();
-		view.addEventListener('resize', resize);
-		view.addEventListener('scroll', resize);
-		return () => {
-			view.removeEventListener('resize', resize);
-			view.removeEventListener('scroll', resize);
-		};
-	}, []);
-	const onClose = useEffectEvent(close);
-	useEffect(() => {
-		if (minimized) return;
-		const previous = document.activeElement as HTMLElement | null;
-		panel.current?.focus();
-		const escape = (event: KeyboardEvent) => {
-			if (event.key === 'Escape') onClose();
-		};
-		document.addEventListener('keydown', escape);
-		return () => {
-			document.removeEventListener('keydown', escape);
-			previous?.focus();
-		};
-	}, [minimized]);
-	return (
-		<Paper
-			className={styles.panel}
-			ref={panel}
-			id="chat-ai-panel"
-			role="dialog"
-			aria-label="AI Assistant"
-			tabIndex={-1}
-			elevation={8}
-			sx={{
-				display: minimized ? 'none' : 'flex',
-				flexDirection: 'column',
-				'--chat-ai-primary': (theme) => theme.palette.primary.main,
-				position: 'fixed',
-				right: { xs: 0, sm: 24 },
-				top: { xs: viewport?.top ?? 0, sm: 'auto' },
-				bottom: { xs: 'auto', sm: offset ? 164 : 92 },
-				width: { xs: '100%', sm: 440 },
-				height: { xs: viewport?.height ?? '100dvh', sm: 630 },
-				maxHeight: { xs: '100dvh', sm: offset ? 'calc(100dvh - 180px)' : 'calc(100dvh - 112px)' },
-				borderRadius: { xs: 0, sm: 3 },
-				zIndex: (theme) => theme.zIndex.drawer + 2,
-				pt: { xs: 'env(safe-area-inset-top)', sm: 0 },
-				pb: { xs: 'env(safe-area-inset-bottom)', sm: 0 },
-				overflow: 'hidden',
-			}}
-		>
-			{children}
-		</Paper>
-	);
-};
-
-const ChatAIHeader = ({
-	close,
-	newConversation,
-	history,
-	language = 'fr',
-}: {
-	close: () => void;
-	newConversation?: () => void;
-	history?: () => void;
-	language?: 'fr' | 'en';
-}) => (
-	<Box className={styles.header}>
-		<Stack direction="row" sx={{ alignItems: 'center', gap: 1 }}>
-			<Avatar className={styles.assistantAvatar} variant="rounded" sx={{ width: 36, height: 36 }}>
-				<ChatBubbleOutlined fontSize="small" />
-			</Avatar>
-			<Box sx={{ flex: 1 }}>
-				<Typography sx={{ fontWeight: 600, fontSize: 14 }}>AI Assistant</Typography>
-				<Typography variant="caption" color="text.secondary">
-					Management Projet
-				</Typography>
-			</Box>
-			<DarkTooltip title={language === 'en' ? 'Close assistant' : 'Fermer l’assistant'}>
-				<IconButton aria-label={language === 'en' ? 'Close' : 'Fermer'} onClick={close}>
-					<Close />
-				</IconButton>
-			</DarkTooltip>
-		</Stack>
-		{newConversation && (
-			<Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-				<TextButton
-					cssClass={styles.headerControl}
-					buttonText={language === 'en' ? 'New conversation' : 'Nouvelle conversation'}
-					startIcon={<Add fontSize="small" />}
-					onClick={newConversation}
-				/>
-				<TextButton
-					cssClass={styles.headerControl}
-					buttonText={language === 'en' ? 'History' : 'Historique'}
-					startIcon={<History fontSize="small" />}
-					onClick={history}
-				/>
-			</Stack>
-		)}
-	</Box>
-);
-
 type ChatAIRetryRequest = {
 	text: string;
 	id: string;
@@ -291,10 +93,12 @@ const ChatAIWorkspace = ({
 	const [conversation, setConversation] = useState<string | null>(null);
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
 	const [draft, setDraft] = useState('');
+	const [composerVersion, setComposerVersion] = useState(0);
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState('');
 	const [delta, setDelta] = useState('');
 	const [historyOpen, setHistoryOpen] = useState(false);
+	const [pendingDeletion, setPendingDeletion] = useState<string | null>(null);
 	const [historyLoading, setHistoryLoading] = useState(false);
 	const [history, setHistory] = useState<{ id: string; title?: string; updated_at: string }[]>([]);
 	const controller = useRef<AbortController | null>(null);
@@ -316,13 +120,19 @@ const ChatAIWorkspace = ({
 		currentPath.current = pathname;
 	}, [pathname]);
 	useEffect(() => {
-		if (!historyOpen && followLatest.current) bottom.current?.scrollIntoView?.({ behavior: 'auto', block: 'end' });
+		if (historyOpen) return;
+		if (!messages.length && !delta && !busy) {
+			bottom.current?.parentElement?.scrollTo?.({ top: 0 });
+		} else if (followLatest.current) {
+			bottom.current?.scrollIntoView?.({ behavior: 'auto', block: 'end' });
+		}
 	}, [messages, delta, busy, historyOpen]);
 
 	// Every new view/request invalidates older asynchronous work, including fetches
 	// whose response body finishes after abort. Server-confirmed writes are still
 	// allowed to invalidate business caches, but cannot change a newer chat view.
 	const cancelPending = () => {
+		setPendingDeletion(null);
 		requestEpoch.current += 1;
 		controller.current?.abort();
 		controller.current = null;
@@ -540,6 +350,7 @@ const ChatAIWorkspace = ({
 	};
 	const newConversation = () => {
 		cancelPending();
+		setComposerVersion((version) => version + 1);
 		followLatest.current = true;
 		setConversation(null);
 		setMessages([]);
@@ -573,9 +384,18 @@ const ChatAIWorkspace = ({
 	return (
 		<>
 			<ChatAIHeader
+				appName="Management Projet"
 				close={close}
 				newConversation={newConversation}
-				history={loadHistory}
+				history={() => {
+					if (historyOpen) {
+						cancelPending();
+						setHistoryOpen(false);
+					} else {
+						void loadHistory();
+					}
+				}}
+				historyExpanded={historyOpen}
 				language={interfaceLanguage}
 			/>
 			{companyControl}
@@ -588,7 +408,7 @@ const ChatAIWorkspace = ({
 					const list = event.currentTarget;
 					followLatest.current = list.scrollHeight - list.scrollTop - list.clientHeight <= 64;
 				}}
-				sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2 }}
+				className={styles.messages}
 			>
 				{historyOpen ? (
 					<Stack spacing={1}>
@@ -648,7 +468,7 @@ const ChatAIWorkspace = ({
 												<IconButton
 													aria-label={`${interfaceLanguage === 'en' ? 'Delete conversation' : 'Supprimer la conversation'} : ${title}`}
 													disabled={historyLoading}
-													onClick={() => deleteConversation(item.id)}
+													onClick={() => setPendingDeletion(item.id)}
 												>
 													<DeleteOutlined fontSize="small" />
 												</IconButton>
@@ -671,30 +491,16 @@ const ChatAIWorkspace = ({
 						/>
 					</Stack>
 				) : (
-					<Stack spacing={2}>
+					<div>
 						{!messages.length && (
-							<>
-								<Box sx={{ pt: 0.5, pb: 1 }}>
-									<Typography variant="h6" sx={{ fontSize: 18, fontWeight: 600 }}>
-										{interfaceLanguage === 'en' ? 'What would you like to find?' : 'Que souhaitez-vous retrouver ?'}
-									</Typography>
-									<Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-										{interfaceLanguage === 'en'
-											? 'Select a question to send it, or describe what you need.'
-											: 'Cliquez sur une question pour l’envoyer, ou décrivez votre besoin.'}
-									</Typography>
-								</Box>
-								{company.suggestions.map((text) => (
-									<TextButton
-										key={text}
-										buttonText={text}
-										startIcon={<ArrowForward fontSize="small" />}
-										cssClass={styles.suggestion}
-										disabled={busy}
-										onClick={() => void send(text)}
-									/>
-								))}
-							</>
+							<ChatAIWelcome
+								language={interfaceLanguage}
+								suggestions={company.suggestions}
+								busy={busy}
+								send={(question) => {
+									void send(question);
+								}}
+							/>
 						)}
 						{messages.map((message) => (
 							<ChatAIMessageBox key={message.id} role={message.role} text={message.text} language={interfaceLanguage}>
@@ -732,80 +538,51 @@ const ChatAIWorkspace = ({
 								)}
 							</Alert>
 						)}
-					</Stack>
+					</div>
 				)}
 				<div ref={bottom} />
 			</Box>
-			{/^\/[^\s]*$/.test(draft) && (
-				<Box
-					sx={{
-						px: 2,
-						borderTop: 1,
-						borderColor: 'divider',
-						maxHeight: '35%',
-						minHeight: 0,
-						overflowY: 'auto',
-						flexShrink: 1,
-					}}
-				>
-					<ChatAIShortcuts
-						draft={draft}
-						shortcuts={company.shortcuts || []}
-						language={interfaceLanguage}
-						choose={setDraft}
-					/>
-				</Box>
-			)}
-			<Box className={styles.composer} sx={{ flexShrink: 0 }}>
-				<Stack direction="row" className={styles.input} sx={{ gap: 1, alignItems: 'center' }}>
-					<InputBase
-						fullWidth
-						multiline
-						maxRows={4}
-						placeholder={interfaceLanguage === 'en' ? 'Describe what you need…' : 'Décrivez votre recherche…'}
-						value={draft}
-						disabled={busy}
-						slotProps={{
-							input: {
-								maxLength: 4000,
-								dir: 'auto',
-								'aria-label': interfaceLanguage === 'en' ? 'Your message' : 'Votre message',
+			{pendingDeletion && (
+				<ActionModals
+					title={interfaceLanguage === 'en' ? 'Delete this conversation?' : 'Supprimer cette conversation ?'}
+					body={
+						interfaceLanguage === 'en'
+							? 'This deletes the conversation and its messages. Business records are unaffected.'
+							: 'La conversation et ses messages seront supprimés. Les données de l’application seront conservées.'
+					}
+					onClose={() => setPendingDeletion(null)}
+					actions={[
+						{
+							text: interfaceLanguage === 'en' ? 'Cancel' : 'Annuler',
+							active: false,
+							onClick: () => setPendingDeletion(null),
+						},
+						{
+							text: interfaceLanguage === 'en' ? 'Delete conversation' : 'Supprimer la conversation',
+							active: true,
+							color: '#C62828',
+							onClick: () => {
+								void deleteConversation(pendingDeletion);
 							},
-						}}
-						onChange={(e) => setDraft(e.target.value)}
-						sx={{ fontSize: { xs: 16, sm: 13 }, py: 0, '& textarea': { p: 0, lineHeight: 1.5 } }}
-						onKeyDown={(e) => {
-							if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
-								e.preventDefault();
-								void send();
-							}
-						}}
-					/>
-					{busy ? (
-						<IconButton
-							className={styles.send}
-							aria-label={interfaceLanguage === 'en' ? 'Cancel response' : 'Annuler la réponse'}
-							onClick={cancelPending}
-						>
-							<Stop fontSize="small" />
-						</IconButton>
-					) : (
-						<IconButton
-							className={styles.send}
-							aria-label={interfaceLanguage === 'en' ? 'Send' : 'Envoyer'}
-							disabled={!draft.trim()}
-							onClick={() => send()}
-						>
-							<Send fontSize="small" />
-						</IconButton>
-					)}
-				</Stack>
-				<Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.75, fontSize: 10 }}>
-					{interfaceLanguage === 'en'
-						? 'Enter to send · Shift + Enter for a new line · / shortcuts'
-						: 'Entrée pour envoyer · Maj + Entrée pour une nouvelle ligne · / raccourcis'}
-				</Typography>
-			</Box>
+						},
+					]}
+				>
+					<Typography variant="body2">{history.find((item) => item.id === pendingDeletion)?.title}</Typography>
+				</ActionModals>
+			)}
+			<ChatAIComposer
+				key={`${composerVersion}:${historyOpen}`}
+				draft={draft}
+				setDraft={setDraft}
+				busy={busy}
+				historyOpen={historyOpen}
+				shortcuts={company.shortcuts || []}
+				language={interfaceLanguage}
+				send={() => {
+					void send();
+				}}
+				cancel={cancelPending}
+			/>
 		</>
 	);
 };
@@ -879,25 +656,16 @@ export const ChatAIAssistant = () => {
 	if (!company) return null;
 	return (
 		<Portal>
-			<Box data-chat-ai-shell sx={{ display: overlayOpen ? 'none' : 'contents' }}>
-				<ChatAIFloatingButton open={open} toggle={() => setOpen((value) => !value)} />
-				<ChatAIPanel minimized={!open || overlayOpen} close={() => setOpen(false)}>
-					<ChatAIWorkspace
-						key={profile.id}
-						companyId={1}
-						token={token}
-						capabilities={capabilities}
-						close={() => setOpen(false)}
-						companyControl={
-							<Box className={styles.company}>
-								<Typography variant="body2" sx={{ fontSize: 12, fontWeight: 500 }}>
-									{company.name}
-								</Typography>
-							</Box>
-						}
-					/>
-				</ChatAIPanel>
-			</Box>
+			<ChatAIInterface open={open} onOpenChange={setOpen} suppressed={overlayOpen}>
+				<ChatAIWorkspace
+					key={profile.id}
+					companyId={1}
+					token={token}
+					capabilities={capabilities}
+					close={() => setOpen(false)}
+					companyControl={null}
+				/>
+			</ChatAIInterface>
 		</Portal>
 	);
 };
