@@ -7,6 +7,7 @@ import CategoriesListClient from './categories-list';
 import type { AppSession } from '@/types/_initTypes';
 
 jest.mock('next/navigation', () => ({
+	useSearchParams: () => new URLSearchParams(window.location.search),
 	useRouter: () => ({ push: jest.fn() }),
 }));
 

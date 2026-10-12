@@ -1,5 +1,6 @@
 'use client';
 
+import { listReturnUrl } from '@/utils/listReturn';
 import { useState, type ChangeEvent, type FC, type MouseEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Alert, Box, Button, Card, CardContent, Divider, InputAdornment, Stack, Typography } from '@mui/material';
@@ -174,7 +175,7 @@ const FormikContent: FC<{ token?: string; id?: number }> = ({ token, id }) => {
 				<Button
 					variant="outlined"
 					startIcon={<ArrowBackIcon />}
-					onClick={() => router.push(QUOTES_LIST)}
+					onClick={() => router.push(listReturnUrl(QUOTES_LIST))}
 					sx={{ alignSelf: 'flex-start' }}
 				>
 					{t.quotes.backToList}

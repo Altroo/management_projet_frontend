@@ -1,5 +1,6 @@
 'use client';
 
+import { listReturnUrl } from '@/utils/listReturn';
 import { isValidElement, useState, type FC, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -190,7 +191,7 @@ const QuoteViewClient: FC<SessionProps & { id: number }> = ({ session, id }) => 
 		try {
 			await deleteQuote({ id }).unwrap();
 			onSuccess(t.quotes.quoteDeletedSuccess);
-			router.push(QUOTES_LIST);
+			router.push(listReturnUrl(QUOTES_LIST));
 		} catch (e) {
 			onError(extractApiErrorMessage(e, t.quotes.quoteDeleteError));
 		} finally {
@@ -212,7 +213,7 @@ const QuoteViewClient: FC<SessionProps & { id: number }> = ({ session, id }) => 
 							<Button
 								variant="outlined"
 								startIcon={<ArrowBack />}
-								onClick={() => router.push(QUOTES_LIST)}
+								onClick={() => router.push(listReturnUrl(QUOTES_LIST))}
 								sx={{ width: isMobile ? '100%' : 'auto' }}
 							>
 								{t.quotes.backToList}

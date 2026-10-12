@@ -1,5 +1,6 @@
 'use client';
 
+import { listReturnUrl } from '@/utils/listReturn';
 import { runWithCleanup } from '@/utils/runWithCleanup';
 import { useState, type FC } from 'react';
 import { useRouter } from 'next/navigation';
@@ -71,7 +72,7 @@ const ClientFormContent: FC<{ token: string | undefined; id?: number }> = ({ tok
 							await createClient({ data: fields }).unwrap();
 							onSuccess(t.clients.clientAddedSuccess);
 						}
-						router.push(CLIENTS_LIST);
+						router.push(listReturnUrl(CLIENTS_LIST));
 					} catch (e) {
 						setFormikAutoErrors({ e, setFieldError });
 						onError(isEditMode ? t.clients.clientUpdateError : t.clients.clientAddError);
@@ -96,7 +97,7 @@ const ClientFormContent: FC<{ token: string | undefined; id?: number }> = ({ tok
 			<Button
 				variant="outlined"
 				startIcon={<ArrowBackIcon />}
-				onClick={() => router.push(CLIENTS_LIST)}
+				onClick={() => router.push(listReturnUrl(CLIENTS_LIST))}
 				sx={{ alignSelf: 'flex-start' }}
 			>
 				{t.clients.clientsList}

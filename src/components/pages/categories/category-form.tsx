@@ -1,5 +1,6 @@
 'use client';
 
+import { listReturnUrl } from '@/utils/listReturn';
 import { runWithCleanup } from '@/utils/runWithCleanup';
 import { useState, type FC, type MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
@@ -70,7 +71,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 							await createCategory({ data: fields }).unwrap();
 							onSuccess(t.categories.categoryAddedSuccess);
 						}
-						router.push(EXPENSES_LIST);
+						router.push(listReturnUrl(EXPENSES_LIST));
 					} catch (e) {
 						setFormikAutoErrors({ e, setFieldError });
 						onError(isEditMode ? t.categories.categoryUpdateError : t.categories.categoryAddError);
@@ -100,7 +101,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 				<Button
 					variant="outlined"
 					startIcon={<ArrowBackIcon />}
-					onClick={() => router.push(EXPENSES_LIST)}
+					onClick={() => router.push(listReturnUrl(EXPENSES_LIST))}
 					sx={{ whiteSpace: 'nowrap' }}
 				>
 					{t.expenses.expensesList}

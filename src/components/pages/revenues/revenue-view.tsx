@@ -1,5 +1,6 @@
 'use client';
 
+import { listReturnUrl } from '@/utils/listReturn';
 import { runWithCleanup } from '@/utils/runWithCleanup';
 import { isValidElement, useState, type FC, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
@@ -126,7 +127,7 @@ const RevenueViewClient: FC<Props> = ({ session, id }) => {
 				try {
 					await deleteRevenue({ id }).unwrap();
 					onSuccess(t.revenues.revenueDeletedSuccess);
-					router.push(REVENUES_LIST);
+					router.push(listReturnUrl(REVENUES_LIST));
 				} catch (err) {
 					onError(extractApiErrorMessage(err, t.revenues.revenueDeleteError));
 				}
@@ -177,7 +178,7 @@ const RevenueViewClient: FC<Props> = ({ session, id }) => {
 							<Button
 								variant="outlined"
 								startIcon={<ArrowBackIcon />}
-								onClick={() => router.push(REVENUES_LIST)}
+								onClick={() => router.push(listReturnUrl(REVENUES_LIST))}
 								sx={{ width: isMobile ? '100%' : 'auto' }}
 							>
 								{t.revenues.revenuesList}

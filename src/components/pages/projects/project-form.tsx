@@ -1,5 +1,6 @@
 'use client';
 
+import { listReturnUrl } from '@/utils/listReturn';
 import { useRef, useState, type ChangeEvent, type FC, type MouseEvent, type SubmitEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Alert, Box, Button, Card, CardContent, Divider, InputAdornment, Stack, Typography } from '@mui/material';
@@ -179,7 +180,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 								}
 								onSuccess(t.projects.projectAddedSuccess);
 							}
-							router.push(PROJECTS_LIST);
+							router.push(listReturnUrl(PROJECTS_LIST));
 						},
 						async (e) => {
 							setFormikAutoErrors({ e, setFieldError });
@@ -238,7 +239,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 					<Button
 						variant="outlined"
 						startIcon={<ArrowBackIcon />}
-						onClick={() => router.push(PROJECTS_LIST)}
+						onClick={() => router.push(listReturnUrl(PROJECTS_LIST))}
 						sx={{ whiteSpace: 'nowrap' }}
 					>
 						{t.projects.projectsList}

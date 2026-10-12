@@ -1,5 +1,6 @@
 'use client';
 
+import { listReturnUrl } from '@/utils/listReturn';
 import { runWithCleanup } from '@/utils/runWithCleanup';
 import { useState, type ChangeEvent, type FC, type MouseEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -201,7 +202,7 @@ export const ExpenseFormContent: FC<ExpenseFormContentProps> = ({
 							onSuccess(t.expenses.expenseAddedSuccess);
 						}
 						if (onSaved) onSaved();
-						else router.push(EXPENSES_LIST);
+						else router.push(listReturnUrl(EXPENSES_LIST));
 					} catch (e) {
 						setFormikAutoErrors({ e, setFieldError });
 						onError(isEditMode ? t.expenses.expenseUpdateError : t.expenses.expenseAddError);
@@ -259,7 +260,7 @@ export const ExpenseFormContent: FC<ExpenseFormContentProps> = ({
 						<Button
 							variant="outlined"
 							startIcon={<ArrowBackIcon />}
-							onClick={() => router.push(EXPENSES_LIST)}
+							onClick={() => router.push(listReturnUrl(EXPENSES_LIST))}
 							sx={{ whiteSpace: 'nowrap' }}
 						>
 							{t.expenses.expensesList}

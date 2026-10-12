@@ -7,6 +7,7 @@ import ProjectViewClient from './project-view';
 import type { AppSession } from '@/types/_initTypes';
 
 jest.mock('next/navigation', () => ({
+	useSearchParams: () => new URLSearchParams(window.location.search),
 	useRouter: () => ({ push: jest.fn() }),
 }));
 

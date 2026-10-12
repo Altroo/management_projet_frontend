@@ -1,5 +1,6 @@
 'use client';
 
+import { listReturnUrl } from '@/utils/listReturn';
 import { runWithCleanup } from '@/utils/runWithCleanup';
 import { isValidElement, useState, type FC, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
@@ -144,7 +145,7 @@ const ProjectViewClient: FC<Props> = ({ session, id }) => {
 				try {
 					await deleteProject({ id }).unwrap();
 					onSuccess(t.projects.projectDeletedSuccess);
-					router.push(PROJECTS_LIST);
+					router.push(listReturnUrl(PROJECTS_LIST));
 				} catch (err) {
 					onError(extractApiErrorMessage(err, t.projects.projectDeleteError));
 				}
@@ -221,7 +222,7 @@ const ProjectViewClient: FC<Props> = ({ session, id }) => {
 							<Button
 								variant="outlined"
 								startIcon={<ArrowBackIcon />}
-								onClick={() => router.push(PROJECTS_LIST)}
+								onClick={() => router.push(listReturnUrl(PROJECTS_LIST))}
 								sx={{ width: isMobile ? '100%' : 'auto' }}
 							>
 								{t.projects.projectsList}

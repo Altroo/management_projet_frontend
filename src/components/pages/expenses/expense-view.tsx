@@ -1,5 +1,6 @@
 'use client';
 
+import { listReturnUrl } from '@/utils/listReturn';
 import { runWithCleanup } from '@/utils/runWithCleanup';
 import { isValidElement, useState, type FC, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
@@ -139,7 +140,7 @@ export const ExpenseViewContent: FC<ExpenseViewContentProps> = ({ token, id, emb
 					await deleteExpense({ id }).unwrap();
 					onSuccess(t.expenses.expenseDeletedSuccess);
 					if (onDeleted) onDeleted();
-					else router.push(EXPENSES_LIST);
+					else router.push(listReturnUrl(EXPENSES_LIST));
 				} catch (err) {
 					onError(extractApiErrorMessage(err, t.expenses.expenseDeleteError));
 				}
@@ -183,7 +184,7 @@ export const ExpenseViewContent: FC<ExpenseViewContentProps> = ({ token, id, emb
 							<Button
 								variant="outlined"
 								startIcon={<ArrowBackIcon />}
-								onClick={() => router.push(EXPENSES_LIST)}
+								onClick={() => router.push(listReturnUrl(EXPENSES_LIST))}
 								sx={{ width: isMobile ? '100%' : 'auto' }}
 							>
 								{t.expenses.expensesList}

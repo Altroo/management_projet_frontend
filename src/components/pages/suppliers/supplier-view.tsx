@@ -1,5 +1,6 @@
 'use client';
 
+import { listReturnUrl } from '@/utils/listReturn';
 import { runWithCleanup } from '@/utils/runWithCleanup';
 import { useState, type FC } from 'react';
 import { useRouter } from 'next/navigation';
@@ -111,7 +112,7 @@ const SupplierViewClient: FC<SessionProps & { id: number }> = ({ session, id }) 
 				try {
 					await deleteSupplier({ id }).unwrap();
 					onSuccess(t.suppliers.supplierDeletedSuccess);
-					router.push(SUPPLIERS_LIST);
+					router.push(listReturnUrl(SUPPLIERS_LIST));
 				} catch (err) {
 					onError(extractApiErrorMessage(err, t.suppliers.supplierDeleteError));
 				}
@@ -139,7 +140,7 @@ const SupplierViewClient: FC<SessionProps & { id: number }> = ({ session, id }) 
 				<Protected permission="can_view">
 					<Stack spacing={3} sx={{ p: { xs: 2, md: 3 }, mt: 2 }}>
 						<Stack direction={isMobile ? 'column' : 'row'} spacing={2} sx={{ justifyContent: 'space-between' }}>
-							<Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => router.push(SUPPLIERS_LIST)}>
+							<Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => router.push(listReturnUrl(SUPPLIERS_LIST))}>
 								{t.suppliers.suppliersList}
 							</Button>
 							{supplier && (

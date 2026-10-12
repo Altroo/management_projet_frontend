@@ -1,5 +1,6 @@
 'use client';
 
+import { listReturnUrl } from '@/utils/listReturn';
 import { runWithCleanup } from '@/utils/runWithCleanup';
 import { useState, type FC } from 'react';
 import { useRouter } from 'next/navigation';
@@ -67,7 +68,7 @@ const SupplierFormContent: FC<{ token: string | undefined; id?: number }> = ({ t
 							await createSupplier({ data: fields }).unwrap();
 							onSuccess(t.suppliers.supplierAddedSuccess);
 						}
-						router.push(SUPPLIERS_LIST);
+						router.push(listReturnUrl(SUPPLIERS_LIST));
 					} catch (e) {
 						setFormikAutoErrors({ e, setFieldError });
 						onError(isEditMode ? t.suppliers.supplierUpdateError : t.suppliers.supplierAddError);
@@ -92,7 +93,7 @@ const SupplierFormContent: FC<{ token: string | undefined; id?: number }> = ({ t
 			<Button
 				variant="outlined"
 				startIcon={<ArrowBackIcon />}
-				onClick={() => router.push(SUPPLIERS_LIST)}
+				onClick={() => router.push(listReturnUrl(SUPPLIERS_LIST))}
 				sx={{ alignSelf: 'flex-start' }}
 			>
 				{t.suppliers.suppliersList}

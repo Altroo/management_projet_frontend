@@ -1,5 +1,6 @@
 'use client';
 
+import { listReturnUrl } from '@/utils/listReturn';
 import { runWithCleanup } from '@/utils/runWithCleanup';
 import { useState, type ChangeEvent, type FC, type MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
@@ -120,7 +121,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 							}
 							onSuccess(t.revenues.revenueAddedSuccess);
 						}
-						router.push(REVENUES_LIST);
+						router.push(listReturnUrl(REVENUES_LIST));
 					} catch (e) {
 						setFormikAutoErrors({ e, setFieldError });
 						onError(isEditMode ? t.revenues.revenueUpdateError : t.revenues.revenueAddError);
@@ -153,7 +154,7 @@ const FormikContent: FC<FormikContentProps> = ({ token, id }) => {
 					<Button
 						variant="outlined"
 						startIcon={<ArrowBackIcon />}
-						onClick={() => router.push(REVENUES_LIST)}
+						onClick={() => router.push(listReturnUrl(REVENUES_LIST))}
 						sx={{ whiteSpace: 'nowrap' }}
 					>
 						{t.revenues.revenuesList}

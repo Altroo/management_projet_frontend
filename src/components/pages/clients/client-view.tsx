@@ -1,5 +1,6 @@
 'use client';
 
+import { listReturnUrl } from '@/utils/listReturn';
 import { runWithCleanup } from '@/utils/runWithCleanup';
 import { useState, type FC } from 'react';
 import { useRouter } from 'next/navigation';
@@ -139,7 +140,7 @@ const ClientViewClient: FC<SessionProps & { id: number }> = ({ session, id }) =>
 				try {
 					await deleteClient({ id }).unwrap();
 					onSuccess(t.clients.clientDeletedSuccess);
-					router.push(CLIENTS_LIST);
+					router.push(listReturnUrl(CLIENTS_LIST));
 				} catch (err) {
 					onError(extractApiErrorMessage(err, t.clients.clientDeleteError));
 				}
@@ -167,7 +168,7 @@ const ClientViewClient: FC<SessionProps & { id: number }> = ({ session, id }) =>
 				<Protected permission="can_view">
 					<Stack spacing={3} sx={{ p: { xs: 2, md: 3 }, mt: 2 }}>
 						<Stack direction={isMobile ? 'column' : 'row'} spacing={2} sx={{ justifyContent: 'space-between' }}>
-							<Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => router.push(CLIENTS_LIST)}>
+							<Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => router.push(listReturnUrl(CLIENTS_LIST))}>
 								{t.clients.clientsList}
 							</Button>
 							{client && (
