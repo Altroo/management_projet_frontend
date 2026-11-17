@@ -1,3 +1,4 @@
+import { PdfTranslationDeferredError } from './pdfErrors';
 import type { PdfLanguage } from '@/utils/routes';
 
 interface FinancialReportFilenameOptions {
@@ -45,7 +46,21 @@ interface DownloadFileBlobOptions {
 }
 
 export const downloadFileBlob = async (url: string, options: DownloadFileBlobOptions = {}): Promise<void> => {
-	const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
+	const started = Date.now();
+	let response: Response;
+	while (true) {
+		response = await fetch(url, { credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(30_000) });
+		if (response.status !== 409) break;
+		const data = await response
+			.clone()
+			.json()
+			.catch(() => ({}));
+		const code = data.code ?? data.details?.code ?? data.errors?.code ?? data.data?.code;
+		if (code === 'pdf_translation_deferred') throw new PdfTranslationDeferredError();
+		if (code !== 'pdf_translation_pending') break;
+		if (Date.now() - started >= 180_000) throw new PdfTranslationDeferredError();
+		await new Promise((resolve) => setTimeout(resolve, 2000));
+	}
 	if (!response.ok) {
 		let data: unknown;
 		if (response.headers.get('content-type')?.includes('application/json')) {

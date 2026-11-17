@@ -41,7 +41,11 @@ export async function GET(request: NextRequest) {
 		if (!upstream.ok) {
 			return new NextResponse(upstream.body, {
 				status: upstream.status,
-				headers: { 'Content-Type': upstream.headers.get('content-type') || 'application/json' },
+				headers: {
+					'Content-Type': upstream.headers.get('content-type') || 'application/json',
+					'Cache-Control': 'no-store',
+					...(upstream.headers.get('retry-after') ? { 'Retry-After': upstream.headers.get('retry-after')! } : {}),
+				},
 			});
 		}
 

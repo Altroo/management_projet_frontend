@@ -343,6 +343,7 @@ export const en: TranslationDictionary = {
 		homeBtn: 'Home',
 	},
 	pdf: {
+		translationPending: 'The document translation is being prepared. Please try again later.',
 		generatePdf: 'PDF Generation',
 		chooseLanguage: 'Choose the language in which you want to generate the PDF document.',
 		french: 'Français',

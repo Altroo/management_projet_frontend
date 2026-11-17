@@ -79,3 +79,42 @@ describe('downloadFileBlob', () => {
 		});
 	});
 });
+
+describe('translation preparation', () => {
+	afterEach(() => jest.useRealTimers());
+	const pending = (code: string) => ({
+		ok: false,
+		status: 409,
+		headers: new Headers({ 'content-type': 'application/json' }),
+		clone: () => ({ json: async () => ({ details: { code } }) }),
+	});
+	it('waits for a pending translation then downloads without an error', async () => {
+		jest.useFakeTimers();
+		jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation();
+		global.fetch = jest
+			.fn()
+			.mockResolvedValueOnce(pending('pdf_translation_pending'))
+			.mockResolvedValueOnce({ ok: true, status: 200, blob: async () => new Blob(['pdf']), headers: new Headers() });
+		const onResponseReady = jest.fn();
+		const task = downloadFileBlob('/api/reports/pdf?language=en', { onResponseReady });
+		await jest.advanceTimersByTimeAsync(2000);
+		await task;
+		expect(fetch).toHaveBeenCalledTimes(2);
+		expect(onResponseReady).toHaveBeenCalledTimes(1);
+	});
+	it('stops polling a quota wait without downloading a partial file', async () => {
+		global.fetch = jest.fn().mockResolvedValue(pending('pdf_translation_deferred'));
+		await expect(downloadFileBlob('/api/reports/pdf?language=en')).rejects.toMatchObject({
+			name: 'PdfTranslationDeferredError',
+		});
+		expect(fetch).toHaveBeenCalledTimes(1);
+	});
+	it('bounds how long newly queued text can keep the spinner active', async () => {
+		jest.useFakeTimers();
+		global.fetch = jest.fn().mockResolvedValue(pending('pdf_translation_pending'));
+		const result = downloadFileBlob('/api/reports/pdf?language=en').catch((error: Error) => error.name);
+		await jest.advanceTimersByTimeAsync(182000);
+		expect(await result).toBe('PdfTranslationDeferredError');
+		expect(fetch).toHaveBeenCalledTimes(91);
+	});
+});

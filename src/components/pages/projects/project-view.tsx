@@ -47,6 +47,7 @@ import ActionModals from '@/components/htmlElements/modals/actionModal/actionMod
 import PdfLanguageModal from '@/components/shared/pdfLanguageModal/pdfLanguageModal';
 import { Protected } from '@/components/layouts/protected/protected';
 import { extractApiErrorMessage, formatDate } from '@/utils/helpers';
+import { showPdfError } from '@/utils/pdfErrors';
 import { downloadFileBlob } from '@/utils/fileDownload';
 import { useLanguage, useToast } from '@/utils/hooks';
 import { STATUS_CHIP_COLORS } from '@/utils/rawData';
@@ -133,7 +134,7 @@ const ProjectViewClient: FC<Props> = ({ session, id }) => {
 	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
 	const [deleteProject] = useDeleteProjectMutation();
-	const { onSuccess, onError } = useToast();
+	const { onSuccess, onError, onInfo } = useToast();
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
 	const [includeEstimates, setIncludeEstimates] = useState(false);
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
@@ -188,7 +189,13 @@ const ProjectViewClient: FC<Props> = ({ session, id }) => {
 						}),
 					);
 				} catch (err) {
-					onError(extractApiErrorMessage(err, t.projects.reportDownloadError));
+					showPdfError(
+						err,
+						onError,
+						onInfo,
+						t.pdf.translationPending,
+						extractApiErrorMessage(err, t.projects.reportDownloadError),
+					);
 				}
 			},
 			() => {

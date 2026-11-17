@@ -37,6 +37,6 @@ while read -r oldrev newrev ref; do
   # Preserve the shared reverse proxy; reload it gracefully after replacing frontend.
   docker exec nginx nginx -t
   docker exec nginx nginx -s reload
-  curl --fail --silent --show-error --output /dev/null "$health_url"
+  curl --http1.1 -H 'Connection: close' --retry 6 --retry-delay 2 --retry-all-errors --fail --silent --show-error --output /dev/null "$health_url"
   printf 'Management Projet frontend deployment verified: %s\n' "$newrev"
 done

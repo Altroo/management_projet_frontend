@@ -34,6 +34,7 @@ import { useGetProjectsListQuery } from '@/store/services/project';
 import { extractApiErrorMessage } from '@/utils/helpers';
 import { useLanguage, useToast } from '@/utils/hooks';
 import { REPORTS_DOWNLOAD, type PdfLanguage } from '@/utils/routes';
+import { PdfTranslationDeferredError } from '@/utils/pdfErrors';
 import { downloadFileBlob } from '@/utils/fileDownload';
 import { textInputTheme } from '@/utils/themes';
 import Styles from '@/styles/dashboard/dashboard.module.sass';
@@ -76,6 +77,7 @@ const ReportsClient: FC<SessionProps> = ({ session }) => {
 	const [generationStage, setGenerationStage] = useState<GenerationStage | null>(null);
 	const [generatingLanguage, setGeneratingLanguage] = useState<PdfLanguage | null>(null);
 	const [generationError, setGenerationError] = useState('');
+	const [generationDeferred, setGenerationDeferred] = useState(false);
 	const { data: projectsData, isLoading: projectsLoading } = useGetProjectsListQuery(
 		{ with_pagination: false },
 		{ skip: !token },
@@ -108,6 +110,7 @@ const ReportsClient: FC<SessionProps> = ({ session }) => {
 		if (!token || !periodIsValid) return;
 		setShowLanguageModal(false);
 		setGenerationError('');
+		setGenerationDeferred(false);
 		setGeneratingLanguage(language);
 		setGenerationStage('preparing');
 		await runWithCleanup(
@@ -126,6 +129,11 @@ const ReportsClient: FC<SessionProps> = ({ session }) => {
 						);
 					},
 					async (error) => {
+						if (error instanceof PdfTranslationDeferredError) {
+							setGenerationDeferred(true);
+							setGenerationError(t.pdf.translationPending);
+							return;
+						}
 						const message = extractApiErrorMessage(error, t.reports.generationError);
 						setGenerationError(message);
 						onError(message);
@@ -250,7 +258,7 @@ const ReportsClient: FC<SessionProps> = ({ session }) => {
 									</Stack>
 								</Alert>
 							)}
-							{generationError && <Alert severity="error">{generationError}</Alert>}
+							{generationError && <Alert severity={generationDeferred ? 'info' : 'error'}>{generationError}</Alert>}
 							<Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 2 }}>
 								<PrimaryLoadingButton
 									buttonText={t.reports.generate}
