@@ -113,8 +113,8 @@ describe('translation preparation', () => {
 		jest.useFakeTimers();
 		global.fetch = jest.fn().mockResolvedValue(pending('pdf_translation_pending'));
 		const result = downloadFileBlob('/api/reports/pdf?language=en').catch((error: Error) => error.name);
-		await jest.advanceTimersByTimeAsync(182000);
+		await jest.advanceTimersByTimeAsync(45_000);
 		expect(await result).toBe('PdfTranslationDeferredError');
-		expect(fetch).toHaveBeenCalledTimes(91);
+		expect(fetch).toHaveBeenCalledTimes(23);
 	});
 });

@@ -46,10 +46,14 @@ interface DownloadFileBlobOptions {
 }
 
 export const downloadFileBlob = async (url: string, options: DownloadFileBlobOptions = {}): Promise<void> => {
-	const started = Date.now();
+	const deadline = Date.now() + 45_000;
 	let response: Response;
 	while (true) {
-		response = await fetch(url, { credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(30_000) });
+		response = await fetch(url, {
+			credentials: 'same-origin',
+			cache: 'no-store',
+			signal: AbortSignal.timeout(Math.min(30_000, Math.max(1, deadline - Date.now()))),
+		});
 		if (response.status !== 409) break;
 		const data = await response
 			.clone()
@@ -58,7 +62,7 @@ export const downloadFileBlob = async (url: string, options: DownloadFileBlobOpt
 		const code = data.code ?? data.details?.code ?? data.errors?.code ?? data.data?.code;
 		if (code === 'pdf_translation_deferred') throw new PdfTranslationDeferredError();
 		if (code !== 'pdf_translation_pending') break;
-		if (Date.now() - started >= 180_000) throw new PdfTranslationDeferredError();
+		if (Date.now() + 2_000 >= deadline) throw new PdfTranslationDeferredError();
 		await new Promise((resolve) => setTimeout(resolve, 2000));
 	}
 	if (!response.ok) {
